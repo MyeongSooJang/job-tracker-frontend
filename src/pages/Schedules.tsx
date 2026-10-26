@@ -25,7 +25,7 @@ const TYPE_BADGE_VARIANTS: Record<ScheduleType, string> = {
 }
 
 export default function Schedules() {
-  const { data: schedules = [], isLoading } = useSchedules()
+  const { data: schedules = [], isLoading, isError } = useSchedules()
   const { data: applications = [] } = useApplications()
   const { mutate: createSchedule, isPending } = useCreateSchedule()
   const [open, setOpen] = useState(false)
@@ -43,6 +43,7 @@ export default function Schedules() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
+    if (!form.applicationId || !form.type) return
     createSchedule(
       {
         applicationId: Number(form.applicationId),
@@ -60,13 +61,19 @@ export default function Schedules() {
     )
   }
 
+  const handleDialogChange = (isOpen: boolean) => {
+    setOpen(isOpen)
+    if (!isOpen) setForm({ applicationId: '', title: '', scheduledAt: '', type: '', note: '' })
+  }
+
   if (isLoading) return <div className="text-slate-500">불러오는 중...</div>
+  if (isError) return <div className="text-red-500 p-4">데이터를 불러오지 못했습니다.</div>
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-slate-800">일정</h1>
-        <Dialog open={open} onOpenChange={setOpen}>
+        <Dialog open={open} onOpenChange={handleDialogChange}>
           <DialogTrigger asChild>
             <Button>일정 등록</Button>
           </DialogTrigger>
@@ -124,7 +131,7 @@ export default function Schedules() {
                   </SelectContent>
                 </Select>
               </div>
-              <Button type="submit" disabled={isPending} className="w-full">
+              <Button type="submit" disabled={isPending || !form.applicationId || !form.type} className="w-full">
                 {isPending ? '등록 중...' : '등록'}
               </Button>
             </form>

@@ -13,7 +13,7 @@ export default function InterviewDetail() {
   const appId = Number(applicationId)
   const intId = Number(interviewId)
 
-  const { data: interviews = [], isLoading } = useInterviews(appId)
+  const { data: interviews = [], isLoading, isError } = useInterviews(appId)
   const interview = interviews.find(i => i.id === intId)
   const { mutate: addQuestion, isPending } = useAddQuestion(appId, intId)
 
@@ -21,6 +21,7 @@ export default function InterviewDetail() {
   const [form, setForm] = useState({ question: '', answer: '', memo: '' })
 
   if (isLoading) return <div className="text-slate-500">불러오는 중...</div>
+  if (isError) return <div className="text-red-500 p-4">데이터를 불러오지 못했습니다.</div>
   if (!interview) return <div className="text-slate-500">면접을 찾을 수 없습니다.</div>
 
   const handleSubmit = (e: React.FormEvent) => {

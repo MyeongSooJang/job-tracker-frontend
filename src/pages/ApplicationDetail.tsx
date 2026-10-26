@@ -33,7 +33,7 @@ const NEXT_STATUSES: Record<ApplicationStatus, ApplicationStatus[]> = {
 export default function ApplicationDetail() {
   const { id } = useParams<{ id: string }>()
   const appId = Number(id)
-  const { data: application, isLoading } = useApplication(appId)
+  const { data: application, isLoading, isError } = useApplication(appId)
   const { mutate: updateStatus, isPending: updating } = useUpdateApplicationStatus(appId)
   const { data: interviews = [] } = useInterviews(appId)
   const { mutate: createInterview, isPending: creating } = useCreateInterview(appId)
@@ -41,8 +41,14 @@ export default function ApplicationDetail() {
   const [form, setForm] = useState({ round: '', interviewDate: '', location: '', note: '' })
 
   if (isLoading || !application) return <div className="text-slate-500">불러오는 중...</div>
+  if (isError) return <div className="text-red-500 p-4">데이터를 불러오지 못했습니다.</div>
 
   const nextStatuses = NEXT_STATUSES[application.status]
+
+  const handleDialogChange = (isOpen: boolean) => {
+    setOpen(isOpen)
+    if (!isOpen) setForm({ round: '', interviewDate: '', location: '', note: '' })
+  }
 
   const handleInterviewSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -112,7 +118,7 @@ export default function ApplicationDetail() {
 
       <div className="flex items-center justify-between">
         <h2 className="text-lg font-semibold">면접 기록</h2>
-        <Dialog open={open} onOpenChange={setOpen}>
+        <Dialog open={open} onOpenChange={handleDialogChange}>
           <DialogTrigger asChild>
             <Button size="sm">면접 추가</Button>
           </DialogTrigger>

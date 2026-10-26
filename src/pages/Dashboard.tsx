@@ -25,8 +25,8 @@ const STATUS_BADGE_CLASS: Record<ApplicationStatus, string> = {
 }
 
 export default function Dashboard() {
-  const { data: applications = [], isLoading: appsLoading } = useApplications()
-  const { data: schedules = [], isLoading: schedulesLoading } = useSchedules()
+  const { data: applications = [], isLoading: appsLoading, isError: appsError } = useApplications()
+  const { data: schedules = [], isLoading: schedulesLoading, isError: schedulesError } = useSchedules()
 
   const accepted = applications.filter(a => a.status === 'ACCEPTED').length
   const rejected = applications.filter(a => a.status === 'REJECTED').length
@@ -39,6 +39,10 @@ export default function Dashboard() {
 
   if (appsLoading || schedulesLoading) {
     return <div className="text-slate-500 p-8">불러오는 중...</div>
+  }
+
+  if (appsError || schedulesError) {
+    return <div className="text-red-500 p-4">데이터를 불러오지 못했습니다.</div>
   }
 
   return (

@@ -12,7 +12,7 @@ import {
 } from '@/components/ui/table'
 
 export default function Companies() {
-  const { data: companies = [], isLoading } = useCompanies()
+  const { data: companies = [], isLoading, isError } = useCompanies()
   const { mutate: createCompany, isPending } = useCreateCompany()
   const [open, setOpen] = useState(false)
   const [form, setForm] = useState({ name: '', industry: '', website: '' })
@@ -27,13 +27,19 @@ export default function Companies() {
     })
   }
 
+  const handleDialogChange = (isOpen: boolean) => {
+    setOpen(isOpen)
+    if (!isOpen) setForm({ name: '', industry: '', website: '' })
+  }
+
   if (isLoading) return <div className="text-slate-500">불러오는 중...</div>
+  if (isError) return <div className="text-red-500 p-4">데이터를 불러오지 못했습니다.</div>
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-slate-800">회사 목록</h1>
-        <Dialog open={open} onOpenChange={setOpen}>
+        <Dialog open={open} onOpenChange={handleDialogChange}>
           <DialogTrigger asChild>
             <Button>회사 등록</Button>
           </DialogTrigger>

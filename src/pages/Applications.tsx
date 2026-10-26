@@ -43,7 +43,7 @@ const FILTER_OPTIONS: Array<ApplicationStatus | 'ALL'> = [
 ]
 
 export default function Applications() {
-  const { data: applications = [], isLoading } = useApplications()
+  const { data: applications = [], isLoading, isError } = useApplications()
   const { data: companies = [] } = useCompanies()
   const { mutate: createApplication, isPending } = useCreateApplication()
 
@@ -68,13 +68,19 @@ export default function Applications() {
     )
   }
 
+  const handleDialogChange = (isOpen: boolean) => {
+    setOpen(isOpen)
+    if (!isOpen) setForm({ companyId: '', position: '', appliedDate: '' })
+  }
+
   if (isLoading) return <div className="text-slate-500">불러오는 중...</div>
+  if (isError) return <div className="text-red-500 p-4">데이터를 불러오지 못했습니다.</div>
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-slate-800">지원 현황</h1>
-        <Dialog open={open} onOpenChange={setOpen}>
+        <Dialog open={open} onOpenChange={handleDialogChange}>
           <DialogTrigger asChild>
             <Button>지원 등록</Button>
           </DialogTrigger>
