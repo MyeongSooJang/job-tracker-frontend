@@ -12,9 +12,9 @@ vi.mock('@/hooks/useApplications', () => ({
   useUpdateApplicationStatus: () => ({ mutate: vi.fn(), isPending: false }),
 }))
 
-vi.mock('@/hooks/useInterviews', () => ({
-  useInterviews: () => ({ data: [], isLoading: false }),
-  useCreateInterview: () => ({ mutate: vi.fn(), isPending: false }),
+vi.mock('@/hooks/useReviews', () => ({
+  useReviews: () => ({ data: [], isLoading: false }),
+  useWriteReview: () => ({ mutate: vi.fn(), isPending: false }),
 }))
 
 const qc = new QueryClient()
