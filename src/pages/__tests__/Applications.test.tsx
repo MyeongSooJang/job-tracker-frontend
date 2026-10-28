@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react'
+import { render, screen, within } from '@testing-library/react'
 import { BrowserRouter } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { describe, it, expect, vi } from 'vitest'
@@ -29,8 +29,10 @@ describe('Applications', () => {
     expect(screen.getByText('백엔드')).toBeInTheDocument()
   })
 
-  it('다음 단계가 있는 지원 건에 상태 변경 드롭다운을 보여준다', () => {
+  it('다음 단계가 있는 지원 건에 상태 변경 버튼을 보여준다', () => {
     render(<Applications />, { wrapper })
-    expect(screen.getByRole('combobox', { name: '상태 변경' })).toBeInTheDocument()
+    const row = within(screen.getByRole('row', { name: /카카오/ }))
+    expect(row.getByRole('button', { name: '→ 서류합격' })).toBeInTheDocument()
+    expect(row.getByRole('button', { name: '→ 불합격' })).toBeInTheDocument()
   })
 })

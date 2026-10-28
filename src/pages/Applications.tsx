@@ -46,24 +46,21 @@ function StatusCell({ id, status }: { id: number; status: ApplicationStatus }) {
   const nextStatuses = NEXT_STATUSES[status]
 
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex items-center gap-2 flex-wrap">
       <span className={`px-2 py-1 rounded-full text-xs font-medium ${STATUS_COLORS[status]}`}>
         {STATUS_LABELS[status]}
       </span>
-      {nextStatuses.length > 0 && (
-        <Select value="" onValueChange={(v) => updateStatus(v as ApplicationStatus)} disabled={isPending}>
-          <SelectTrigger className="h-7 w-24 text-xs" aria-label="상태 변경">
-            <SelectValue placeholder="상태 변경" />
-          </SelectTrigger>
-          <SelectContent>
-            {nextStatuses.map((s) => (
-              <SelectItem key={s} value={s}>
-                {STATUS_LABELS[s]}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      )}
+      {nextStatuses.map((s) => (
+        <Button
+          key={s}
+          variant={s === 'REJECTED' ? 'destructive' : 'outline'}
+          size="sm"
+          disabled={isPending}
+          onClick={() => updateStatus(s)}
+        >
+          → {STATUS_LABELS[s]}
+        </Button>
+      ))}
     </div>
   )
 }
