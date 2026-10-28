@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { useApplication, useUpdateApplicationStatus } from '@/hooks/useApplications'
 import { useInterviews, useCreateInterview } from '@/hooks/useInterviews'
+import PassScheduleDialog from '@/components/schedules/PassScheduleDialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -38,6 +39,7 @@ export default function ApplicationDetail() {
   const { data: interviews = [] } = useInterviews(appId)
   const { mutate: createInterview, isPending: creating } = useCreateInterview(appId)
   const [open, setOpen] = useState(false)
+  const [scheduleOpen, setScheduleOpen] = useState(false)
   const [form, setForm] = useState({ round: '', interviewDate: '', location: '', note: '' })
 
   if (isLoading || !application) return <div className="text-slate-500">불러오는 중...</div>
@@ -105,7 +107,9 @@ export default function ApplicationDetail() {
                     variant={s === 'REJECTED' ? 'destructive' : 'default'}
                     size="sm"
                     disabled={updating}
-                    onClick={() => updateStatus(s)}
+                    onClick={() =>
+                      updateStatus(s, { onSuccess: () => s === 'RESUME_PASSED' && setScheduleOpen(true) })
+                    }
                   >
                     {STATUS_LABELS[s]}
                   </Button>
@@ -199,6 +203,14 @@ export default function ApplicationDetail() {
           ))
         )}
       </div>
+
+      {scheduleOpen && (
+        <PassScheduleDialog
+          applicationId={appId}
+          companyName={application.company.name}
+          onClose={() => setScheduleOpen(false)}
+        />
+      )}
     </div>
   )
 }

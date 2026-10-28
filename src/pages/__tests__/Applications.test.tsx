@@ -1,8 +1,13 @@
 import { render, screen, within } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { BrowserRouter } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { describe, it, expect, vi } from 'vitest'
 import Applications from '../Applications'
+
+const updateMutate = vi.hoisted(() =>
+  vi.fn((_status: string, opts?: { onSuccess?: () => void }) => opts?.onSuccess?.()),
+)
 
 vi.mock('@/hooks/useApplications', () => ({
   useApplications: () => ({
@@ -10,7 +15,7 @@ vi.mock('@/hooks/useApplications', () => ({
     isLoading: false,
   }),
   useCreateApplication: () => ({ mutate: vi.fn(), isPending: false }),
-  useUpdateApplicationStatus: () => ({ mutate: vi.fn(), isPending: false }),
+  useUpdateApplicationStatus: () => ({ mutate: updateMutate, isPending: false }),
 }))
 
 vi.mock('@/hooks/useCompanies', () => ({
@@ -34,5 +39,20 @@ describe('Applications', () => {
     const row = within(screen.getByRole('row', { name: /카카오/ }))
     expect(row.getByRole('button', { name: '→ 서류합격' })).toBeInTheDocument()
     expect(row.getByRole('button', { name: '→ 불합격' })).toBeInTheDocument()
+  })
+
+  it('서류합격으로 변경하면 면접 일정 등록 창을 띄운다', async () => {
+    render(<Applications />, { wrapper })
+    const row = within(screen.getByRole('row', { name: /카카오/ }))
+    await userEvent.click(row.getByRole('button', { name: '→ 서류합격' }))
+    expect(await screen.findByText('서류합격 — 면접 일정 등록')).toBeInTheDocument()
+    expect(screen.getByLabelText('제목 *')).toHaveValue('카카오 면접')
+  })
+
+  it('불합격으로 변경하면 일정 등록 창을 띄우지 않는다', async () => {
+    render(<Applications />, { wrapper })
+    const row = within(screen.getByRole('row', { name: /카카오/ }))
+    await userEvent.click(row.getByRole('button', { name: '→ 불합격' }))
+    expect(screen.queryByText('서류합격 — 면접 일정 등록')).not.toBeInTheDocument()
   })
 })

@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useApplications, useCreateApplication, useUpdateApplicationStatus } from '@/hooks/useApplications'
 import { useCompanies } from '@/hooks/useCompanies'
+import PassScheduleDialog from '@/components/schedules/PassScheduleDialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -41,7 +42,15 @@ const NEXT_STATUSES: Record<ApplicationStatus, ApplicationStatus[]> = {
   REJECTED: [],
 }
 
-function StatusCell({ id, status }: { id: number; status: ApplicationStatus }) {
+function StatusCell({
+  id,
+  status,
+  onPassed,
+}: {
+  id: number
+  status: ApplicationStatus
+  onPassed: () => void
+}) {
   const { mutate: updateStatus, isPending } = useUpdateApplicationStatus(id)
   const nextStatuses = NEXT_STATUSES[status]
 
@@ -56,7 +65,9 @@ function StatusCell({ id, status }: { id: number; status: ApplicationStatus }) {
           variant={s === 'REJECTED' ? 'destructive' : 'outline'}
           size="sm"
           disabled={isPending}
-          onClick={() => updateStatus(s)}
+          onClick={() =>
+            updateStatus(s, { onSuccess: () => s === 'RESUME_PASSED' && onPassed() })
+          }
         >
           → {STATUS_LABELS[s]}
         </Button>
@@ -83,6 +94,7 @@ export default function Applications() {
 
   const [open, setOpen] = useState(false)
   const [filter, setFilter] = useState<ApplicationStatus | 'ALL'>('ALL')
+  const [passed, setPassed] = useState<{ id: number; companyName: string } | null>(null)
   const [form, setForm] = useState({ companyId: '', position: '', appliedDate: '' })
 
   const filtered =
@@ -208,7 +220,11 @@ export default function Applications() {
                   </TableCell>
                   <TableCell>{a.position}</TableCell>
                   <TableCell>
-                    <StatusCell id={a.id} status={a.status} />
+                    <StatusCell
+                      id={a.id}
+                      status={a.status}
+                      onPassed={() => setPassed({ id: a.id, companyName: a.company.name })}
+                    />
                   </TableCell>
                   <TableCell>{a.appliedDate}</TableCell>
                 </TableRow>
@@ -217,6 +233,14 @@ export default function Applications() {
           </Table>
         </CardContent>
       </Card>
+
+      {passed && (
+        <PassScheduleDialog
+          applicationId={passed.id}
+          companyName={passed.companyName}
+          onClose={() => setPassed(null)}
+        />
+      )}
     </div>
   )
 }
