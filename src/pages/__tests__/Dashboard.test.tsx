@@ -26,11 +26,11 @@ const wrapper = ({ children }: { children: React.ReactNode }) => (
 describe('Dashboard', () => {
   it('전체 지원 건수를 표시한다', () => {
     render(<Dashboard />, { wrapper })
-    expect(screen.getByText('2')).toBeInTheDocument()
+    expect(screen.getByText('전체 지원').parentElement!.parentElement).toHaveTextContent('2')
   })
 
   it('최종합격 건수를 표시한다', () => {
     render(<Dashboard />, { wrapper })
-    expect(screen.getByText('1')).toBeInTheDocument()
+    expect(screen.getAllByText('최종합격')[0].parentElement!.parentElement).toHaveTextContent('1')
   })
 })

@@ -1,6 +1,7 @@
 import { useApplications } from '@/hooks/useApplications'
 import { useSchedules } from '@/hooks/useSchedules'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import InterviewCalendar from '@/components/schedules/InterviewCalendar'
 import { Badge } from '@/components/ui/badge'
 import { STATUS_LABELS } from '@/lib/status'
 import type { ApplicationStatus } from '@/api/types'
@@ -130,6 +131,9 @@ export default function Dashboard() {
           )}
         </CardContent>
       </Card>
+
+      {/* 면접 일정 달력 */}
+      <InterviewCalendar schedules={schedules} />
     </div>
   )
 }
