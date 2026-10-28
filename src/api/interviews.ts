@@ -11,3 +11,8 @@ export const addQuestion = (applicationId: number, interviewId: number, data: Cr
   apiClient
     .post<Interview>(`/api/applications/${applicationId}/interviews/${interviewId}/questions`, data)
     .then(r => r.data)
+
+export const evaluateInterview = (applicationId: number, interviewId: number, score: number) =>
+  apiClient
+    .patch<Interview>(`/api/applications/${applicationId}/interviews/${interviewId}/score`, { score })
+    .then(r => r.data)

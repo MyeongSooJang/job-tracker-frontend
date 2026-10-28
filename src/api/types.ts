@@ -36,6 +36,7 @@ export interface Interview {
   interviewDate: string
   location: string
   note: string
+  score: number | null
   questions: InterviewQuestion[]
 }
 

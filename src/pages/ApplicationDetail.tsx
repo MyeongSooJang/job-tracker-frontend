@@ -100,6 +100,7 @@ export default function ApplicationDetail() {
 
       <div className="flex items-center justify-between">
         <h2 className="text-lg font-semibold">면접 기록</h2>
+        {application.status === 'INTERVIEW' && (
         <Dialog open={open} onOpenChange={handleDialogChange}>
           <DialogTrigger asChild>
             <Button size="sm">면접 추가</Button>
@@ -152,6 +153,7 @@ export default function ApplicationDetail() {
             </form>
           </DialogContent>
         </Dialog>
+        )}
       </div>
 
       <div className="space-y-3">
@@ -175,7 +177,10 @@ export default function ApplicationDetail() {
                 {interview.note && (
                   <p className="mt-2 text-sm text-slate-600">{interview.note}</p>
                 )}
-                <p className="mt-1 text-xs text-slate-400">질문 {interview.questions?.length ?? 0}개</p>
+                <p className="mt-1 text-xs text-slate-400">
+                  질문 {interview.questions?.length ?? 0}개
+                  {interview.score != null && ` · 점수 ${interview.score}점`}
+                </p>
               </CardContent>
             </Card>
           ))

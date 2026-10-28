@@ -13,6 +13,7 @@ vi.mock('@/hooks/useInterviews', () => ({
     isLoading: false,
   }),
   useAddQuestion: () => ({ mutate: vi.fn(), isPending: false }),
+  useEvaluateInterview: () => ({ mutate: vi.fn(), isPending: false }),
 }))
 
 const qc = new QueryClient()

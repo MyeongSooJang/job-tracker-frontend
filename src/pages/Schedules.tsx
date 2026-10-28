@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useSchedules, useCreateSchedule } from '@/hooks/useSchedules'
 import { useApplications } from '@/hooks/useApplications'
+import InterviewCalendar from '@/components/schedules/InterviewCalendar'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -149,6 +150,8 @@ export default function Schedules() {
           </DialogContent>
         </Dialog>
       </div>
+
+      <InterviewCalendar schedules={schedules} />
 
       <div className="space-y-3">
         {sorted.length === 0 ? (
