@@ -1,7 +1,7 @@
 import { render, screen, fireEvent } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { describe, it, expect } from 'vitest'
-import InterviewCalendar from './InterviewCalendar'
+import InterviewCalendar from '../InterviewCalendar'
 import type { Schedule } from '@/api/types'
 
 const now = new Date()
