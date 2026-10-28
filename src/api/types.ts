@@ -39,6 +39,14 @@ export interface Interview {
   questions: InterviewQuestion[]
 }
 
+export interface Review {
+  id: number
+  application: Application
+  content: string | null
+  createdAt: string
+  updatedAt: string
+}
+
 export interface Schedule {
   id: number
   application: Application

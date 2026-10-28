@@ -26,6 +26,8 @@ export const useUpdateApplicationStatus = (id: number) => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['applications'] })
       queryClient.invalidateQueries({ queryKey: ['applications', id] })
+      // 서류합격 시 백엔드가 후기를 자동 생성하므로 후기 목록도 갱신한다
+      queryClient.invalidateQueries({ queryKey: ['reviews'] })
     },
   })
 }
