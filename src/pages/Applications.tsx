@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { useApplications, useCreateApplication } from '@/hooks/useApplications'
+import { useApplications, useCreateApplication, useUpdateApplicationStatus } from '@/hooks/useApplications'
 import { useCompanies } from '@/hooks/useCompanies'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -29,6 +29,43 @@ const STATUS_COLORS: Record<ApplicationStatus, string> = {
   FINAL: 'bg-purple-100 text-purple-700',
   ACCEPTED: 'bg-green-100 text-green-700',
   REJECTED: 'bg-red-100 text-red-700',
+}
+
+const NEXT_STATUSES: Record<ApplicationStatus, ApplicationStatus[]> = {
+  RESUME_SUBMITTED: ['RESUME_PASSED', 'REJECTED'],
+  RESUME_PASSED: ['INTERVIEW_1', 'REJECTED'],
+  INTERVIEW_1: ['INTERVIEW_2', 'FINAL', 'REJECTED'],
+  INTERVIEW_2: ['FINAL', 'REJECTED'],
+  FINAL: ['ACCEPTED', 'REJECTED'],
+  ACCEPTED: [],
+  REJECTED: [],
+}
+
+function StatusCell({ id, status }: { id: number; status: ApplicationStatus }) {
+  const { mutate: updateStatus, isPending } = useUpdateApplicationStatus(id)
+  const nextStatuses = NEXT_STATUSES[status]
+
+  return (
+    <div className="flex items-center gap-2">
+      <span className={`px-2 py-1 rounded-full text-xs font-medium ${STATUS_COLORS[status]}`}>
+        {STATUS_LABELS[status]}
+      </span>
+      {nextStatuses.length > 0 && (
+        <Select value="" onValueChange={(v) => updateStatus(v as ApplicationStatus)} disabled={isPending}>
+          <SelectTrigger className="h-7 w-24 text-xs" aria-label="상태 변경">
+            <SelectValue placeholder="상태 변경" />
+          </SelectTrigger>
+          <SelectContent>
+            {nextStatuses.map((s) => (
+              <SelectItem key={s} value={s}>
+                {STATUS_LABELS[s]}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      )}
+    </div>
+  )
 }
 
 const FILTER_OPTIONS: Array<ApplicationStatus | 'ALL'> = [
@@ -174,11 +211,7 @@ export default function Applications() {
                   </TableCell>
                   <TableCell>{a.position}</TableCell>
                   <TableCell>
-                    <span
-                      className={`px-2 py-1 rounded-full text-xs font-medium ${STATUS_COLORS[a.status]}`}
-                    >
-                      {STATUS_LABELS[a.status]}
-                    </span>
+                    <StatusCell id={a.id} status={a.status} />
                   </TableCell>
                   <TableCell>{a.appliedDate}</TableCell>
                 </TableRow>

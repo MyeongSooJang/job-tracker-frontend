@@ -10,6 +10,7 @@ vi.mock('@/hooks/useApplications', () => ({
     isLoading: false,
   }),
   useCreateApplication: () => ({ mutate: vi.fn(), isPending: false }),
+  useUpdateApplicationStatus: () => ({ mutate: vi.fn(), isPending: false }),
 }))
 
 vi.mock('@/hooks/useCompanies', () => ({
@@ -26,5 +27,10 @@ describe('Applications', () => {
     render(<Applications />, { wrapper })
     expect(screen.getByText('카카오')).toBeInTheDocument()
     expect(screen.getByText('백엔드')).toBeInTheDocument()
+  })
+
+  it('다음 단계가 있는 지원 건에 상태 변경 드롭다운을 보여준다', () => {
+    render(<Applications />, { wrapper })
+    expect(screen.getByRole('combobox', { name: '상태 변경' })).toBeInTheDocument()
   })
 })
