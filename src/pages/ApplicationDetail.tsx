@@ -87,9 +87,7 @@ export default function ApplicationDetail() {
                     variant={s === 'REJECTED' ? 'destructive' : 'default'}
                     size="sm"
                     disabled={updating}
-                    onClick={() =>
-                      updateStatus(s, { onSuccess: () => s === 'INTERVIEW' && setScheduleOpen(true) })
-                    }
+                    onClick={() => (s === 'INTERVIEW' ? setScheduleOpen(true) : updateStatus(s))}
                   >
                     {ACTION_LABELS[s]}
                   </Button>

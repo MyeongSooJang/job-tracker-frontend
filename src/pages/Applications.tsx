@@ -43,9 +43,7 @@ function StatusCell({
           variant={s === 'REJECTED' ? 'destructive' : 'outline'}
           size="sm"
           disabled={isPending}
-          onClick={() =>
-            updateStatus(s, { onSuccess: () => s === 'INTERVIEW' && onPassed() })
-          }
+          onClick={() => (s === 'INTERVIEW' ? onPassed() : updateStatus(s))}
         >
           → {ACTION_LABELS[s]}
         </Button>
