@@ -9,27 +9,7 @@ import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { Textarea } from '@/components/ui/textarea'
-import type { ApplicationStatus } from '@/api/types'
-
-const STATUS_LABELS: Record<ApplicationStatus, string> = {
-  RESUME_SUBMITTED: '서류접수',
-  RESUME_PASSED: '서류합격',
-  INTERVIEW_1: '1차면접',
-  INTERVIEW_2: '2차면접',
-  FINAL: '최종면접',
-  ACCEPTED: '최종합격',
-  REJECTED: '불합격',
-}
-
-const NEXT_STATUSES: Record<ApplicationStatus, ApplicationStatus[]> = {
-  RESUME_SUBMITTED: ['RESUME_PASSED', 'REJECTED'],
-  RESUME_PASSED: ['INTERVIEW_1', 'REJECTED'],
-  INTERVIEW_1: ['INTERVIEW_2', 'FINAL', 'REJECTED'],
-  INTERVIEW_2: ['FINAL', 'REJECTED'],
-  FINAL: ['ACCEPTED', 'REJECTED'],
-  ACCEPTED: [],
-  REJECTED: [],
-}
+import { ACTION_LABELS, NEXT_STATUSES, STATUS_LABELS } from '@/lib/status'
 
 export default function ApplicationDetail() {
   const { id } = useParams<{ id: string }>()
@@ -108,10 +88,10 @@ export default function ApplicationDetail() {
                     size="sm"
                     disabled={updating}
                     onClick={() =>
-                      updateStatus(s, { onSuccess: () => s === 'RESUME_PASSED' && setScheduleOpen(true) })
+                      updateStatus(s, { onSuccess: () => s === 'INTERVIEW' && setScheduleOpen(true) })
                     }
                   >
-                    {STATUS_LABELS[s]}
+                    {ACTION_LABELS[s]}
                   </Button>
                 ))}
               </div>

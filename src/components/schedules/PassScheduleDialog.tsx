@@ -16,7 +16,7 @@ interface Props {
 // 열릴 때마다 새로 마운트해서 사용한다 (폼 초기화 목적).
 export default function PassScheduleDialog({ applicationId, companyName, onClose }: Props) {
   const { mutate: createSchedule, isPending } = useCreateSchedule()
-  const [form, setForm] = useState({ title: `${companyName} 면접`, scheduledAt: '', note: '' })
+  const [form, setForm] = useState({ title: `${companyName} 면접`, scheduledAt: '', address: '', note: '' })
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -26,6 +26,7 @@ export default function PassScheduleDialog({ applicationId, companyName, onClose
         title: form.title,
         scheduledAt: form.scheduledAt + ':00',
         type: 'INTERVIEW',
+        address: form.address,
         note: form.note,
       },
       { onSuccess: onClose },
@@ -55,6 +56,15 @@ export default function PassScheduleDialog({ applicationId, companyName, onClose
               type="datetime-local"
               value={form.scheduledAt}
               onChange={(e) => setForm((f) => ({ ...f, scheduledAt: e.target.value }))}
+              required
+            />
+          </div>
+          <div>
+            <Label htmlFor="pass-address">장소 *</Label>
+            <Input
+              id="pass-address"
+              value={form.address}
+              onChange={(e) => setForm((f) => ({ ...f, address: e.target.value }))}
               required
             />
           </div>

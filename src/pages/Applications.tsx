@@ -10,36 +10,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import { ACTION_LABELS, NEXT_STATUSES, STATUS_LABELS } from '@/lib/status'
 import type { ApplicationStatus } from '@/api/types'
-
-const STATUS_LABELS: Record<ApplicationStatus, string> = {
-  RESUME_SUBMITTED: '서류접수',
-  RESUME_PASSED: '서류합격',
-  INTERVIEW_1: '1차면접',
-  INTERVIEW_2: '2차면접',
-  FINAL: '최종면접',
-  ACCEPTED: '최종합격',
-  REJECTED: '불합격',
-}
 
 const STATUS_COLORS: Record<ApplicationStatus, string> = {
   RESUME_SUBMITTED: 'bg-slate-100 text-slate-700',
-  RESUME_PASSED: 'bg-blue-100 text-blue-700',
-  INTERVIEW_1: 'bg-yellow-100 text-yellow-700',
-  INTERVIEW_2: 'bg-orange-100 text-orange-700',
-  FINAL: 'bg-purple-100 text-purple-700',
+  INTERVIEW: 'bg-blue-100 text-blue-700',
   ACCEPTED: 'bg-green-100 text-green-700',
   REJECTED: 'bg-red-100 text-red-700',
-}
-
-const NEXT_STATUSES: Record<ApplicationStatus, ApplicationStatus[]> = {
-  RESUME_SUBMITTED: ['RESUME_PASSED', 'REJECTED'],
-  RESUME_PASSED: ['INTERVIEW_1', 'REJECTED'],
-  INTERVIEW_1: ['INTERVIEW_2', 'FINAL', 'REJECTED'],
-  INTERVIEW_2: ['FINAL', 'REJECTED'],
-  FINAL: ['ACCEPTED', 'REJECTED'],
-  ACCEPTED: [],
-  REJECTED: [],
 }
 
 function StatusCell({
@@ -66,10 +44,10 @@ function StatusCell({
           size="sm"
           disabled={isPending}
           onClick={() =>
-            updateStatus(s, { onSuccess: () => s === 'RESUME_PASSED' && onPassed() })
+            updateStatus(s, { onSuccess: () => s === 'INTERVIEW' && onPassed() })
           }
         >
-          → {STATUS_LABELS[s]}
+          → {ACTION_LABELS[s]}
         </Button>
       ))}
     </div>
@@ -79,10 +57,7 @@ function StatusCell({
 const FILTER_OPTIONS: Array<ApplicationStatus | 'ALL'> = [
   'ALL',
   'RESUME_SUBMITTED',
-  'RESUME_PASSED',
-  'INTERVIEW_1',
-  'INTERVIEW_2',
-  'FINAL',
+  'INTERVIEW',
   'ACCEPTED',
   'REJECTED',
 ]

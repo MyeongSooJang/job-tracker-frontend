@@ -1,9 +1,6 @@
 export type ApplicationStatus =
   | 'RESUME_SUBMITTED'
-  | 'RESUME_PASSED'
-  | 'INTERVIEW_1'
-  | 'INTERVIEW_2'
-  | 'FINAL'
+  | 'INTERVIEW'
   | 'ACCEPTED'
   | 'REJECTED'
 
@@ -48,6 +45,7 @@ export interface Schedule {
   title: string
   scheduledAt: string
   type: ScheduleType
+  address: string
   note: string
 }
 
@@ -86,5 +84,6 @@ export interface CreateScheduleRequest {
   title: string
   scheduledAt: string
   type: ScheduleType
+  address: string
   note?: string
 }
