@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { isAxiosError } from 'axios'
 import { useCompanies, useCreateCompany } from '@/hooks/useCompanies'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -13,7 +14,7 @@ import {
 
 export default function Companies() {
   const { data: companies = [], isLoading, isError } = useCompanies()
-  const { mutate: createCompany, isPending } = useCreateCompany()
+  const { mutate: createCompany, isPending, error, reset } = useCreateCompany()
   const [open, setOpen] = useState(false)
   const [form, setForm] = useState({ name: '', industry: '', website: '' })
 
@@ -29,7 +30,10 @@ export default function Companies() {
 
   const handleDialogChange = (isOpen: boolean) => {
     setOpen(isOpen)
-    if (!isOpen) setForm({ name: '', industry: '', website: '' })
+    if (!isOpen) {
+      setForm({ name: '', industry: '', website: '' })
+      reset()
+    }
   }
 
   if (isLoading) return <div className="text-slate-500">불러오는 중...</div>
@@ -73,6 +77,13 @@ export default function Companies() {
                   onChange={e => setForm(f => ({ ...f, website: e.target.value }))}
                 />
               </div>
+              {error && (
+                <p className="text-sm text-red-500">
+                  {isAxiosError(error) && error.response?.status === 409
+                    ? '이미 등록된 회사입니다.'
+                    : '회사를 등록하지 못했습니다.'}
+                </p>
+              )}
               <Button type="submit" disabled={isPending} className="w-full">
                 {isPending ? '등록 중...' : '등록'}
               </Button>

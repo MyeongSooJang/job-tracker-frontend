@@ -6,6 +6,7 @@ import Applications from '@/pages/Applications'
 import ApplicationDetail from '@/pages/ApplicationDetail'
 import InterviewDetail from '@/pages/InterviewDetail'
 import Schedules from '@/pages/Schedules'
+import Reviews from '@/pages/Reviews'
 
 export default function App() {
   return (
@@ -17,6 +18,7 @@ export default function App() {
         <Route path="/applications/:id" element={<ApplicationDetail />} />
         <Route path="/applications/:applicationId/interviews/:interviewId" element={<InterviewDetail />} />
         <Route path="/schedules" element={<Schedules />} />
+        <Route path="/reviews" element={<Reviews />} />
       </Routes>
     </Layout>
   )

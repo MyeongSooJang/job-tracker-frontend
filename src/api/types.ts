@@ -51,6 +51,15 @@ export interface Schedule {
   note: string
 }
 
+export interface Review {
+  id: number
+  application: Application
+  content: string | null
+  rating: number | null
+  createdAt: string
+  updatedAt: string
+}
+
 // 요청 타입
 export interface CreateCompanyRequest {
   name: string
@@ -79,6 +88,11 @@ export interface CreateQuestionRequest {
   question: string
   answer?: string
   memo?: string
+}
+
+export interface WriteReviewRequest {
+  content: string
+  rating: number
 }
 
 export interface CreateScheduleRequest {
