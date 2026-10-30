@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
-import { useInterviews, useAddQuestion } from '@/hooks/useInterviews'
+import { useInterviews, useAddQuestion, useEvaluateInterview } from '@/hooks/useInterviews'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -16,6 +16,8 @@ export default function InterviewDetail() {
   const { data: interviews = [], isLoading, isError } = useInterviews(appId)
   const interview = interviews.find(i => i.id === intId)
   const { mutate: addQuestion, isPending } = useAddQuestion(appId, intId)
+  const { mutate: evaluate, isPending: scoring } = useEvaluateInterview(appId, intId)
+  const [scoreInput, setScoreInput] = useState<string | null>(null)
 
   const [open, setOpen] = useState(false)
   const [form, setForm] = useState({ question: '', answer: '', memo: '' })
@@ -45,6 +47,32 @@ export default function InterviewDetail() {
           <p><span className="text-slate-500">일시: </span>{new Date(interview.interviewDate).toLocaleString('ko-KR')}</p>
           {interview.location && <p><span className="text-slate-500">장소: </span>{interview.location}</p>}
           {interview.note && <p><span className="text-slate-500">메모: </span>{interview.note}</p>}
+          <form
+            className="flex items-center gap-2 pt-2"
+            onSubmit={e => {
+              e.preventDefault()
+              if (scoreInput === null) return
+              evaluate(Number(scoreInput), { onSuccess: () => setScoreInput(null) })
+            }}
+          >
+            <Label htmlFor="score" className="text-slate-500 font-normal">점수 (0~100)</Label>
+            <Input
+              id="score"
+              type="number"
+              min={0}
+              max={100}
+              className="w-24"
+              value={scoreInput ?? interview.score ?? ''}
+              onChange={e => setScoreInput(e.target.value)}
+            />
+            <Button
+              type="submit"
+              size="sm"
+              disabled={scoring || scoreInput === null || scoreInput === '' || Number(scoreInput) < 0 || Number(scoreInput) > 100}
+            >
+              {scoring ? '저장 중...' : '점수 저장'}
+            </Button>
+          </form>
         </CardContent>
       </Card>
 

@@ -1,5 +1,5 @@
 import { NavLink } from 'react-router-dom'
-import { LayoutDashboard, Building2, FileText, Calendar, MessageSquare } from 'lucide-react'
+import { LayoutDashboard, Building2, FileText, Calendar, MessageSquareText } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 const navItems = [
@@ -7,7 +7,7 @@ const navItems = [
   { to: '/companies', label: '회사', icon: Building2 },
   { to: '/applications', label: '지원 현황', icon: FileText },
   { to: '/schedules', label: '일정', icon: Calendar },
-  { to: '/reviews', label: '후기', icon: MessageSquare },
+  { to: '/reviews', label: '후기', icon: MessageSquareText },
 ]
 
 export default function Sidebar() {

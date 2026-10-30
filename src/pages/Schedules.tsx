@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useSchedules, useCreateSchedule } from '@/hooks/useSchedules'
 import { useApplications } from '@/hooks/useApplications'
+import InterviewCalendar from '@/components/schedules/InterviewCalendar'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -34,6 +35,7 @@ export default function Schedules() {
     title: '',
     scheduledAt: '',
     type: '' as ScheduleType | '',
+    address: '',
     note: '',
   })
 
@@ -50,12 +52,13 @@ export default function Schedules() {
         title: form.title,
         scheduledAt: form.scheduledAt + ':00',
         type: form.type as ScheduleType,
+        address: form.address,
         note: form.note,
       },
       {
         onSuccess: () => {
           setOpen(false)
-          setForm({ applicationId: '', title: '', scheduledAt: '', type: '', note: '' })
+          setForm({ applicationId: '', title: '', scheduledAt: '', type: '', address: '', note: '' })
         },
       },
     )
@@ -63,7 +66,7 @@ export default function Schedules() {
 
   const handleDialogChange = (isOpen: boolean) => {
     setOpen(isOpen)
-    if (!isOpen) setForm({ applicationId: '', title: '', scheduledAt: '', type: '', note: '' })
+    if (!isOpen) setForm({ applicationId: '', title: '', scheduledAt: '', type: '', address: '', note: '' })
   }
 
   if (isLoading) return <div className="text-slate-500">불러오는 중...</div>
@@ -131,6 +134,15 @@ export default function Schedules() {
                   </SelectContent>
                 </Select>
               </div>
+              <div>
+                <Label htmlFor="address">장소 *</Label>
+                <Input
+                  id="address"
+                  value={form.address}
+                  onChange={e => setForm(f => ({ ...f, address: e.target.value }))}
+                  required
+                />
+              </div>
               <Button type="submit" disabled={isPending || !form.applicationId || !form.type} className="w-full">
                 {isPending ? '등록 중...' : '등록'}
               </Button>
@@ -138,6 +150,8 @@ export default function Schedules() {
           </DialogContent>
         </Dialog>
       </div>
+
+      <InterviewCalendar schedules={schedules} />
 
       <div className="space-y-3">
         {sorted.length === 0 ? (
@@ -163,6 +177,7 @@ export default function Schedules() {
                       minute: '2-digit',
                     })}
                   </p>
+                  {s.address && <p className="text-sm text-slate-500">{s.address}</p>}
                 </div>
                 <Badge
                   variant="outline"

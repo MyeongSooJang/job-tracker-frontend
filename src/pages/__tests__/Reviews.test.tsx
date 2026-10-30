@@ -1,44 +1,64 @@
 import { render, screen } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { BrowserRouter } from 'react-router-dom'
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { describe, it, expect, vi } from 'vitest'
 import Reviews from '../Reviews'
 
-const company = { id: 1, name: '카카오', industry: 'IT', website: '', createdAt: '' }
-const application = {
-  id: 1, company, position: '백엔드 개발자', status: 'INTERVIEW_1' as const, appliedDate: '', createdAt: '',
-}
+const writeMutate = vi.hoisted(() => vi.fn())
 
 vi.mock('@/hooks/useReviews', () => ({
   useReviews: () => ({
     data: [
-      { id: 1, application, content: '분위기가 좋았다', rating: 4, createdAt: '', updatedAt: '' },
-      { id: 2, application, content: null, rating: null, createdAt: '', updatedAt: '' },
+      {
+        id: 7,
+        application: {
+          id: 1,
+          company: { id: 1, name: '카카오', industry: 'IT', website: '', createdAt: '' },
+          position: '백엔드',
+          status: 'INTERVIEW',
+          appliedDate: '2026-10-01',
+          createdAt: '',
+        },
+        content: null,
+        rating: null,
+        createdAt: '2026-10-28T10:00:00',
+        updatedAt: '2026-10-28T10:00:00',
+      },
     ],
     isLoading: false,
     isError: false,
   }),
-  useWriteReview: () => ({ mutate: vi.fn(), isPending: false, isError: false }),
+  useWriteReview: () => ({ mutate: writeMutate, isPending: false }),
 }))
 
-const qc = new QueryClient()
 const wrapper = ({ children }: { children: React.ReactNode }) => (
-  <QueryClientProvider client={qc}><BrowserRouter>{children}</BrowserRouter></QueryClientProvider>
+  <BrowserRouter>{children}</BrowserRouter>
 )
 
 describe('Reviews', () => {
-  it('후기와 평점을 렌더링한다', () => {
+  it('자동 생성된 후기를 작성 전 상태로 보여준다', () => {
     render(<Reviews />, { wrapper })
-
-    expect(screen.getAllByText('카카오')).toHaveLength(2)
-    expect(screen.getByText('분위기가 좋았다')).toBeInTheDocument()
-    expect(screen.getByLabelText('평점 4점')).toBeInTheDocument()
+    expect(screen.getByText('카카오')).toBeInTheDocument()
+    expect(screen.getByText('작성 전')).toBeInTheDocument()
   })
 
-  it('작성 전 후기는 작성 버튼을, 작성된 후기는 수정 버튼을 보여준다', () => {
+  it('후기를 입력하고 평점을 고르기 전에는 저장할 수 없다', async () => {
     render(<Reviews />, { wrapper })
+    const save = screen.getByRole('button', { name: '저장' })
 
-    expect(screen.getByRole('button', { name: '수정' })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: '작성' })).toBeInTheDocument()
+    await userEvent.type(screen.getByLabelText('카카오 후기'), '분위기가 좋았다')
+
+    expect(save).toBeDisabled()
+  })
+
+  it('후기와 평점을 입력하고 저장하면 내용과 평점을 전송한다', async () => {
+    render(<Reviews />, { wrapper })
+    const save = screen.getByRole('button', { name: '저장' })
+
+    await userEvent.type(screen.getByLabelText('카카오 후기'), '분위기가 좋았다')
+    await userEvent.click(screen.getByRole('button', { name: '4점' }))
+    await userEvent.click(save)
+
+    expect(writeMutate).toHaveBeenCalledWith({ id: 7, data: { content: '분위기가 좋았다', rating: 4 } })
   })
 })

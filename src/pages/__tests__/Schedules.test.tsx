@@ -8,7 +8,7 @@ vi.mock('@/hooks/useSchedules', () => ({
   useSchedules: () => ({
     data: [{
       id: 1, title: '1차 면접',
-      application: { id: 1, company: { name: '카카오' }, position: '백엔드', status: 'INTERVIEW_1', appliedDate: '', createdAt: '' },
+      application: { id: 1, company: { name: '카카오' }, position: '백엔드', status: 'INTERVIEW', appliedDate: '', createdAt: '' },
       scheduledAt: '2026-11-01T10:00:00', type: 'INTERVIEW', note: '',
     }],
     isLoading: false,

@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { useApplications, useCreateApplication } from '@/hooks/useApplications'
+import { useApplications, useCreateApplication, useUpdateApplicationStatus } from '@/hooks/useApplications'
 import { useCompanies } from '@/hooks/useCompanies'
+import PassScheduleDialog from '@/components/schedules/PassScheduleDialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -9,35 +10,52 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import { ACTION_LABELS, NEXT_STATUSES, STATUS_LABELS } from '@/lib/status'
 import type { ApplicationStatus } from '@/api/types'
-
-const STATUS_LABELS: Record<ApplicationStatus, string> = {
-  RESUME_SUBMITTED: '서류접수',
-  RESUME_PASSED: '서류합격',
-  INTERVIEW_1: '1차면접',
-  INTERVIEW_2: '2차면접',
-  FINAL: '최종면접',
-  ACCEPTED: '최종합격',
-  REJECTED: '불합격',
-}
 
 const STATUS_COLORS: Record<ApplicationStatus, string> = {
   RESUME_SUBMITTED: 'bg-slate-100 text-slate-700',
-  RESUME_PASSED: 'bg-blue-100 text-blue-700',
-  INTERVIEW_1: 'bg-yellow-100 text-yellow-700',
-  INTERVIEW_2: 'bg-orange-100 text-orange-700',
-  FINAL: 'bg-purple-100 text-purple-700',
+  INTERVIEW: 'bg-blue-100 text-blue-700',
   ACCEPTED: 'bg-green-100 text-green-700',
   REJECTED: 'bg-red-100 text-red-700',
+}
+
+function StatusCell({
+  id,
+  status,
+  onPassed,
+}: {
+  id: number
+  status: ApplicationStatus
+  onPassed: () => void
+}) {
+  const { mutate: updateStatus, isPending } = useUpdateApplicationStatus(id)
+  const nextStatuses = NEXT_STATUSES[status]
+
+  return (
+    <div className="flex items-center gap-2 flex-wrap">
+      <span className={`px-2 py-1 rounded-full text-xs font-medium ${STATUS_COLORS[status]}`}>
+        {STATUS_LABELS[status]}
+      </span>
+      {nextStatuses.map((s) => (
+        <Button
+          key={s}
+          variant={s === 'REJECTED' ? 'destructive' : 'outline'}
+          size="sm"
+          disabled={isPending}
+          onClick={() => (s === 'INTERVIEW' ? onPassed() : updateStatus(s))}
+        >
+          → {ACTION_LABELS[s]}
+        </Button>
+      ))}
+    </div>
+  )
 }
 
 const FILTER_OPTIONS: Array<ApplicationStatus | 'ALL'> = [
   'ALL',
   'RESUME_SUBMITTED',
-  'RESUME_PASSED',
-  'INTERVIEW_1',
-  'INTERVIEW_2',
-  'FINAL',
+  'INTERVIEW',
   'ACCEPTED',
   'REJECTED',
 ]
@@ -49,6 +67,7 @@ export default function Applications() {
 
   const [open, setOpen] = useState(false)
   const [filter, setFilter] = useState<ApplicationStatus | 'ALL'>('ALL')
+  const [passed, setPassed] = useState<{ id: number; companyName: string } | null>(null)
   const [form, setForm] = useState({ companyId: '', position: '', appliedDate: '' })
 
   const filtered =
@@ -174,11 +193,11 @@ export default function Applications() {
                   </TableCell>
                   <TableCell>{a.position}</TableCell>
                   <TableCell>
-                    <span
-                      className={`px-2 py-1 rounded-full text-xs font-medium ${STATUS_COLORS[a.status]}`}
-                    >
-                      {STATUS_LABELS[a.status]}
-                    </span>
+                    <StatusCell
+                      id={a.id}
+                      status={a.status}
+                      onPassed={() => setPassed({ id: a.id, companyName: a.company.name })}
+                    />
                   </TableCell>
                   <TableCell>{a.appliedDate}</TableCell>
                 </TableRow>
@@ -187,6 +206,14 @@ export default function Applications() {
           </Table>
         </CardContent>
       </Card>
+
+      {passed && (
+        <PassScheduleDialog
+          applicationId={passed.id}
+          companyName={passed.companyName}
+          onClose={() => setPassed(null)}
+        />
+      )}
     </div>
   )
 }

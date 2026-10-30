@@ -1,25 +1,14 @@
 import { useApplications } from '@/hooks/useApplications'
 import { useSchedules } from '@/hooks/useSchedules'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import InterviewCalendar from '@/components/schedules/InterviewCalendar'
 import { Badge } from '@/components/ui/badge'
+import { STATUS_LABELS } from '@/lib/status'
 import type { ApplicationStatus } from '@/api/types'
-
-const STATUS_LABELS: Record<ApplicationStatus, string> = {
-  RESUME_SUBMITTED: '서류접수',
-  RESUME_PASSED: '서류합격',
-  INTERVIEW_1: '1차면접',
-  INTERVIEW_2: '2차면접',
-  FINAL: '최종면접',
-  ACCEPTED: '최종합격',
-  REJECTED: '불합격',
-}
 
 const STATUS_BADGE_CLASS: Record<ApplicationStatus, string> = {
   RESUME_SUBMITTED: 'border-slate-300 text-slate-600',
-  RESUME_PASSED: 'border-blue-300 text-blue-600',
-  INTERVIEW_1: 'border-blue-400 text-blue-700',
-  INTERVIEW_2: 'border-blue-500 text-blue-800',
-  FINAL: 'border-violet-400 text-violet-700',
+  INTERVIEW: 'border-blue-400 text-blue-700',
   ACCEPTED: 'border-emerald-400 text-emerald-700',
   REJECTED: 'border-rose-400 text-rose-600',
 }
@@ -142,6 +131,9 @@ export default function Dashboard() {
           )}
         </CardContent>
       </Card>
+
+      {/* 면접 일정 달력 */}
+      <InterviewCalendar schedules={schedules} />
     </div>
   )
 }

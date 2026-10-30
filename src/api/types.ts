@@ -1,9 +1,6 @@
 export type ApplicationStatus =
   | 'RESUME_SUBMITTED'
-  | 'RESUME_PASSED'
-  | 'INTERVIEW_1'
-  | 'INTERVIEW_2'
-  | 'FINAL'
+  | 'INTERVIEW'
   | 'ACCEPTED'
   | 'REJECTED'
 
@@ -39,16 +36,8 @@ export interface Interview {
   interviewDate: string
   location: string
   note: string
+  score: number | null
   questions: InterviewQuestion[]
-}
-
-export interface Schedule {
-  id: number
-  application: Application
-  title: string
-  scheduledAt: string
-  type: ScheduleType
-  note: string
 }
 
 export interface Review {
@@ -58,6 +47,16 @@ export interface Review {
   rating: number | null
   createdAt: string
   updatedAt: string
+}
+
+export interface Schedule {
+  id: number
+  application: Application
+  title: string
+  scheduledAt: string
+  type: ScheduleType
+  address: string
+  note: string
 }
 
 // 요청 타입
@@ -100,5 +99,6 @@ export interface CreateScheduleRequest {
   title: string
   scheduledAt: string
   type: ScheduleType
+  address: string
   note?: string
 }
