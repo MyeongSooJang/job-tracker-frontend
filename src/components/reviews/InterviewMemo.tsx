@@ -3,15 +3,18 @@ import { useReviews, useWriteReview } from '@/hooks/useReviews'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import RatingInput from '@/components/reviews/RatingInput'
 import type { Review } from '@/api/types'
 
 function MemoEditor({ review }: { review: Review }) {
   const { mutate: writeReview, isPending } = useWriteReview()
   const [content, setContent] = useState(review.content ?? '')
-  const unchanged = content === (review.content ?? '')
+  const [rating, setRating] = useState(review.rating ?? 0)
+  const unchanged = content === (review.content ?? '') && rating === (review.rating ?? 0)
 
   return (
     <CardContent className="space-y-3">
+      <RatingInput value={rating} onChange={setRating} label="면접 평점" />
       <Textarea
         rows={5}
         placeholder="면접 분위기, 받은 질문, 아쉬운 점 등을 메모해 보세요."
@@ -22,8 +25,8 @@ function MemoEditor({ review }: { review: Review }) {
       <div className="flex justify-end">
         <Button
           size="sm"
-          disabled={isPending || unchanged || !content.trim()}
-          onClick={() => writeReview({ id: review.id, content })}
+          disabled={isPending || unchanged || !content.trim() || rating === 0}
+          onClick={() => writeReview({ id: review.id, data: { content, rating } })}
         >
           {isPending ? '저장 중...' : '메모 저장'}
         </Button>

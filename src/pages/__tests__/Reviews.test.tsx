@@ -20,6 +20,7 @@ vi.mock('@/hooks/useReviews', () => ({
           createdAt: '',
         },
         content: null,
+        rating: null,
         createdAt: '2026-10-28T10:00:00',
         updatedAt: '2026-10-28T10:00:00',
       },
@@ -41,14 +42,23 @@ describe('Reviews', () => {
     expect(screen.getByText('작성 전')).toBeInTheDocument()
   })
 
-  it('후기를 입력하고 저장하면 내용을 전송한다', async () => {
+  it('후기를 입력하고 평점을 고르기 전에는 저장할 수 없다', async () => {
     render(<Reviews />, { wrapper })
     const save = screen.getByRole('button', { name: '저장' })
-    expect(save).toBeDisabled()
 
     await userEvent.type(screen.getByLabelText('카카오 후기'), '분위기가 좋았다')
+
+    expect(save).toBeDisabled()
+  })
+
+  it('후기와 평점을 입력하고 저장하면 내용과 평점을 전송한다', async () => {
+    render(<Reviews />, { wrapper })
+    const save = screen.getByRole('button', { name: '저장' })
+
+    await userEvent.type(screen.getByLabelText('카카오 후기'), '분위기가 좋았다')
+    await userEvent.click(screen.getByRole('button', { name: '4점' }))
     await userEvent.click(save)
 
-    expect(writeMutate).toHaveBeenCalledWith({ id: 7, content: '분위기가 좋았다' })
+    expect(writeMutate).toHaveBeenCalledWith({ id: 7, data: { content: '분위기가 좋았다', rating: 4 } })
   })
 })

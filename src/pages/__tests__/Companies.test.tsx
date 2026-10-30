@@ -9,7 +9,7 @@ vi.mock('@/hooks/useCompanies', () => ({
     data: [{ id: 1, name: '카카오', industry: 'IT', website: 'https://kakao.com', createdAt: '' }],
     isLoading: false,
   }),
-  useCreateCompany: () => ({ mutate: vi.fn(), isPending: false }),
+  useCreateCompany: () => ({ mutate: vi.fn(), isPending: false, error: null, reset: vi.fn() }),
 }))
 
 const qc = new QueryClient()

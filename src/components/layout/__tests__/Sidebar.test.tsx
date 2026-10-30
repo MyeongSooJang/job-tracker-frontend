@@ -11,5 +11,6 @@ describe('Sidebar', () => {
     expect(screen.getByText('회사')).toBeInTheDocument()
     expect(screen.getByText('지원 현황')).toBeInTheDocument()
     expect(screen.getByText('일정')).toBeInTheDocument()
+    expect(screen.getByText('후기')).toBeInTheDocument()
   })
 })

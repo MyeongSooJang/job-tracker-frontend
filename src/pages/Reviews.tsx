@@ -6,12 +6,14 @@ import { Badge } from '@/components/ui/badge'
 import { Textarea } from '@/components/ui/textarea'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { STATUS_LABELS } from '@/lib/status'
+import RatingInput from '@/components/reviews/RatingInput'
 import type { Review } from '@/api/types'
 
 function ReviewCard({ review }: { review: Review }) {
   const { mutate: writeReview, isPending } = useWriteReview()
   const [content, setContent] = useState(review.content ?? '')
-  const unchanged = content === (review.content ?? '')
+  const [rating, setRating] = useState(review.rating ?? 0)
+  const unchanged = content === (review.content ?? '') && rating === (review.rating ?? 0)
 
   return (
     <Card>
@@ -36,6 +38,11 @@ function ReviewCard({ review }: { review: Review }) {
         </div>
       </CardHeader>
       <CardContent className="space-y-3">
+        <RatingInput
+          value={rating}
+          onChange={setRating}
+          label={`${review.application.company.name} 평점`}
+        />
         <Textarea
           rows={4}
           placeholder="면접 분위기, 받은 질문, 아쉬운 점 등 후기를 남겨 보세요."
@@ -46,8 +53,8 @@ function ReviewCard({ review }: { review: Review }) {
         <div className="flex justify-end">
           <Button
             size="sm"
-            disabled={isPending || unchanged || !content.trim()}
-            onClick={() => writeReview({ id: review.id, content })}
+            disabled={isPending || unchanged || !content.trim() || rating === 0}
+            onClick={() => writeReview({ id: review.id, data: { content, rating } })}
           >
             {isPending ? '저장 중...' : '저장'}
           </Button>
