@@ -16,6 +16,7 @@ function MemoEditor({ review }: { review: Review }) {
     <CardContent className="space-y-3">
       <RatingInput value={rating} onChange={setRating} label="면접 평점" />
       <Textarea
+        autoResize
         rows={5}
         placeholder="면접 분위기, 받은 질문, 아쉬운 점 등을 메모해 보세요."
         aria-label="면접 메모"

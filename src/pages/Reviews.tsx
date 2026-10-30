@@ -44,6 +44,7 @@ function ReviewCard({ review }: { review: Review }) {
           label={`${review.application.company.name} 평점`}
         />
         <Textarea
+          autoResize
           rows={4}
           placeholder="면접 분위기, 받은 질문, 아쉬운 점 등 후기를 남겨 보세요."
           aria-label={`${review.application.company.name} 후기`}
