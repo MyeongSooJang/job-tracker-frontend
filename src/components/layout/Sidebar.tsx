@@ -1,6 +1,7 @@
 import { NavLink } from 'react-router-dom'
-import { LayoutDashboard, Building2, FileText, Calendar, MessageSquareText } from 'lucide-react'
+import { LayoutDashboard, Building2, FileText, Calendar, MessageSquareText, UserRound } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import SidebarUser from './SidebarUser'
 
 const navItems = [
   { to: '/', label: '대시보드', icon: LayoutDashboard },
@@ -8,13 +9,14 @@ const navItems = [
   { to: '/applications', label: '지원 현황', icon: FileText },
   { to: '/schedules', label: '일정', icon: Calendar },
   { to: '/reviews', label: '후기', icon: MessageSquareText },
+  { to: '/mypage', label: '마이페이지', icon: UserRound },
 ]
 
 export default function Sidebar() {
   return (
-    <aside className="w-60 min-h-screen bg-slate-900 text-white flex flex-col border-r border-slate-800">
+    <aside className="w-full md:w-60 md:min-h-screen bg-slate-900 text-white flex flex-col border-b md:border-b-0 md:border-r border-slate-800">
       {/* Brand mark */}
-      <div className="px-5 pt-7 pb-6 border-b border-slate-800">
+      <div className="px-5 pt-4 pb-3 md:pt-7 md:pb-6 border-b border-slate-800">
         <div className="flex items-center gap-2.5">
           <div className="w-6 h-6 rounded-sm bg-white/10 border border-white/20 flex items-center justify-center">
             <div className="w-2.5 h-2.5 rounded-[2px] bg-white/80" />
@@ -26,8 +28,8 @@ export default function Sidebar() {
       </div>
 
       {/* Navigation */}
-      <nav className="flex flex-col gap-0.5 px-3 pt-4 flex-1">
-        <p className="text-[10px] font-semibold tracking-[0.12em] uppercase text-slate-500 px-2 mb-2">
+      <nav className="flex flex-row gap-0.5 overflow-x-auto px-3 py-2 md:flex-col md:overflow-visible md:pt-4 md:pb-0 md:flex-1">
+        <p className="hidden md:block text-[10px] font-semibold tracking-[0.12em] uppercase text-slate-500 px-2 mb-2">
           메뉴
         </p>
         {navItems.map(({ to, label, icon: Icon }) => (
@@ -37,7 +39,7 @@ export default function Sidebar() {
             end={to === '/'}
             className={({ isActive }) =>
               cn(
-                'relative flex items-center gap-3 px-3 py-2.5 rounded-md text-sm transition-all duration-150 group',
+                'relative flex shrink-0 items-center gap-3 whitespace-nowrap px-3 py-2.5 rounded-md text-sm transition-all duration-150 group',
                 isActive
                   ? 'bg-white/[0.07] text-white'
                   : 'text-slate-400 hover:bg-white/[0.04] hover:text-slate-200',
@@ -69,8 +71,8 @@ export default function Sidebar() {
       </nav>
 
       {/* Footer */}
-      <div className="px-5 py-4 border-t border-slate-800">
-        <p className="text-[11px] text-slate-600 tracking-wide">장명수 · 구직 추적</p>
+      <div className="px-5 py-3 md:py-4 border-t border-slate-800">
+        <SidebarUser />
       </div>
     </aside>
   )

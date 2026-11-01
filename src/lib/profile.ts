@@ -1,0 +1,82 @@
+import type { Profile, ProfileRequest } from '@/api/types'
+
+export const MAX_RESUME_BYTES = 5 * 1024 * 1024
+
+const isFilled = (value: string | null | undefined) => !!value && value.trim().length > 0
+
+// 완성도에 반영하는 항목 수: 연락처, 생년월일, 주소, 링크(하나라도), 학력, 경력, 희망 직무, 자기소개, 이력서
+const COMPLETENESS_ITEMS = 9
+
+export function calcCompleteness(profile: Profile): number {
+  const filled = [
+    isFilled(profile.phone),
+    isFilled(profile.birthDate),
+    isFilled(profile.address),
+    isFilled(profile.githubUrl) || isFilled(profile.blogUrl) || isFilled(profile.portfolioUrl),
+    isFilled(profile.education),
+    isFilled(profile.career),
+    isFilled(profile.desiredJob),
+    isFilled(profile.introduction),
+    profile.resume !== null,
+  ].filter(Boolean).length
+  return Math.round((filled / COMPLETENESS_ITEMS) * 100)
+}
+
+// 비어 있는 선택 항목은 null로 보낸다. 특히 날짜는 빈 문자열이면 서버 파싱에 실패한다.
+export function toProfileRequest(profile: Profile, changes: Partial<ProfileRequest>): ProfileRequest {
+  const merged: ProfileRequest = {
+    name: profile.name,
+    phone: profile.phone,
+    birthDate: profile.birthDate,
+    address: profile.address,
+    githubUrl: profile.githubUrl,
+    blogUrl: profile.blogUrl,
+    portfolioUrl: profile.portfolioUrl,
+    education: profile.education,
+    career: profile.career,
+    desiredJob: profile.desiredJob,
+    introduction: profile.introduction,
+    ...changes,
+  }
+  const blankToNull = (value: string | null) => (isFilled(value) ? value!.trim() : null)
+  return {
+    name: merged.name.trim(),
+    phone: blankToNull(merged.phone),
+    birthDate: blankToNull(merged.birthDate),
+    address: blankToNull(merged.address),
+    githubUrl: blankToNull(merged.githubUrl),
+    blogUrl: blankToNull(merged.blogUrl),
+    portfolioUrl: blankToNull(merged.portfolioUrl),
+    education: blankToNull(merged.education),
+    career: blankToNull(merged.career),
+    desiredJob: blankToNull(merged.desiredJob),
+    introduction: blankToNull(merged.introduction),
+  }
+}
+
+// 업로드 전에 형식/용량을 미리 검사한다. 통과하면 null, 아니면 사용자에게 보일 메시지.
+export function validateResumeFile(file: File): string | null {
+  const looksLikePdf = file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')
+  if (!looksLikePdf) return 'PDF 파일만 업로드할 수 있습니다.'
+  if (file.size === 0) return '비어 있는 파일은 업로드할 수 없습니다.'
+  if (file.size > MAX_RESUME_BYTES) return '파일 크기는 5MB 이하여야 합니다.'
+  return null
+}
+
+export function formatFileSize(bytes: number): string {
+  if (bytes < 1024) return `${bytes}B`
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)}KB`
+  return `${(bytes / (1024 * 1024)).toFixed(1)}MB`
+}
+
+export function formatDateTime(iso: string): string {
+  const date = new Date(iso)
+  if (Number.isNaN(date.getTime())) return '-'
+  const pad = (n: number) => String(n).padStart(2, '0')
+  return `${date.getFullYear()}.${pad(date.getMonth() + 1)}.${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}`
+}
+
+export function initialOf(name: string): string {
+  const trimmed = name.trim()
+  return trimmed.length > 0 ? trimmed[0].toUpperCase() : '?'
+}
