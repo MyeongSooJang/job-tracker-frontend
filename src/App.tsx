@@ -20,18 +20,20 @@ export default function App() {
       <Route
         path="/*"
         element={
-          <Layout>
-            <Routes>
-              <Route path="/" element={<Dashboard />} />
-              <Route path="/companies" element={<Companies />} />
-              <Route path="/applications" element={<Applications />} />
-              <Route path="/applications/:id" element={<ApplicationDetail />} />
-              <Route path="/applications/:applicationId/interviews/:interviewId" element={<InterviewDetail />} />
-              <Route path="/schedules" element={<Schedules />} />
-              <Route path="/reviews" element={<Reviews />} />
-              <Route path="/mypage" element={<RequireAuth><MyPage /></RequireAuth>} />
-            </Routes>
-          </Layout>
+          <RequireAuth>
+            <Layout>
+              <Routes>
+                <Route path="/" element={<Dashboard />} />
+                <Route path="/companies" element={<Companies />} />
+                <Route path="/applications" element={<Applications />} />
+                <Route path="/applications/:id" element={<ApplicationDetail />} />
+                <Route path="/applications/:applicationId/interviews/:interviewId" element={<InterviewDetail />} />
+                <Route path="/schedules" element={<Schedules />} />
+                <Route path="/reviews" element={<Reviews />} />
+                <Route path="/mypage" element={<MyPage />} />
+              </Routes>
+            </Layout>
+          </RequireAuth>
         }
       />
     </Routes>
