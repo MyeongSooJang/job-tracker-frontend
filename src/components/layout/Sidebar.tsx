@@ -1,6 +1,7 @@
 import { NavLink } from 'react-router-dom'
-import { LayoutDashboard, Building2, FileText, Calendar, MessageSquareText } from 'lucide-react'
+import { LayoutDashboard, Building2, FileText, Calendar, MessageSquareText, UserRound } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import SidebarUser from './SidebarUser'
 
 const navItems = [
   { to: '/', label: '대시보드', icon: LayoutDashboard },
@@ -8,6 +9,7 @@ const navItems = [
   { to: '/applications', label: '지원 현황', icon: FileText },
   { to: '/schedules', label: '일정', icon: Calendar },
   { to: '/reviews', label: '후기', icon: MessageSquareText },
+  { to: '/mypage', label: '마이페이지', icon: UserRound },
 ]
 
 export default function Sidebar() {
@@ -70,7 +72,7 @@ export default function Sidebar() {
 
       {/* Footer */}
       <div className="px-5 py-4 border-t border-slate-800">
-        <p className="text-[11px] text-slate-600 tracking-wide">장명수 · 구직 추적</p>
+        <SidebarUser />
       </div>
     </aside>
   )

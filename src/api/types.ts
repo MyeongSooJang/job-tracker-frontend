@@ -102,3 +102,43 @@ export interface CreateScheduleRequest {
   address: string
   note?: string
 }
+
+// 인증 / 마이페이지
+export interface SignupRequest {
+  email: string
+  name: string
+  password: string
+}
+
+export interface LoginRequest {
+  email: string
+  password: string
+}
+
+export interface TokenResponse {
+  accessToken: string
+}
+
+export interface ResumeInfo {
+  fileName: string
+  sizeBytes: number
+  updatedAt: string
+}
+
+export interface Profile {
+  email: string
+  name: string
+  phone: string | null
+  birthDate: string | null
+  address: string | null
+  githubUrl: string | null
+  blogUrl: string | null
+  portfolioUrl: string | null
+  education: string | null
+  career: string | null
+  desiredJob: string | null
+  introduction: string | null
+  resume: ResumeInfo | null
+}
+
+export type ProfileRequest = Omit<Profile, 'email' | 'resume'>
