@@ -14,6 +14,7 @@ const profile: Profile = {
   name: '홍길동',
   phone: '010-1234-5678',
   birthDate: null,
+  jobSearchStartDate: null,
   address: null,
   githubUrl: 'https://github.com/hong',
   blogUrl: null,
@@ -104,6 +105,7 @@ describe('MyPage', () => {
         githubUrl: 'https://github.com/hong',
         desiredJob: '백엔드 개발자',
         birthDate: null,
+        jobSearchStartDate: null,
       }),
       expect.any(Object),
     )

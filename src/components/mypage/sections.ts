@@ -31,6 +31,7 @@ export const PROFILE_SECTIONS: SectionDef[] = [
       { key: 'email', label: '이메일', type: 'text', readOnly: true },
       { key: 'phone', label: '연락처', type: 'text', placeholder: '010-0000-0000', maxLength: 255 },
       { key: 'birthDate', label: '생년월일', type: 'date' },
+      { key: 'jobSearchStartDate', label: '준비 시작일', type: 'date' },
       { key: 'address', label: '주소', type: 'text', maxLength: 255 },
     ],
   },

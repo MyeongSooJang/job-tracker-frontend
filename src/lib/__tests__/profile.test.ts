@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import type { Profile } from '@/api/types'
 import {
-  calcCompleteness, formatFileSize, initialOf, MAX_RESUME_BYTES, toProfileRequest, validateResumeFile,
+  calcCompleteness, calcPreparationMonths, formatFileSize, getPreparationGrade, initialOf, MAX_RESUME_BYTES, toProfileRequest, validateResumeFile,
 } from '@/lib/profile'
 
 const emptyProfile: Profile = {
@@ -9,6 +9,7 @@ const emptyProfile: Profile = {
   name: '홍길동',
   phone: null,
   birthDate: null,
+  jobSearchStartDate: null,
   address: null,
   githubUrl: null,
   blogUrl: null,
@@ -131,5 +132,83 @@ describe('initialOf', () => {
     expect(initialOf('홍길동')).toBe('홍')
     expect(initialOf('alice')).toBe('A')
     expect(initialOf('  ')).toBe('?')
+  })
+})
+
+describe('calcPreparationMonths', () => {
+  const today = new Date(2026, 10, 2) // 2026-11-02
+
+  it('같은 날이면 0개월이다', () => {
+    expect(calcPreparationMonths('2026-11-02', today)).toBe(0)
+  })
+
+  it('일이 차지 않은 달은 내림한다', () => {
+    expect(calcPreparationMonths('2026-10-03', today)).toBe(0)
+    expect(calcPreparationMonths('2026-10-02', today)).toBe(1)
+  })
+
+  it.each([
+    ['2026-06-02', 5],
+    ['2026-05-02', 6],
+    ['2025-12-02', 11],
+    ['2025-11-02', 12],
+    ['2025-06-02', 17],
+    ['2025-05-02', 18],
+    ['2024-12-02', 23],
+    ['2024-11-02', 24],
+  ])('시작일 %s은 %i개월이다', (start, months) => {
+    expect(calcPreparationMonths(start, today)).toBe(months)
+  })
+
+  it('미래 날짜는 0이다', () => {
+    expect(calcPreparationMonths('2026-12-01', today)).toBe(0)
+    expect(calcPreparationMonths('2027-11-02', today)).toBe(0)
+  })
+
+  it('형식이 잘못되면 0이다', () => {
+    expect(calcPreparationMonths('abc', today)).toBe(0)
+  })
+
+  it('월말 시작일은 짧은 달의 말일에 한 달이 찬다', () => {
+    expect(calcPreparationMonths('2026-01-31', new Date(2026, 1, 27))).toBe(0)
+    expect(calcPreparationMonths('2026-01-31', new Date(2026, 1, 28))).toBe(1)
+  })
+
+  it('윤년 2월 말일도 처리한다', () => {
+    expect(calcPreparationMonths('2024-01-31', new Date(2024, 1, 28))).toBe(0)
+    expect(calcPreparationMonths('2024-01-31', new Date(2024, 1, 29))).toBe(1)
+    expect(calcPreparationMonths('2024-02-29', new Date(2025, 1, 28))).toBe(12)
+  })
+
+  it('연도를 넘겨도 계산한다', () => {
+    expect(calcPreparationMonths('2025-12-15', new Date(2026, 0, 15))).toBe(1)
+  })
+})
+
+describe('getPreparationGrade', () => {
+  it.each([
+    [0, '취준생'],
+    [5, '취준생'],
+    [6, '도전하는 청년'],
+    [11, '도전하는 청년'],
+    [12, '힘을내는 청년'],
+    [17, '힘을내는 청년'],
+    [18, '노력하는 청년'],
+    [23, '노력하는 청년'],
+    [24, '꿈을꾸는 청년'],
+    [120, '꿈을꾸는 청년'],
+  ])('%i개월이면 %s다', (months, name) => {
+    expect(getPreparationGrade(months).name).toBe(name)
+  })
+})
+
+describe('toProfileRequest 준비 시작일', () => {
+  it('준비 시작일이 빈 문자열이면 null로 보낸다', () => {
+    expect(toProfileRequest(emptyProfile, { jobSearchStartDate: '' }).jobSearchStartDate).toBeNull()
+  })
+
+  it('준비 시작일을 유지해서 보낸다', () => {
+    const profile = { ...emptyProfile, jobSearchStartDate: '2025-05-02' }
+    expect(toProfileRequest(profile, {}).jobSearchStartDate).toBe('2025-05-02')
   })
 })
