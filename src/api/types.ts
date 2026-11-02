@@ -14,6 +14,22 @@ export interface Company {
   createdAt: string
 }
 
+// 회사 목록/상세 응답. 후기가 없으면 averageRating은 null이다.
+export interface CompanyWithStats extends Company {
+  reviewCount: number
+  averageRating: number | null
+}
+
+// 회사별 공개 후기. 작성자 식별 정보는 내려오지 않는다(익명).
+export interface CompanyReview {
+  id: number
+  rating: number
+  content: string
+  position: string
+  stage: ApplicationStatus
+  createdAt: string
+}
+
 export interface Application {
   id: number
   company: Company
