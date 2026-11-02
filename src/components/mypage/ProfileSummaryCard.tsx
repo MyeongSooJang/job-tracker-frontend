@@ -1,7 +1,14 @@
 import type { Profile } from '@/api/types'
+import PreparationGradeBadge from '@/components/mypage/PreparationGradeBadge'
 import { calcCompleteness, initialOf } from '@/lib/profile'
 
-export default function ProfileSummaryCard({ profile }: { profile: Profile }) {
+interface Props {
+  profile: Profile
+  // 준비 시작일 입력 화면으로 이동할 때 호출한다.
+  onGoToStartDateInput?: () => void
+}
+
+export default function ProfileSummaryCard({ profile, onGoToStartDateInput }: Props) {
   const completeness = calcCompleteness(profile)
 
   return (
@@ -20,6 +27,9 @@ export default function ProfileSummaryCard({ profile }: { profile: Profile }) {
             <span className="mx-2 text-ink-400">·</span>
             {profile.email}
           </p>
+          <div className="mt-2">
+            <PreparationGradeBadge startDate={profile.jobSearchStartDate} onGoToInput={onGoToStartDateInput} />
+          </div>
         </div>
         <div className="sm:w-56">
           <div className="mb-1.5 flex items-center justify-between text-sm">
