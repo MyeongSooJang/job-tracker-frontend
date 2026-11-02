@@ -4,7 +4,10 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import InterviewCalendar from '@/components/schedules/InterviewCalendar'
 import { Badge } from '@/components/ui/badge'
 import { STATUS_LABELS } from '@/lib/status'
+import { upcomingInterviews } from '@/lib/schedule'
 import type { ApplicationStatus } from '@/api/types'
+
+const UPCOMING_DAYS = 10
 
 const STATUS_BADGE_CLASS: Record<ApplicationStatus, string> = {
   RESUME_SUBMITTED: 'border-slate-300 text-slate-600',
@@ -21,10 +24,7 @@ export default function Dashboard() {
   const rejected = applications.filter(a => a.status === 'REJECTED').length
   const inProgress = applications.length - accepted - rejected
 
-  const upcoming = schedules
-    .filter(s => new Date(s.scheduledAt) >= new Date())
-    .sort((a, b) => new Date(a.scheduledAt).getTime() - new Date(b.scheduledAt).getTime())
-    .slice(0, 5)
+  const upcoming = upcomingInterviews(schedules, new Date(), UPCOMING_DAYS)
 
   if (appsLoading || schedulesLoading) {
     return <div className="text-slate-500 p-8">불러오는 중...</div>
@@ -84,7 +84,7 @@ export default function Dashboard() {
         </CardHeader>
         <CardContent>
           {upcoming.length === 0 ? (
-            <p className="text-slate-400 text-sm py-2">예정된 일정이 없습니다.</p>
+            <p className="text-slate-400 text-sm py-2">10일 이내 예정된 면접이 없습니다.</p>
           ) : (
             <ul className="divide-y divide-slate-100">
               {upcoming.map(s => (
