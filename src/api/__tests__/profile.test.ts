@@ -20,7 +20,7 @@ describe('profile API', () => {
 
   it('updateMyProfile: PUT /api/me/profile을 호출한다', async () => {
     const req = {
-      name: '홍길동', phone: null, birthDate: null, address: null, githubUrl: null, blogUrl: null,
+      name: '홍길동', phone: null, birthDate: null, jobSearchStartDate: null, address: null, githubUrl: null, blogUrl: null,
       portfolioUrl: null, education: null, career: null, desiredJob: '백엔드', introduction: null,
     }
     vi.mocked(apiClient.put).mockResolvedValue({ data: { ...req, email: 'a@b.c', resume: null } })

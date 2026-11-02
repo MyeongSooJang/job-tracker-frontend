@@ -22,12 +22,52 @@ export function calcCompleteness(profile: Profile): number {
   return Math.round((filled / COMPLETENESS_ITEMS) * 100)
 }
 
+export type PreparationGradeTone = 'rookie' | 'challenger' | 'striver' | 'diligent' | 'dreamer'
+
+export interface PreparationGrade {
+  name: string
+  minMonths: number
+  tone: PreparationGradeTone
+}
+
+// 등급 임계값의 단일 출처. minMonths 이상이면 해당 등급(이상~미만)이며 오름차순이어야 한다.
+export const PREPARATION_GRADES: readonly PreparationGrade[] = [
+  { name: '취준생', minMonths: 0, tone: 'rookie' },
+  { name: '도전하는 청년', minMonths: 6, tone: 'challenger' },
+  { name: '힘을내는 청년', minMonths: 12, tone: 'striver' },
+  { name: '노력하는 청년', minMonths: 18, tone: 'diligent' },
+  { name: '꿈을꾸는 청년', minMonths: 24, tone: 'dreamer' },
+]
+
+// 시작일(yyyy-MM-dd)부터 today까지 지난 만 개월 수(내림). 미래 날짜나 형식 오류는 0이다.
+// 시작일의 일(day)이 이번 달에 없으면(예: 31일 시작, 2월) 이번 달 말일에 한 달이 찬 것으로 본다.
+export function calcPreparationMonths(startDate: string, today: Date = new Date()): number {
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(startDate)
+  if (!match) return 0
+  const startYear = Number(match[1])
+  const startMonth = Number(match[2])
+  const startDay = Number(match[3])
+  const nowYear = today.getFullYear()
+  const nowMonth = today.getMonth() + 1
+  const lastDayOfNowMonth = new Date(nowYear, nowMonth, 0).getDate()
+
+  const months = (nowYear - startYear) * 12 + (nowMonth - startMonth)
+  const reachedDay = today.getDate() >= Math.min(startDay, lastDayOfNowMonth)
+  return Math.max(0, reachedDay ? months : months - 1)
+}
+
+export function getPreparationGrade(months: number): PreparationGrade {
+  const reached = PREPARATION_GRADES.filter(grade => months >= grade.minMonths)
+  return reached[reached.length - 1] ?? PREPARATION_GRADES[0]
+}
+
 // 비어 있는 선택 항목은 null로 보낸다. 특히 날짜는 빈 문자열이면 서버 파싱에 실패한다.
 export function toProfileRequest(profile: Profile, changes: Partial<ProfileRequest>): ProfileRequest {
   const merged: ProfileRequest = {
     name: profile.name,
     phone: profile.phone,
     birthDate: profile.birthDate,
+    jobSearchStartDate: profile.jobSearchStartDate,
     address: profile.address,
     githubUrl: profile.githubUrl,
     blogUrl: profile.blogUrl,
@@ -43,6 +83,7 @@ export function toProfileRequest(profile: Profile, changes: Partial<ProfileReque
     name: merged.name.trim(),
     phone: blankToNull(merged.phone),
     birthDate: blankToNull(merged.birthDate),
+    jobSearchStartDate: blankToNull(merged.jobSearchStartDate),
     address: blankToNull(merged.address),
     githubUrl: blankToNull(merged.githubUrl),
     blogUrl: blankToNull(merged.blogUrl),

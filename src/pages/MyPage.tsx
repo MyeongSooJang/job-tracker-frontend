@@ -8,6 +8,8 @@ import ResumeCard from '@/components/mypage/ResumeCard'
 import { PROFILE_SECTIONS } from '@/components/mypage/sections'
 
 const RESUME_TAB = 'resume'
+// 준비 시작일 필드가 있는 탭
+const START_DATE_TAB = 'basic'
 
 const TABS = [
   ...PROFILE_SECTIONS.map(section => ({ id: section.id as string, title: section.title, icon: section.icon })),
@@ -25,7 +27,7 @@ export default function MyPage() {
 
   return (
     <div className="space-y-6 font-sans">
-      <ProfileSummaryCard profile={profile} />
+      <ProfileSummaryCard profile={profile} onGoToStartDateInput={() => setActiveTab(START_DATE_TAB)} />
 
       <div className="grid gap-6 lg:grid-cols-[220px_1fr]">
         <nav

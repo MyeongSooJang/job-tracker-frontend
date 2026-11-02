@@ -146,6 +146,8 @@ export interface Profile {
   name: string
   phone: string | null
   birthDate: string | null
+  // 취업 준비 시작일(yyyy-MM-dd). 미입력이면 null
+  jobSearchStartDate: string | null
   address: string | null
   githubUrl: string | null
   blogUrl: string | null
