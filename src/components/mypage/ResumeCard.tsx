@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react'
-import { Download, FileText, RefreshCw, Trash2, UploadCloud } from 'lucide-react'
+import { Download, Eye, FileText, RefreshCw, Trash2, UploadCloud } from 'lucide-react'
 import type { ResumeInfo } from '@/api/types'
 import { downloadResume } from '@/api/profile'
 import { useDeleteResume, useUploadResume } from '@/hooks/useProfile'
@@ -7,6 +7,7 @@ import { formatDateTime, formatFileSize, validateResumeFile } from '@/lib/profil
 import { getErrorMessage } from '@/lib/errors'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
+import ResumePreviewDialog from './ResumePreviewDialog'
 
 export default function ResumeCard({ resume }: { resume: ResumeInfo | null }) {
   const upload = useUploadResume()
@@ -14,6 +15,7 @@ export default function ResumeCard({ resume }: { resume: ResumeInfo | null }) {
   const inputRef = useRef<HTMLInputElement>(null)
   const [dragging, setDragging] = useState(false)
   const [localError, setLocalError] = useState<string | null>(null)
+  const [previewOpen, setPreviewOpen] = useState(false)
 
   const errorMessage =
     localError
@@ -99,6 +101,9 @@ export default function ResumeCard({ resume }: { resume: ResumeInfo | null }) {
             </div>
           </div>
           <div className="flex gap-1">
+            <Button type="button" variant="outline" size="sm" onClick={() => setPreviewOpen(true)} disabled={busy} aria-label="이력서 미리보기">
+              <Eye /> 미리보기
+            </Button>
             <Button type="button" variant="outline" size="sm" onClick={handleDownload} disabled={busy} aria-label="이력서 다운로드">
               <Download /> 다운로드
             </Button>
@@ -128,6 +133,8 @@ export default function ResumeCard({ resume }: { resume: ResumeInfo | null }) {
           </Button>
         </div>
       )}
+
+      {resume && <ResumePreviewDialog open={previewOpen} onOpenChange={setPreviewOpen} fileName={resume.fileName} />}
 
       {upload.isPending && resume && <p className="mt-3 text-sm text-ink-600">업로드 중...</p>}
       {errorMessage && <p role="alert" className="mt-3 text-sm text-danger">{errorMessage}</p>}
