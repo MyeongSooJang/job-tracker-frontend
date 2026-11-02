@@ -2,6 +2,13 @@ import type { Schedule } from '@/api/types'
 
 const DAY_MS = 24 * 60 * 60 * 1000
 
+// 아직 지나지 않은 일정만 가까운 순으로 돌려준다.
+export function upcomingSchedules(schedules: Schedule[], now: Date): Schedule[] {
+  return schedules
+    .filter(s => new Date(s.scheduledAt).getTime() >= now.getTime())
+    .sort((a, b) => new Date(a.scheduledAt).getTime() - new Date(b.scheduledAt).getTime())
+}
+
 // 지금부터 withinDays일 이내에 잡힌 면접만 가까운 순으로 돌려준다. 이미 지난 면접은 제외한다.
 export function upcomingInterviews(schedules: Schedule[], now: Date, withinDays: number): Schedule[] {
   const from = now.getTime()
