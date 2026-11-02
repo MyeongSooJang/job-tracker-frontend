@@ -4,13 +4,15 @@ import { BrowserRouter } from 'react-router-dom'
 import { describe, it, expect, vi } from 'vitest'
 import Schedules from '../Schedules'
 
+const DAY_MS = 24 * 60 * 60 * 1000
+const application = { id: 1, company: { name: '카카오' }, position: '백엔드', status: 'INTERVIEW', appliedDate: '', createdAt: '' }
+
 vi.mock('@/hooks/useSchedules', () => ({
   useSchedules: () => ({
-    data: [{
-      id: 1, title: '1차 면접',
-      application: { id: 1, company: { name: '카카오' }, position: '백엔드', status: 'INTERVIEW', appliedDate: '', createdAt: '' },
-      scheduledAt: '2026-11-01T10:00:00', type: 'INTERVIEW', note: '',
-    }],
+    data: [
+      { id: 1, title: '1차 면접', application, scheduledAt: new Date(Date.now() + DAY_MS).toISOString(), type: 'INTERVIEW', note: '' },
+      { id: 2, title: '지난 면접', application, scheduledAt: new Date(Date.now() - DAY_MS).toISOString(), type: 'INTERVIEW', note: '' },
+    ],
     isLoading: false,
   }),
   useCreateSchedule: () => ({ mutate: vi.fn(), isPending: false }),
@@ -30,5 +32,10 @@ describe('Schedules', () => {
     render(<Schedules />, { wrapper })
     expect(screen.getByText('1차 면접')).toBeInTheDocument()
     expect(screen.getByText('카카오')).toBeInTheDocument()
+  })
+
+  it('지난 일정은 목록에 표시하지 않는다', () => {
+    render(<Schedules />, { wrapper })
+    expect(screen.queryByText('지난 면접')).not.toBeInTheDocument()
   })
 })

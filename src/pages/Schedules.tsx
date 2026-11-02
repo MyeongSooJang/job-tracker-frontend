@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useSchedules, useCreateSchedule } from '@/hooks/useSchedules'
 import { useApplications } from '@/hooks/useApplications'
 import InterviewCalendar from '@/components/schedules/InterviewCalendar'
+import { upcomingSchedules } from '@/lib/schedule'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -39,9 +40,7 @@ export default function Schedules() {
     note: '',
   })
 
-  const sorted = [...schedules].sort(
-    (a, b) => new Date(a.scheduledAt).getTime() - new Date(b.scheduledAt).getTime(),
-  )
+  const sorted = upcomingSchedules(schedules, new Date())
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -155,7 +154,7 @@ export default function Schedules() {
 
       <div className="space-y-3">
         {sorted.length === 0 ? (
-          <p className="text-slate-400 text-sm">등록된 일정이 없습니다.</p>
+          <p className="text-slate-400 text-sm">예정된 일정이 없습니다.</p>
         ) : (
           sorted.map(s => (
             <Card key={s.id} className="hover:shadow-md transition-shadow">
