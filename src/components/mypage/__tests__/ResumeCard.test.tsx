@@ -75,6 +75,17 @@ describe('ResumeCard', () => {
     expect(screen.getByText(/2\.0KB · 2026\.11\.01 10:00 업로드/)).toBeInTheDocument()
   })
 
+  it('미리보기 버튼을 누르면 미리보기 창이 열린다', async () => {
+    const user = userEvent.setup()
+    vi.mocked(downloadResume).mockReturnValue(new Promise(() => {}))
+    render(<ResumeCard resume={resume} />)
+
+    await user.click(screen.getByRole('button', { name: '이력서 미리보기' }))
+
+    expect(await screen.findByRole('dialog')).toBeInTheDocument()
+    expect(screen.getByText('불러오는 중...')).toBeInTheDocument()
+  })
+
   it('삭제를 확인하면 삭제를 요청하고, 취소하면 요청하지 않는다', async () => {
     const user = userEvent.setup()
     const confirm = vi.spyOn(window, 'confirm')
