@@ -160,3 +160,27 @@ export interface Profile {
 }
 
 export type ProfileRequest = Omit<Profile, 'email' | 'resume'>
+
+// 학습 기록 (하루 1건, studyDate는 yyyy-MM-dd)
+export interface StudyLog {
+  id: number
+  studyDate: string
+  content: string
+  studyMinutes: number
+}
+
+export interface StudyLogRequest {
+  content: string
+  studyMinutes: number
+}
+
+export interface DailyStudyMinutes {
+  date: string
+  minutes: number
+}
+
+export interface StudyStats {
+  currentStreak: number
+  monthWrittenDays: number
+  last7Days: DailyStudyMinutes[]
+}

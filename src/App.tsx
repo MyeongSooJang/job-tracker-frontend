@@ -9,6 +9,7 @@ import ApplicationDetail from '@/pages/ApplicationDetail'
 import InterviewDetail from '@/pages/InterviewDetail'
 import Schedules from '@/pages/Schedules'
 import Reviews from '@/pages/Reviews'
+import StudyLogs from '@/pages/StudyLogs'
 import MyPage from '@/pages/MyPage'
 import Login from '@/pages/Login'
 import Signup from '@/pages/Signup'
@@ -32,6 +33,7 @@ export default function App() {
                 <Route path="/applications/:applicationId/interviews/:interviewId" element={<InterviewDetail />} />
                 <Route path="/schedules" element={<Schedules />} />
                 <Route path="/reviews" element={<Reviews />} />
+                <Route path="/study-logs" element={<StudyLogs />} />
                 <Route path="/mypage" element={<MyPage />} />
               </Routes>
             </Layout>
