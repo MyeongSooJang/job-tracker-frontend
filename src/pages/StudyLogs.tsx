@@ -37,11 +37,8 @@ export default function StudyLogs() {
           {day.isLoading && <p className="text-ink-600">불러오는 중...</p>}
           {day.isError && <p role="alert" className="text-danger">기록을 불러오지 못했습니다.</p>}
           {day.data !== undefined && (
-            <StudyLogEditor
-              key={`${selectedDate}-${day.data?.id ?? 'new'}`}
-              date={selectedDate}
-              log={day.data}
-            />
+            // 날짜로만 key 를 잡는다. 기록 id 를 넣으면 처음 저장한 직후 에디터가 다시 마운트되어 저장 안내가 사라진다.
+            <StudyLogEditor key={selectedDate} date={selectedDate} log={day.data} />
           )}
         </div>
         <div className="space-y-6">

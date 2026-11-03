@@ -86,7 +86,19 @@ describe('StudyLogEditor', () => {
 
     await user.click(screen.getByRole('button', { name: '삭제' }))
 
-    expect(deleteMutate).toHaveBeenCalledWith(DATE)
+    expect(deleteMutate).toHaveBeenCalledWith(DATE, expect.anything())
+  })
+
+  it('삭제에 성공하면 입력해 둔 내용과 공부 시간을 비운다', async () => {
+    vi.spyOn(window, 'confirm').mockReturnValue(true)
+    deleteMutate.mockImplementationOnce((_date: string, options?: { onSuccess?: () => void }) => options?.onSuccess?.())
+    const user = userEvent.setup()
+    render(<StudyLogEditor date={DATE} log={log} />)
+
+    await user.click(screen.getByRole('button', { name: '삭제' }))
+
+    expect(screen.getByLabelText('공부한 내용')).toHaveValue('')
+    expect(screen.getByLabelText('공부 시간 (분)')).toHaveValue(null)
   })
 
   it('삭제를 취소하면 삭제하지 않는다', async () => {

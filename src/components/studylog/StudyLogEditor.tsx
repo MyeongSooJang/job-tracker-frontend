@@ -36,7 +36,7 @@ interface StudyLogEditorProps {
   log: StudyLog | null
 }
 
-// 날짜가 바뀌거나 저장된 기록이 달라지면 부모가 key 를 바꿔 입력 상태를 새로 시작한다.
+// 날짜가 바뀌면 부모가 key 를 바꿔 입력 상태를 새로 시작한다. 같은 날 안에서는 저장·삭제 후에도 이 입력 상태를 이어 쓴다.
 export default function StudyLogEditor({ date, log }: StudyLogEditorProps) {
   const save = useSaveStudyLog()
   const remove = useDeleteStudyLog()
@@ -63,7 +63,12 @@ export default function StudyLogEditor({ date, log }: StudyLogEditorProps) {
 
   const handleDelete = () => {
     if (!window.confirm('이 날의 기록을 삭제할까요?')) return
-    remove.mutate(date)
+    remove.mutate(date, {
+      onSuccess: () => {
+        setContent('')
+        setMinutesInput('')
+      },
+    })
   }
 
   return (
