@@ -2,6 +2,8 @@ import type { StudyLog } from '@/api/types'
 import { groupByDate } from '@/lib/studyLog'
 import { Button } from '@/components/ui/button'
 import DayGroup from './DayGroup'
+import { cn } from '@/lib/utils'
+import { cardClass } from './cardClass'
 
 interface StudyLogFeedProps {
   logs: StudyLog[]
@@ -26,7 +28,7 @@ export default function StudyLogFeed({
   return (
     <section
       aria-label="학습 기록 목록"
-      className="min-w-0 rounded-xl border border-line bg-white p-4 shadow-[0_1px_2px_rgba(16,24,40,0.05)] sm:p-5"
+      className={cn(cardClass, 'min-w-0 sm:p-5')}
     >
       {isLoading ? (
         <div aria-label="기록 불러오는 중" className="space-y-3">

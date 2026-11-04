@@ -1,6 +1,7 @@
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { buildMonthCells, shiftMonth } from '@/lib/studyLog'
+import { cardClass } from './cardClass'
 
 const WEEKDAYS = ['일', '월', '화', '수', '목', '금', '토']
 
@@ -22,7 +23,7 @@ export default function StudyLogCalendar({
   return (
     <section
       aria-label="학습 기록 달력"
-      className="rounded-xl border border-line bg-white p-4 shadow-[0_1px_2px_rgba(16,24,40,0.05)]"
+      className={cardClass}
     >
       <header className="mb-3 flex items-center justify-between">
         <Button variant="outline" size="sm" aria-label="이전 달" onClick={() => onMonthChange(shiftMonth(month, -1))}>

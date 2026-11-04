@@ -63,6 +63,15 @@ describe('StudyLogs 페이지', () => {
     expect(screen.getByRole('button', { name: /알고리즘/ })).toBeInTheDocument()
   })
 
+  it('오늘 기록 쓰기 버튼은 오늘 날짜로 새 글쓰기를 시작한다', async () => {
+    const user = userEvent.setup()
+    renderPage()
+
+    await user.click(screen.getByRole('button', { name: '오늘 기록 쓰기' }))
+
+    expect(screen.getByTestId('location')).toHaveTextContent('/study-logs/new?date=2026-11-04')
+  })
+
   it('글을 누르면 그 글의 글쓰기 화면으로 이동한다', async () => {
     const user = userEvent.setup()
     renderPage()

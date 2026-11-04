@@ -18,4 +18,11 @@ describe('StudyStatsBar', () => {
 
     expect(screen.getByText('0분')).toBeInTheDocument()
   })
+
+  it('현재 연속이 0일이면 0일 대신 시작을 권하는 문구를 보여준다', () => {
+    render(<StudyStatsBar stats={{ currentStreak: 0, longestStreak: 4, monthWrittenDays: 2, todayMinutes: 0 }} />)
+
+    expect(screen.getByText('오늘 기록하면 연속이 시작돼요')).toBeInTheDocument()
+    expect(screen.getByText('4일')).toBeInTheDocument()
+  })
 })

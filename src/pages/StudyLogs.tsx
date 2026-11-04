@@ -1,13 +1,14 @@
 import { useEffect, useMemo, useState } from 'react'
+import { Pencil } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { useHeatmap, useStudyLogFeed, useStudyStats } from '@/hooks/useStudyLogs'
 import { feedWindow, heatmapRange, monthRange, toDateKey, toMonthKey } from '@/lib/studyLog'
+import { cardClass } from '@/components/studylog/cardClass'
 import StudyHeatmap from '@/components/studylog/StudyHeatmap'
 import StudyLogCalendar from '@/components/studylog/StudyLogCalendar'
 import StudyLogFeed from '@/components/studylog/StudyLogFeed'
 import StudyStatsBar from '@/components/studylog/StudyStatsBar'
-
-const cardClass = 'rounded-xl border border-line bg-white p-4 shadow-[0_1px_2px_rgba(16,24,40,0.05)]'
+import { Button } from '@/components/ui/button'
 
 // 둘러보기 화면. 글쓰기는 /study-logs/new, /study-logs/:id 의 몰입 화면에서 한다.
 export default function StudyLogs() {
@@ -50,7 +51,13 @@ export default function StudyLogs() {
 
   return (
     <div className="space-y-6 font-sans">
-      <h1 className="text-2xl font-bold text-ink-900">학습 기록</h1>
+      <div className="flex items-center justify-between gap-3">
+        <h1 className="text-2xl font-bold text-ink-900">학습 기록</h1>
+        <Button type="button" variant="brand" onClick={() => navigate(`/study-logs/new?date=${today}`)}>
+          <Pencil size={16} aria-hidden />
+          오늘 기록 쓰기
+        </Button>
+      </div>
 
       {stats.data ? (
         <StudyStatsBar stats={stats.data} />
