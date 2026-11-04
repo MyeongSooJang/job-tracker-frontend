@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event'
 import { MemoryRouter, useLocation } from 'react-router-dom'
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import type { StudyLog } from '@/api/types'
+import { hashDraftBase } from '@/lib/studyLogDraft'
 import StudyLogEditor from '../StudyLogEditor'
 
 const createMutate = vi.fn()
@@ -478,6 +479,81 @@ describe('StudyLogEditor', () => {
 
       expect(stored('study-log-draft:v1:7:7')).toMatchObject({ title: 'JPA 정리 보강' })
       expect(stored(NEW_KEY)).toBeNull()
+    })
+
+    describe('기준 버전 확인', () => {
+      const WARNING = '다른 곳에서 수정된 글이에요. 이어 쓰면 서버의 최신 내용을 덮어써요.'
+      const loaded = { title: log.title, content: log.content, minutesInput: String(log.studyMinutes) }
+      const edited = { title: '쓰던 글', content: '쓰던 내용', minutesInput: '45', savedAt }
+
+      it('기준이 지금 글과 같으면 경고 없이 안내한다', async () => {
+        store(LOG_KEY, { ...edited, baseHash: hashDraftBase(loaded) })
+        await renderEditor(log)
+
+        expect(screen.getByRole('region', { name: '임시 저장된 글' })).toBeInTheDocument()
+        expect(screen.queryByText(WARNING)).not.toBeInTheDocument()
+      })
+
+      it('기준이 지금 글과 다르면 덮어쓴다는 경고를 함께 보여준다', async () => {
+        store(LOG_KEY, { ...edited, baseHash: hashDraftBase({ ...loaded, content: '## 예전 내용' }) })
+        await renderEditor(log)
+
+        expect(within(screen.getByRole('region', { name: '임시 저장된 글' })).getByText(WARNING)).toBeInTheDocument()
+        expect(screen.getByRole('button', { name: '이어 쓰기' })).toBeInTheDocument()
+        expect(screen.getByRole('button', { name: '버리기' })).toBeInTheDocument()
+      })
+
+      it('기준 해시가 없는 예전 임시 글은 경고하지 않는다', async () => {
+        store(LOG_KEY, edited)
+        await renderEditor(log)
+
+        expect(screen.getByRole('region', { name: '임시 저장된 글' })).toBeInTheDocument()
+        expect(screen.queryByText(WARNING)).not.toBeInTheDocument()
+      })
+
+      it('새 글 임시 저장본은 경고하지 않는다', async () => {
+        store(NEW_KEY, { ...edited, baseHash: null })
+        await renderEditor()
+
+        expect(screen.getByRole('region', { name: '임시 저장된 글' })).toBeInTheDocument()
+        expect(screen.queryByText(WARNING)).not.toBeInTheDocument()
+      })
+
+      it('기존 글을 고치면 불러온 값의 해시를 기준으로 임시 저장한다', async () => {
+        const user = setup()
+        await renderEditor(log)
+
+        await user.type(screen.getByLabelText('제목'), ' 보강')
+        advance(500)
+
+        expect(stored(LOG_KEY)).toMatchObject({ baseHash: hashDraftBase(loaded) })
+      })
+
+      it('새 글은 기준 해시 없이 임시 저장한다', async () => {
+        const user = setup()
+        await renderEditor()
+
+        await user.type(screen.getByLabelText('제목'), 'JPA')
+        advance(500)
+
+        expect(stored(NEW_KEY)).toMatchObject({ baseHash: null })
+      })
+
+      it('수정을 저장한 뒤에는 새로 저장된 값의 해시가 기준이 된다', async () => {
+        updateMutate.mockImplementationOnce((_vars, options?: { onSuccess?: () => void }) => options?.onSuccess?.())
+        const user = setup()
+        await renderEditor(log)
+        await user.type(screen.getByLabelText('제목'), ' 보강')
+        await user.click(screen.getByRole('button', { name: '저장' }))
+
+        await user.type(screen.getByLabelText('제목'), '!')
+        advance(500)
+
+        expect(stored(LOG_KEY)).toMatchObject({
+          title: 'JPA 정리 보강!',
+          baseHash: hashDraftBase({ ...loaded, title: 'JPA 정리 보강' }),
+        })
+      })
     })
 
     it('글을 삭제하면 임시 글을 지운다', async () => {

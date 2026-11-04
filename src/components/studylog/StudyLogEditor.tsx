@@ -6,7 +6,7 @@ import { useCreateStudyLog, useDayStudyLogs, useDeleteStudyLog, useUpdateStudyLo
 import { getToken } from '@/lib/auth'
 import { getErrorMessage } from '@/lib/errors'
 import { formatDateLabel, formatMinutes } from '@/lib/studyLog'
-import { clearDraft, draftKey, loadDraft, saveDraft, userIdFromToken, type StudyLogDraft } from '@/lib/studyLogDraft'
+import { clearDraft, draftKey, hashDraftBase, loadDraft, saveDraft, userIdFromToken, type StudyLogDraft } from '@/lib/studyLogDraft'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 
@@ -79,6 +79,9 @@ export default function StudyLogEditor({ date, log, onCreated }: StudyLogEditorP
       && stored.minutesInput === initial.minutesInput
     return same ? null : stored
   })
+  // 임시 글을 쓰기 시작한 뒤 서버의 글이 바뀌었다면(다른 기기 등) 이어 쓰기 전에 알린다.
+  const baseChanged = pendingRestore !== null && pendingRestore.baseHash !== null
+    && pendingRestore.baseHash !== hashDraftBase(initial)
   // MarkdownEditor는 마운트 때만 initialValue를 읽으므로, 복원할 때는 seed를 올려 새로 마운트한다.
   const [editorContent, setEditorContent] = useState(initial.content)
   const [editorSeed, setEditorSeed] = useState(0)
@@ -113,9 +116,12 @@ export default function StudyLogEditor({ date, log, onCreated }: StudyLogEditorP
       clearDraft(key)
       return
     }
-    const timer = setTimeout(() => saveDraft(key, draft), AUTOSAVE_DELAY_MS)
+    const timer = setTimeout(
+      () => saveDraft(key, { ...draft, baseHash: savedId === null ? null : hashDraftBase(saved) }),
+      AUTOSAVE_DELAY_MS,
+    )
     return () => clearTimeout(timer)
-  }, [key, pendingRestore, dirty, draft])
+  }, [key, pendingRestore, dirty, draft, saved, savedId])
 
   const restoreDraft = () => {
     if (pendingRestore === null) return
@@ -218,7 +224,12 @@ export default function StudyLogEditor({ date, log, onCreated }: StudyLogEditorP
             aria-label="임시 저장된 글"
             className="mb-4 flex flex-wrap items-center justify-between gap-x-3 gap-y-2 rounded-lg border border-brand-100 bg-brand-50 px-3 py-2 text-sm text-ink-900"
           >
-            <p>저장하지 않은 글이 있어요. {formatClock(pendingRestore.savedAt)}에 임시 저장됐어요.</p>
+            <div className="space-y-1">
+              <p>저장하지 않은 글이 있어요. {formatClock(pendingRestore.savedAt)}에 임시 저장됐어요.</p>
+              {baseChanged && (
+                <p className="font-medium text-ink-900">다른 곳에서 수정된 글이에요. 이어 쓰면 서버의 최신 내용을 덮어써요.</p>
+              )}
+            </div>
             <div className="flex items-center gap-2">
               <Button type="button" variant="brand" size="sm" onClick={restoreDraft}>이어 쓰기</Button>
               <Button type="button" variant="ghost" size="sm" onClick={discardDraft}>버리기</Button>
