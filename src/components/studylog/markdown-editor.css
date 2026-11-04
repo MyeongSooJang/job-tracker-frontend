@@ -1,0 +1,33 @@
+/* Crepe 테마 변수를 앱 토큰에 맞춘다. */
+.study-editor .milkdown {
+  --crepe-color-background: #ffffff;
+  --crepe-color-on-background: theme('colors.ink.900');
+  --crepe-color-surface: theme('colors.surface');
+  --crepe-color-surface-low: theme('colors.surface');
+  --crepe-color-on-surface: theme('colors.ink.900');
+  --crepe-color-on-surface-variant: theme('colors.ink.600');
+  --crepe-color-outline: theme('colors.line');
+  --crepe-color-primary: theme('colors.brand.500');
+  --crepe-color-secondary: theme('colors.brand.100');
+  --crepe-color-on-secondary: theme('colors.ink.900');
+  --crepe-color-hover: theme('colors.surface');
+  --crepe-color-selected: theme('colors.brand.50');
+  --crepe-color-inline-area: theme('colors.surface');
+  --crepe-color-inline-code: theme('colors.brand.700');
+  --crepe-color-error: theme('colors.danger');
+  --crepe-font-title: theme('fontFamily.sans');
+  --crepe-font-default: theme('fontFamily.sans');
+  --crepe-base-font-size: 16px;
+}
+
+/* 본문 폭은 부모(글쓰기 폼)가 정한다. 블록 핸들이 들어갈 왼쪽 여백만 남기고 기본 여백을 줄인다. */
+.study-editor .milkdown .ProseMirror {
+  min-height: 320px;
+  padding: 16px 16px 96px 48px;
+}
+
+@media (max-width: 640px) {
+  .study-editor .milkdown .ProseMirror {
+    padding: 12px 4px 96px 4px;
+  }
+}
