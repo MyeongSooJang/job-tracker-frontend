@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useState } from 'react'
+import { lazy, Suspense, useEffect, useRef, useState } from 'react'
 import { ArrowLeft, Plus } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import type { StudyLog } from '@/api/types'
@@ -31,6 +31,11 @@ const AUTOSAVE_DELAY_MS = 500
 function formatClock(timestamp: number): string {
   const time = new Date(timestamp)
   return `${String(time.getHours()).padStart(2, '0')}:${String(time.getMinutes()).padStart(2, '0')}`
+}
+
+// 기존 글이면 마지막으로 저장된 값의 해시를 기준으로 함께 남겨, 나중에 서버 글이 바뀌었는지 비교할 수 있게 한다.
+function persistDraft(key: string, draft: Draft, saved: Draft, savedId: number | null): void {
+  saveDraft(key, { ...draft, baseHash: savedId === null ? null : hashDraftBase(saved) })
 }
 
 interface Draft {
@@ -116,12 +121,39 @@ export default function StudyLogEditor({ date, log, onCreated }: StudyLogEditorP
       clearDraft(key)
       return
     }
-    const timer = setTimeout(
-      () => saveDraft(key, { ...draft, baseHash: savedId === null ? null : hashDraftBase(saved) }),
-      AUTOSAVE_DELAY_MS,
-    )
+    const timer = setTimeout(() => persistDraft(key, draft, saved, savedId), AUTOSAVE_DELAY_MS)
     return () => clearTimeout(timer)
   }, [key, pendingRestore, dirty, draft, saved, savedId])
+
+  // 화면이 사라지거나 숨겨지는 순간에는 디바운스를 기다릴 수 없으므로 마지막 상태를 ref로 들고 있다가 바로 저장한다.
+  const latest = useRef({ userId, key, draft, saved, savedId, dirty, pendingRestore })
+  const skipFlushRef = useRef(false)
+  useEffect(() => {
+    latest.current = { userId, key, draft, saved, savedId, dirty, pendingRestore }
+  })
+
+  const flushLatest = () => {
+    const state = latest.current
+    if (skipFlushRef.current || state.userId === null || state.key === null || !state.dirty || state.pendingRestore !== null) return
+    persistDraft(state.key, state.draft, state.saved, state.savedId)
+  }
+
+  // 언마운트 전용. 키가 바뀔 때(첫 저장 직후) 도는 자동 저장 정리 함수에서 비우면 옛 키에 쓰게 되므로 따로 둔다.
+  useEffect(() => flushLatest, [])
+
+  const canFlushOnHide = userId !== null && dirty && pendingRestore === null
+  useEffect(() => {
+    if (!canFlushOnHide) return
+    const onVisibilityChange = () => {
+      if (document.visibilityState === 'hidden') flushLatest()
+    }
+    window.addEventListener('pagehide', flushLatest)
+    document.addEventListener('visibilitychange', onVisibilityChange)
+    return () => {
+      window.removeEventListener('pagehide', flushLatest)
+      document.removeEventListener('visibilitychange', onVisibilityChange)
+    }
+  }, [canFlushOnHide])
 
   const restoreDraft = () => {
     if (pendingRestore === null) return
@@ -141,6 +173,7 @@ export default function StudyLogEditor({ date, log, onCreated }: StudyLogEditorP
     create.reset()
     update.reset()
     remove.reset()
+    skipFlushRef.current = false
     setDraft(prev => ({ ...prev, ...patch }))
   }
 
@@ -150,6 +183,8 @@ export default function StudyLogEditor({ date, log, onCreated }: StudyLogEditorP
       if (!window.confirm(LEAVE_CONFIRM)) return
       // 복원 안내를 아직 고르지 않았다면 남아 있는 임시 글은 다음에 고를 수 있게 둔다.
       if (key !== null && pendingRestore === null) clearDraft(key)
+      // confirm이 타이머를 막는 동안 대기 중이던 저장이나 이어지는 언마운트가 버린 글을 되살리지 않게 한다.
+      skipFlushRef.current = true
     }
     navigate(to)
   }
@@ -182,6 +217,7 @@ export default function StudyLogEditor({ date, log, onCreated }: StudyLogEditorP
     remove.mutate(savedId, {
       onSuccess: () => {
         if (key !== null) clearDraft(key)
+        skipFlushRef.current = true
         navigate('/study-logs', { replace: true })
       },
     })

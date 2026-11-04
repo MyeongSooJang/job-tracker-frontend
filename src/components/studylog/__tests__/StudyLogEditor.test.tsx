@@ -38,13 +38,14 @@ function LocationProbe() {
 }
 
 async function renderEditor(existing: StudyLog | null = null, onCreated?: (id: number) => void) {
-  render(
+  const { unmount } = render(
     <MemoryRouter>
       <StudyLogEditor date={DATE} log={existing} onCreated={onCreated} />
       <LocationProbe />
     </MemoryRouter>,
   )
   await screen.findByLabelText('공부한 내용')
+  return { unmount }
 }
 
 describe('StudyLogEditor', () => {
@@ -553,6 +554,156 @@ describe('StudyLogEditor', () => {
           title: 'JPA 정리 보강!',
           baseHash: hashDraftBase({ ...loaded, title: 'JPA 정리 보강' }),
         })
+      })
+    })
+
+    describe('이탈 시점 저장', () => {
+      const hideTab = () => {
+        vi.spyOn(document, 'visibilityState', 'get').mockReturnValue('hidden')
+        document.dispatchEvent(new Event('visibilitychange'))
+      }
+
+      it('입력 직후 500ms가 지나기 전에 화면이 사라져도 마지막 입력을 남긴다', async () => {
+        const user = setup()
+        const { unmount } = await renderEditor(log)
+        await user.type(screen.getByLabelText('제목'), ' 보강')
+        expect(stored(LOG_KEY)).toBeNull()
+
+        unmount()
+
+        expect(stored(LOG_KEY)).toMatchObject({ title: 'JPA 정리 보강', baseHash: expect.any(String) })
+      })
+
+      it('변경이 없으면 화면이 사라져도 아무것도 쓰지 않는다', async () => {
+        const setItem = vi.spyOn(Storage.prototype, 'setItem')
+        const { unmount } = await renderEditor(log)
+
+        unmount()
+
+        expect(setItem.mock.calls.filter(([key]) => String(key).startsWith('study-log-draft'))).toEqual([])
+        expect(stored(LOG_KEY)).toBeNull()
+      })
+
+      it('복원 안내가 떠 있으면 화면이 사라져도 저장된 임시 글을 덮어쓰지 않는다', async () => {
+        const draft = { title: '쓰던 글', content: '쓰던 내용', minutesInput: '45', baseHash: null, savedAt }
+        store(NEW_KEY, draft)
+        const user = setup()
+        const { unmount } = await renderEditor()
+        await user.type(screen.getByLabelText('제목'), '새로 입력')
+
+        unmount()
+
+        expect(stored(NEW_KEY)).toEqual(draft)
+      })
+
+      it('나가기를 확인해 버린 글은 화면이 사라질 때 다시 저장하지 않는다', async () => {
+        vi.spyOn(window, 'confirm').mockReturnValue(true)
+        const user = setup()
+        const { unmount } = await renderEditor(log)
+        await user.type(screen.getByLabelText('제목'), ' 보강')
+
+        await user.click(screen.getByRole('button', { name: '목록으로' }))
+        unmount()
+
+        expect(stored(LOG_KEY)).toBeNull()
+      })
+
+      it('버린 뒤 다시 고치면 화면이 사라질 때 저장한다', async () => {
+        vi.spyOn(window, 'confirm').mockReturnValue(true)
+        const user = setup()
+        const { unmount } = await renderEditor(log)
+        await user.type(screen.getByLabelText('제목'), ' 보강')
+        await user.click(screen.getByRole('button', { name: '목록으로' }))
+        await user.type(screen.getByLabelText('제목'), '!')
+
+        unmount()
+
+        expect(stored(LOG_KEY)).toMatchObject({ title: 'JPA 정리 보강!' })
+      })
+
+      it('삭제에 성공한 뒤 화면이 사라져도 임시 글을 다시 저장하지 않는다', async () => {
+        vi.spyOn(window, 'confirm').mockReturnValue(true)
+        deleteMutate.mockImplementationOnce((_id, options?: { onSuccess?: () => void }) => options?.onSuccess?.())
+        const user = setup()
+        const { unmount } = await renderEditor(log)
+        await user.type(screen.getByLabelText('제목'), ' 보강')
+
+        await user.click(screen.getByRole('button', { name: '삭제' }))
+        unmount()
+
+        expect(stored(LOG_KEY)).toBeNull()
+      })
+
+      it('새 글을 처음 저장한 직후 화면이 사라져도 이전 새 글 키에는 쓰지 않는다', async () => {
+        createMutate.mockImplementationOnce((_data, options?: { onSuccess?: (created: StudyLog) => void }) =>
+          options?.onSuccess?.({ ...log, id: 7 }))
+        const user = setup()
+        const { unmount } = await renderEditor()
+        await user.type(screen.getByLabelText('제목'), 'JPA 정리')
+        await user.type(screen.getByLabelText('공부한 내용'), 'JPA 공부')
+        await user.click(screen.getByRole('button', { name: '저장' }))
+
+        unmount()
+
+        expect(stored(NEW_KEY)).toBeNull()
+        expect(stored('study-log-draft:v1:7:7')).toBeNull()
+      })
+
+      it('페이지가 숨겨지는 pagehide에는 500ms를 기다리지 않고 바로 저장한다', async () => {
+        const user = setup()
+        await renderEditor(log)
+        await user.type(screen.getByLabelText('제목'), ' 보강')
+        expect(stored(LOG_KEY)).toBeNull()
+
+        window.dispatchEvent(new Event('pagehide'))
+
+        expect(stored(LOG_KEY)).toMatchObject({ title: 'JPA 정리 보강' })
+      })
+
+      it('탭이 hidden이 되면 바로 저장하고, visible일 때는 저장하지 않는다', async () => {
+        const user = setup()
+        await renderEditor(log)
+        await user.type(screen.getByLabelText('제목'), ' 보강')
+
+        document.dispatchEvent(new Event('visibilitychange'))
+        expect(stored(LOG_KEY)).toBeNull()
+
+        hideTab()
+        expect(stored(LOG_KEY)).toMatchObject({ title: 'JPA 정리 보강' })
+      })
+
+      it('변경이 없으면 pagehide와 hidden에도 저장하지 않는다', async () => {
+        await renderEditor(log)
+
+        window.dispatchEvent(new Event('pagehide'))
+        hideTab()
+
+        expect(stored(LOG_KEY)).toBeNull()
+      })
+
+      it('복원 안내가 떠 있으면 pagehide에도 저장하지 않는다', async () => {
+        const draft = { title: '쓰던 글', content: '쓰던 내용', minutesInput: '45', baseHash: null, savedAt }
+        store(NEW_KEY, draft)
+        const user = setup()
+        await renderEditor()
+        await user.type(screen.getByLabelText('제목'), '새로 입력')
+
+        window.dispatchEvent(new Event('pagehide'))
+
+        expect(stored(NEW_KEY)).toEqual(draft)
+      })
+
+      it('로그인 정보가 없으면 pagehide와 화면 이탈에도 저장하지 않는다', async () => {
+        localStorage.clear()
+        const setItem = vi.spyOn(Storage.prototype, 'setItem')
+        const user = setup()
+        const { unmount } = await renderEditor()
+        await user.type(screen.getByLabelText('제목'), 'JPA')
+
+        window.dispatchEvent(new Event('pagehide'))
+        unmount()
+
+        expect(setItem.mock.calls.filter(([key]) => String(key).startsWith('study-log-draft'))).toEqual([])
       })
     })
 
