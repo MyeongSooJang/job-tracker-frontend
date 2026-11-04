@@ -29,8 +29,10 @@ function Nav() {
   const navigate = useNavigate()
   return (
     <>
-      <button onClick={() => navigate('/study-logs/5', { replace: true, state: { keepEditor: true } })}>저장 후 주소 교체</button>
+      <button onClick={() => navigate('/study-logs/5', { replace: true, state: { createdId: 5 } })}>저장 후 주소 교체</button>
       <button onClick={() => navigate('/study-logs/6')}>다른 글로 이동</button>
+      <button onClick={() => navigate('/study-logs/6', { state: { createdId: 5 } })}>엉뚱한 상태로 이동</button>
+      <button onClick={() => navigate(-1)}>뒤로가기</button>
     </>
   )
 }
@@ -101,6 +103,29 @@ describe('StudyLogWrite 페이지', () => {
     await user.click(screen.getByRole('button', { name: '저장 후 주소 교체' }))
 
     expect(screen.getByTestId('editor')).toHaveAttribute('data-instance', '1')
+  })
+
+  it('저장 후 주소를 교체한 글로 뒤로가기하면 에디터를 새로 만든다', async () => {
+    const user = userEvent.setup()
+    renderAt('/study-logs/new?date=2026-10-20')
+    await user.click(screen.getByRole('button', { name: '저장 후 주소 교체' }))
+    expect(screen.getByTestId('editor')).toHaveAttribute('data-instance', '1')
+    await user.click(screen.getByRole('button', { name: '다른 글로 이동' }))
+    expect(screen.getByTestId('editor')).toHaveAttribute('data-instance', '2')
+
+    await user.click(screen.getByRole('button', { name: '뒤로가기' }))
+
+    expect(screen.getByTestId('editor')).toHaveAttribute('data-instance', '3')
+    expect(screen.getByTestId('editor')).toHaveAttribute('data-log-id', '5')
+  })
+
+  it('만든 글이 아닌 주소로 이동하면 이력 상태가 남아 있어도 에디터를 새로 만든다', async () => {
+    const user = userEvent.setup()
+    renderAt('/study-logs/new?date=2026-10-20')
+
+    await user.click(screen.getByRole('button', { name: '엉뚱한 상태로 이동' }))
+
+    expect(screen.getByTestId('editor')).toHaveAttribute('data-instance', '2')
   })
 
   it('다른 글로 이동하면 에디터를 새로 만든다', async () => {

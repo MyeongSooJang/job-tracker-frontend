@@ -25,11 +25,14 @@ export default function StudyLogWrite() {
   const hasValidId = isNew || (id !== undefined && Number.isInteger(id))
   const log = useStudyLog(hasValidId ? id : undefined)
 
-  // 주소가 바뀌면 에디터를 새로 시작한다. 단, 새 글을 처음 저장하며 주소만 글 주소로 교체한 경우(keepEditor)는 이어 쓴다.
-  const [session, setSession] = useState({ locationKey: location.key, count: 0 })
+  // 주소가 바뀌면 에디터를 새로 시작한다. 단, 새 글 주소에서 방금 만든 글의 주소로 교체된 경우에만 이어 쓴다.
+  // 이력에 남은 state만 보고 판단하면 뒤로가기로 돌아왔을 때 다른 글의 에디터가 남으므로, 이전 위치가 새 글 주소였는지도 함께 본다.
+  const [session, setSession] = useState({ locationKey: location.key, pathname: location.pathname, count: 0 })
   if (session.locationKey !== location.key) {
-    const keepEditor = (location.state as { keepEditor?: boolean } | null)?.keepEditor === true
-    setSession({ locationKey: location.key, count: keepEditor ? session.count : session.count + 1 })
+    const createdId = (location.state as { createdId?: number } | null)?.createdId
+    const fromNewPost = session.pathname === '/study-logs/new'
+    const keepEditor = fromNewPost && createdId !== undefined && location.pathname === `/study-logs/${createdId}`
+    setSession({ locationKey: location.key, pathname: location.pathname, count: keepEditor ? session.count : session.count + 1 })
   }
 
   if (!hasValidId) return <Notice role="alert">글을 찾을 수 없습니다.</Notice>

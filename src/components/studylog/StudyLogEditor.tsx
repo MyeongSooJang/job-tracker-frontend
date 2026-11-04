@@ -102,8 +102,8 @@ export default function StudyLogEditor({ date, log }: StudyLogEditorProps) {
         onSuccess: created => {
           setSaved(submitted)
           setSavedId(created.id)
-          // 에디터를 다시 만들지 않도록 keepEditor 표시를 남기고 주소만 글 주소로 바꾼다.
-          navigate(`/study-logs/${created.id}`, { replace: true, state: { keepEditor: true } })
+          // 에디터를 다시 만들지 않도록 만든 글의 id를 state로 남기고 주소만 글 주소로 바꾼다.
+          navigate(`/study-logs/${created.id}`, { replace: true, state: { createdId: created.id } })
         },
       })
     } else {
