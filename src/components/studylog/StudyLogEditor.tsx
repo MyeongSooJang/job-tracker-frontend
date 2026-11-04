@@ -157,6 +157,8 @@ export default function StudyLogEditor({ date, log, onCreated }: StudyLogEditorP
       create.mutate({ studyDate: date, ...data }, {
         onSuccess: created => {
           if (userId !== null) clearDraft(draftKey(userId, { logId: null, date }))
+          // 저장된 글이 새 글 임시 저장본보다 우선하므로 결정하지 않은 복원 안내도 함께 닫는다.
+          setPendingRestore(null)
           setSaved(submitted)
           setSavedId(created.id)
           // 부모가 이 에디터를 유지할지 판단하도록 만든 글을 먼저 알린 뒤, 주소만 글 주소로 바꾼다.

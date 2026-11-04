@@ -458,6 +458,28 @@ describe('StudyLogEditor', () => {
       expect(stored(NEW_KEY)).toBeNull()
     })
 
+    it('복원 안내를 고르지 않은 채 처음 저장하면 안내를 닫고 글 id 기준으로 임시 저장한다', async () => {
+      store(NEW_KEY, { title: '쓰던 글', content: '쓰던 내용', minutesInput: '45', savedAt })
+      createMutate.mockImplementationOnce((_data, options?: { onSuccess?: (created: StudyLog) => void }) =>
+        options?.onSuccess?.({ ...log, id: 7 }))
+      const user = setup()
+      await renderEditor()
+      expect(screen.getByRole('region', { name: '임시 저장된 글' })).toBeInTheDocument()
+
+      await user.type(screen.getByLabelText('제목'), 'JPA 정리')
+      await user.type(screen.getByLabelText('공부한 내용'), 'JPA 공부')
+      await user.click(screen.getByRole('button', { name: '저장' }))
+
+      expect(screen.queryByRole('region', { name: '임시 저장된 글' })).not.toBeInTheDocument()
+      expect(stored(NEW_KEY)).toBeNull()
+
+      await user.type(screen.getByLabelText('제목'), ' 보강')
+      advance(500)
+
+      expect(stored('study-log-draft:v1:7:7')).toMatchObject({ title: 'JPA 정리 보강' })
+      expect(stored(NEW_KEY)).toBeNull()
+    })
+
     it('글을 삭제하면 임시 글을 지운다', async () => {
       vi.spyOn(window, 'confirm').mockReturnValue(true)
       deleteMutate.mockImplementationOnce((_id, options?: { onSuccess?: () => void }) => options?.onSuccess?.())
