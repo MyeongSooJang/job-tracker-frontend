@@ -161,26 +161,38 @@ export interface Profile {
 
 export type ProfileRequest = Omit<Profile, 'email' | 'resume'>
 
-// 학습 기록 (하루 1건, studyDate는 yyyy-MM-dd)
+// 학습 기록 (하루 여러 글, studyDate는 yyyy-MM-dd)
 export interface StudyLog {
   id: number
   studyDate: string
+  title: string
   content: string
   studyMinutes: number
 }
 
-export interface StudyLogRequest {
+export interface StudyLogCreateRequest {
+  studyDate: string
+  title: string
   content: string
   studyMinutes: number
 }
 
-export interface DailyStudyMinutes {
+export interface StudyLogUpdateRequest {
+  title: string
+  content: string
+  studyMinutes: number
+}
+
+// 잔디용 날짜별 요약. 글이 있는 날만 내려온다.
+export interface HeatmapDay {
   date: string
+  count: number
   minutes: number
 }
 
 export interface StudyStats {
   currentStreak: number
+  longestStreak: number
   monthWrittenDays: number
-  last7Days: DailyStudyMinutes[]
+  todayMinutes: number
 }

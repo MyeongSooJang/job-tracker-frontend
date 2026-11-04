@@ -1,24 +1,23 @@
 import type { StudyStats } from '@/api/types'
-import WeeklyMinutesChart from './WeeklyMinutesChart'
+import { formatMinutes } from '@/lib/studyLog'
 
 const cardClass = 'rounded-xl border border-line bg-white p-4 shadow-[0_1px_2px_rgba(16,24,40,0.05)]'
-// 차트 카드 높이에 맞춰 늘어나는 숫자 카드는 내용을 세로 가운데에 둔다.
-const tileClass = `${cardClass} flex flex-col justify-center`
 
 export default function StudyStatsBar({ stats }: { stats: StudyStats }) {
+  const items = [
+    { label: '현재 연속', value: `${stats.currentStreak}일` },
+    { label: '최장 연속', value: `${stats.longestStreak}일` },
+    { label: '이번 달 작성', value: `${stats.monthWrittenDays}일` },
+    { label: '오늘 공부 시간', value: formatMinutes(stats.todayMinutes) },
+  ]
   return (
-    <div className="grid gap-4 md:grid-cols-[180px_180px_1fr]">
-      <div className={tileClass}>
-        <p className="text-xs text-ink-600">연속 작성일</p>
-        <p className="mt-1 text-2xl font-semibold tabular-nums text-ink-900">{stats.currentStreak}일</p>
-      </div>
-      <div className={tileClass}>
-        <p className="text-xs text-ink-600">이번 달 작성</p>
-        <p className="mt-1 text-2xl font-semibold tabular-nums text-ink-900">{stats.monthWrittenDays}일</p>
-      </div>
-      <div className={cardClass}>
-        <WeeklyMinutesChart data={stats.last7Days} />
-      </div>
+    <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+      {items.map(({ label, value }) => (
+        <div key={label} className={cardClass}>
+          <p className="text-xs text-ink-600">{label}</p>
+          <p className="mt-1 text-2xl font-semibold tabular-nums text-ink-900">{value}</p>
+        </div>
+      ))}
     </div>
   )
 }
