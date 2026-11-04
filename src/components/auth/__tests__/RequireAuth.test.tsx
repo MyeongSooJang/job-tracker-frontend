@@ -1,11 +1,30 @@
 import { render, screen } from '@testing-library/react'
-import { MemoryRouter, Route, Routes } from 'react-router-dom'
+import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { act } from 'react'
 import { describe, it, expect, beforeEach } from 'vitest'
 import { clearToken, setToken, UNAUTHORIZED_EVENT } from '@/lib/auth'
 import { AuthProvider } from '../AuthProvider'
 import RequireAuth from '../RequireAuth'
+
+function LoginProbe() {
+  const from = (useLocation().state as { from?: string } | null)?.from
+  return <div>로그인 화면 from={from}</div>
+}
+
+const renderAt = (entry: string) =>
+  render(
+    <QueryClientProvider client={new QueryClient()}>
+      <AuthProvider>
+        <MemoryRouter initialEntries={[entry]}>
+          <Routes>
+            <Route path="/login" element={<LoginProbe />} />
+            <Route path="/study-logs/new" element={<RequireAuth><div>보호된 화면</div></RequireAuth>} />
+          </Routes>
+        </MemoryRouter>
+      </AuthProvider>
+    </QueryClientProvider>,
+  )
 
 const renderProtected = () =>
   render(
@@ -29,6 +48,12 @@ describe('RequireAuth', () => {
 
     expect(screen.getByText('로그인 화면')).toBeInTheDocument()
     expect(screen.queryByText('보호된 화면')).not.toBeInTheDocument()
+  })
+
+  it('로그인 후 돌아올 주소에 쿼리 문자열도 담아 보낸다', () => {
+    renderAt('/study-logs/new?date=2026-10-20')
+
+    expect(screen.getByText('로그인 화면 from=/study-logs/new?date=2026-10-20')).toBeInTheDocument()
   })
 
   it('로그인했다면 보호된 화면을 보여준다', () => {
