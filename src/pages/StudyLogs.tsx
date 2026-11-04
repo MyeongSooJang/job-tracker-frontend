@@ -29,10 +29,10 @@ export default function StudyLogs() {
 
   // 고른 날짜가 아직 불러오지 못한 오래된 구간이면, 거기까지 이어서 불러온다.
   const loadedFrom = feedWindow(today, Math.max(0, (feed.data?.pages.length ?? 1) - 1)).from
-  const { hasNextPage, isFetchingNextPage, fetchNextPage } = feed
+  const { hasNextPage, isFetchingNextPage, isFetchNextPageError, fetchNextPage } = feed
   useEffect(() => {
-    if (selectedDate < loadedFrom && hasNextPage && !isFetchingNextPage) void fetchNextPage()
-  }, [selectedDate, loadedFrom, hasNextPage, isFetchingNextPage, fetchNextPage])
+    if (selectedDate < loadedFrom && hasNextPage && !isFetchingNextPage && !isFetchNextPageError) void fetchNextPage()
+  }, [selectedDate, loadedFrom, hasNextPage, isFetchingNextPage, isFetchNextPageError, fetchNextPage])
 
   // 날짜를 고르면 목록이 그 날짜 묶음 위치로 이동한다. 첫 화면에서는 움직이지 않는다.
   useEffect(() => {

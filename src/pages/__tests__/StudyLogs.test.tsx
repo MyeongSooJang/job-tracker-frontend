@@ -120,4 +120,15 @@ describe('StudyLogs 페이지', () => {
 
     expect(fetchNextPage).toHaveBeenCalled()
   })
+
+  it('다음 구간을 불러오다 실패한 뒤에는 오래된 날짜를 골라도 자동으로 다시 불러오지 않는다', async () => {
+    const user = userEvent.setup()
+    feed = { ...feed, isFetchNextPageError: true }
+    renderPage()
+    fetchNextPage.mockClear()
+
+    await user.click(screen.getByRole('button', { name: /2025\.12\.01/ }))
+
+    expect(fetchNextPage).not.toHaveBeenCalled()
+  })
 })
