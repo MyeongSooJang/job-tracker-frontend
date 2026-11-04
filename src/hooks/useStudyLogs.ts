@@ -46,7 +46,7 @@ export const useCreateStudyLog = () => {
     mutationFn: (data: StudyLogCreateRequest) => createStudyLog(data),
     onSuccess: created => {
       queryClient.setQueryData(detailKey(created.id), created)
-      return queryClient.invalidateQueries({ queryKey: STUDY_LOGS_KEY })
+      void queryClient.invalidateQueries({ queryKey: STUDY_LOGS_KEY })
     },
   })
 }
@@ -57,7 +57,7 @@ export const useUpdateStudyLog = () => {
     mutationFn: ({ id, data }: { id: number; data: StudyLogUpdateRequest }) => updateStudyLog(id, data),
     onSuccess: updated => {
       queryClient.setQueryData(detailKey(updated.id), updated)
-      return queryClient.invalidateQueries({ queryKey: STUDY_LOGS_KEY })
+      void queryClient.invalidateQueries({ queryKey: STUDY_LOGS_KEY })
     },
   })
 }
@@ -68,7 +68,7 @@ export const useDeleteStudyLog = () => {
     mutationFn: (id: number) => deleteStudyLog(id),
     onSuccess: (_result, id) => {
       queryClient.removeQueries({ queryKey: detailKey(id) })
-      return queryClient.invalidateQueries({ queryKey: STUDY_LOGS_KEY })
+      void queryClient.invalidateQueries({ queryKey: STUDY_LOGS_KEY })
     },
   })
 }

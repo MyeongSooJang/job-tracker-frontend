@@ -48,7 +48,7 @@ export default function StudyHeatmap({ today, selectedDate, days, onSelect }: St
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
     const step = ARROW_STEP[e.key]
-    if (step === undefined) return
+    if (step === undefined || e.altKey || e.ctrlKey || e.metaKey) return
     e.preventDefault()
     const next = addDays(focusDate, step)
     if (next < firstDate || next > today) return
@@ -117,7 +117,7 @@ export default function StudyHeatmap({ today, selectedDate, days, onSelect }: St
         </div>
       </div>
       <div aria-hidden className="mt-1 flex items-center justify-end gap-1.5 text-[11px] text-ink-600">
-        적게
+        공부 시간 적게
         {([0, 1, 2, 3, 4] as const).map(level => (
           <span key={level} className={cn('h-3 w-3 rounded-[3px]', LEVEL_CLASS[level])} />
         ))}

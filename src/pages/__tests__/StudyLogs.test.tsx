@@ -95,7 +95,7 @@ describe('StudyLogs 페이지', () => {
     const user = userEvent.setup()
     renderPage()
 
-    await user.click(screen.getByRole('button', { name: '2026-11-03' }))
+    await user.click(screen.getByRole('button', { name: '2026년 11월 3일' }))
     const day = screen.getByRole('region', { name: /11월 3일/ })
     await user.click(within(day).getByRole('button', { name: '+ 이 날짜에 새 글' }))
 

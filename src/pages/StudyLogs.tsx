@@ -62,7 +62,10 @@ export default function StudyLogs() {
       {stats.data ? (
         <StudyStatsBar stats={stats.data} />
       ) : stats.isError ? (
-        <p role="alert" className="text-sm text-danger">통계를 불러오지 못했습니다.</p>
+        <div role="alert" className="flex items-center gap-3 text-sm text-danger">
+          통계를 불러오지 못했습니다.
+          <Button type="button" variant="outline" size="sm" onClick={() => void stats.refetch()}>다시 시도</Button>
+        </div>
       ) : (
         <div aria-hidden className="grid grid-cols-2 gap-3 md:grid-cols-4">
           {[0, 1, 2, 3].map(i => <div key={i} className="h-[86px] animate-pulse rounded-xl bg-surface" />)}
@@ -75,7 +78,10 @@ export default function StudyLogs() {
           {yearHeatmap.data && <span className="text-xs tabular-nums text-ink-600">{yearHeatmap.data.length}일 작성</span>}
         </div>
         {yearHeatmap.isError ? (
-          <p role="alert" className="text-sm text-danger">잔디를 불러오지 못했습니다.</p>
+          <div role="alert" className="flex items-center gap-3 text-sm text-danger">
+            잔디를 불러오지 못했습니다.
+            <Button type="button" variant="outline" size="sm" onClick={() => void yearHeatmap.refetch()}>다시 시도</Button>
+          </div>
         ) : yearHeatmap.isLoading ? (
           <div aria-hidden className="h-36 animate-pulse rounded-md bg-surface" />
         ) : (

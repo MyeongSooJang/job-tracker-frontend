@@ -30,8 +30,9 @@ export default function StudyLogFeed({
       aria-label="학습 기록 목록"
       className={cn(cardClass, 'min-w-0 sm:p-5')}
     >
+      <h2 className="sr-only">날짜별 학습 기록</h2>
       {isLoading ? (
-        <div aria-label="기록 불러오는 중" className="space-y-3">
+        <div role="status" aria-label="기록 불러오는 중" className="space-y-3">
           {[0, 1, 2].map(i => <div key={i} className="h-16 animate-pulse rounded-lg bg-surface" />)}
         </div>
       ) : isError ? (

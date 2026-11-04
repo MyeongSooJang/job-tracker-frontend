@@ -1,6 +1,7 @@
+import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
-import { buildMonthCells, shiftMonth } from '@/lib/studyLog'
+import { buildMonthCells, shiftMonth, toMonthKey } from '@/lib/studyLog'
 import { cardClass } from './cardClass'
 
 const WEEKDAYS = ['일', '월', '화', '수', '목', '금', '토']
@@ -27,11 +28,17 @@ export default function StudyLogCalendar({
     >
       <header className="mb-3 flex items-center justify-between">
         <Button variant="outline" size="sm" aria-label="이전 달" onClick={() => onMonthChange(shiftMonth(month, -1))}>
-          ◀
+          <ChevronLeft size={16} aria-hidden />
         </Button>
         <span className="text-sm font-medium tabular-nums text-ink-900">{year}년 {monthNumber}월</span>
-        <Button variant="outline" size="sm" aria-label="다음 달" onClick={() => onMonthChange(shiftMonth(month, 1))}>
-          ▶
+        <Button
+          variant="outline"
+          size="sm"
+          aria-label="다음 달"
+          disabled={month >= toMonthKey(today)}
+          onClick={() => onMonthChange(shiftMonth(month, 1))}
+        >
+          <ChevronRight size={16} aria-hidden />
         </Button>
       </header>
       <div className="grid grid-cols-7 gap-1 text-center text-xs">
@@ -49,10 +56,10 @@ export default function StudyLogCalendar({
               type="button"
               disabled={isFuture}
               aria-pressed={isSelected}
-              aria-label={`${date}${hasLog ? ' 기록 있음' : ''}`}
+              aria-label={`${year}년 ${monthNumber}월 ${Number(date.slice(8))}일${date === today ? ' (오늘)' : ''}${hasLog ? ' 기록 있음' : ''}`}
               onClick={() => onSelect(date)}
               className={cn(
-                'relative flex h-9 flex-col items-center justify-center rounded-md text-sm tabular-nums transition-colors',
+                'relative flex h-10 flex-col items-center justify-center rounded-md text-sm tabular-nums transition-colors',
                 isSelected ? 'bg-brand-500 text-white' : 'text-ink-900 hover:bg-surface',
                 date === today && !isSelected && 'ring-1 ring-brand-500',
                 isFuture && 'cursor-not-allowed text-ink-400 hover:bg-transparent',

@@ -4,7 +4,7 @@ import { useStudyLog } from '@/hooks/useStudyLogs'
 import { resolveWriteDate, toDateKey } from '@/lib/studyLog'
 import StudyLogEditor from '@/components/studylog/StudyLogEditor'
 
-function Notice({ children, role }: { children: React.ReactNode; role?: 'alert' }) {
+function Notice({ children, role }: { children: React.ReactNode; role?: 'alert' | 'status' }) {
   return (
     <div className="mx-auto flex min-h-screen max-w-[720px] flex-col items-start justify-center gap-4 px-4 font-sans">
       <p role={role} className="text-ink-600">{children}</p>
@@ -36,7 +36,7 @@ export default function StudyLogWrite() {
   }
 
   if (!hasValidId) return <Notice role="alert">글을 찾을 수 없습니다.</Notice>
-  if (!isNew && log.isLoading) return <Notice>불러오는 중...</Notice>
+  if (!isNew && log.isLoading) return <Notice role="status">불러오는 중...</Notice>
   if (!isNew && (log.isError || !log.data)) return <Notice role="alert">글을 찾을 수 없습니다.</Notice>
 
   const date = isNew
@@ -47,6 +47,7 @@ export default function StudyLogWrite() {
       key={session.count}
       date={date}
       log={isNew ? null : (log.data ?? null)}
+      // 에디터는 onCreated를 navigate보다 먼저 부른다. 주소가 바뀐 렌더에서 created가 이미 있어야 에디터를 유지한다.
       onCreated={id => setCreated({ session: session.count, id })}
     />
   )

@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useLayoutEffect, useRef } from 'react'
 import { Crepe } from '@milkdown/crepe'
 import '@milkdown/crepe/theme/common/style.css'
 import '@milkdown/crepe/theme/frame.css'
@@ -19,7 +19,7 @@ export default function MarkdownEditor({ initialValue, onChange, placeholder, ar
   // 개발 모드(StrictMode)는 효과를 두 번 실행하므로 만들기·정리를 한 줄로 이어서 같은 root에 에디터가 겹치지 않게 한다.
   const queueRef = useRef<Promise<unknown>>(Promise.resolve())
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     onChangeRef.current = onChange
   })
 
@@ -30,14 +30,17 @@ export default function MarkdownEditor({ initialValue, onChange, placeholder, ar
       root,
       defaultValue: initialValue,
       features: { [Crepe.Feature.ImageBlock]: false, [Crepe.Feature.Latex]: false },
-      featureConfigs: { [Crepe.Feature.Placeholder]: { text: placeholder } },
+      // text가 undefined이면 Crepe의 기본 문구를 덮어쓰므로 지정했을 때만 넘긴다.
+      ...(placeholder !== undefined && { featureConfigs: { [Crepe.Feature.Placeholder]: { text: placeholder } } }),
     })
     crepe.on(listener => {
       listener.markdownUpdated((_ctx, markdown, previous) => {
         if (markdown !== previous) onChangeRef.current(markdown)
       })
     })
-    const created = queueRef.current.then(() => crepe.create()).catch(() => undefined)
+    const created = queueRef.current.then(() => crepe.create()).catch(error => {
+      console.error('에디터를 만들지 못했습니다.', error)
+    })
     queueRef.current = created
     return () => {
       queueRef.current = created.then(() => crepe.destroy()).catch(() => undefined)
