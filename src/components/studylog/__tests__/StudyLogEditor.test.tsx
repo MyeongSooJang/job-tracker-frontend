@@ -164,6 +164,69 @@ describe('StudyLogEditor', () => {
     expect(screen.getByRole('button', { name: '저장' })).toBeDisabled()
   })
 
+  it('저장할 수 없을 때는 이유를 버튼 설명으로 알려준다', async () => {
+    const user = userEvent.setup()
+    await renderEditor()
+    expect(screen.getByRole('button', { name: '저장' })).toHaveAttribute('title', '제목을 입력해주세요')
+
+    await user.type(screen.getByLabelText('제목'), 'JPA 정리')
+    expect(screen.getByRole('button', { name: '저장' })).toHaveAttribute('title', '내용을 입력해주세요')
+  })
+
+  it('제목에서 Enter를 치면 저장하지 않고 본문 편집 영역으로 포커스를 옮긴다', async () => {
+    const user = userEvent.setup()
+    await renderEditor()
+    const body = document.createElement('div')
+    body.setAttribute('contenteditable', 'true')
+    body.tabIndex = 0
+    screen.getByLabelText('공부한 내용').parentElement?.appendChild(body)
+
+    await user.type(screen.getByLabelText('제목'), 'JPA 정리{Enter}')
+
+    expect(body).toHaveFocus()
+    expect(createMutate).not.toHaveBeenCalled()
+  })
+
+  it('한글 조합 중 Enter는 가로채지 않는다', async () => {
+    await renderEditor()
+    const title = screen.getByLabelText('제목')
+
+    const notPrevented = fireEvent.keyDown(title, { key: 'Enter', isComposing: true })
+
+    expect(notPrevented).toBe(true)
+  })
+
+  it('Ctrl+S와 Cmd+S로 저장한다', async () => {
+    const user = userEvent.setup()
+    await renderEditor()
+    await user.type(screen.getByLabelText('제목'), 'JPA 정리')
+    await user.type(screen.getByLabelText('공부한 내용'), 'JPA 공부')
+
+    const notPrevented = fireEvent.keyDown(screen.getByLabelText('공부한 내용'), { key: 's', ctrlKey: true })
+
+    expect(notPrevented).toBe(false)
+    expect(createMutate).toHaveBeenCalledTimes(1)
+  })
+
+  it('저장할 수 없는 상태에서 Ctrl+S를 눌러도 저장 요청하지 않는다', async () => {
+    await renderEditor()
+
+    fireEvent.keyDown(window, { key: 's', metaKey: true })
+
+    expect(createMutate).not.toHaveBeenCalled()
+  })
+
+  it('삭제 확인 문구에 저장된 글의 제목을 보여준다', async () => {
+    const confirm = vi.spyOn(window, 'confirm').mockReturnValue(false)
+    const user = userEvent.setup()
+    await renderEditor(log)
+    await user.type(screen.getByLabelText('제목'), ' 수정 중')
+
+    await user.click(screen.getByRole('button', { name: '삭제' }))
+
+    expect(confirm).toHaveBeenCalledWith("'JPA 정리' 글을 삭제할까요?")
+  })
+
   it('새 글을 처음 저장하면 글 주소로 바꾸고 이후 저장은 수정 요청이 된다', async () => {
     createMutate.mockImplementationOnce((_data, options?: { onSuccess?: (created: StudyLog) => void }) =>
       options?.onSuccess?.({ ...log, id: 7 }))

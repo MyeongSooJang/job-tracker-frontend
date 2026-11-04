@@ -1,5 +1,5 @@
 import { lazy, Suspense, useEffect, useRef, useState } from 'react'
-import { ArrowLeft, Plus } from 'lucide-react'
+import { ArrowLeft, Check, Plus } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import type { StudyLog } from '@/api/types'
 import { useCreateStudyLog, useDayStudyLogs, useDeleteStudyLog, useUpdateStudyLog } from '@/hooks/useStudyLogs'
@@ -62,7 +62,7 @@ interface StudyLogEditorProps {
 
 const chipClass = (current: boolean) =>
   cn(
-    'inline-flex max-w-[12rem] items-center gap-1 truncate rounded-full border px-3 py-1 text-xs transition-colors duration-150',
+    'inline-flex max-w-[12rem] items-center gap-1 rounded-full border px-3 py-1 text-xs transition-colors duration-150',
     current
       ? 'border-brand-100 bg-brand-50 font-semibold text-brand-700'
       : 'border-line bg-white text-ink-600 hover:bg-surface',
@@ -106,8 +106,16 @@ export default function StudyLogEditor({ date, log, onCreated }: StudyLogEditorP
   const canSave =
     draft.title.trim() !== '' && draft.content.trim() !== '' && minutes !== null && !tooLong
     && !isPending && (dirty || savedId === null)
+  const saveBlocker =
+    draft.title.trim() === '' ? '제목을 입력해주세요'
+    : draft.content.trim() === '' ? '내용을 입력해주세요'
+    : minutes === null ? '공부 시간은 0~1440분 사이로 입력해주세요'
+    : tooLong ? '내용을 10,000자 이하로 줄여주세요'
+    : !dirty && savedId !== null ? '변경한 내용이 없어요'
+    : null
   const error = create.error ?? update.error ?? remove.error
   const status = isSaving ? '저장 중...' : dirty ? '저장하지 않은 변경' : savedId !== null ? '저장됨' : '새 글'
+  const savedClean = !isSaving && !dirty && savedId !== null
   const siblings = dayLogs.data ?? []
 
   // 탭을 닫거나 새로고침할 때 저장하지 않은 변경이 있으면 브라우저가 경고하게 한다.
@@ -164,6 +172,27 @@ export default function StudyLogEditor({ date, log, onCreated }: StudyLogEditorP
 
   // 안내가 사라지면 누르던 버튼도 함께 사라져 포커스가 문서 처음으로 돌아가므로, 쓰던 자리인 제목으로 옮긴다.
   const titleRef = useRef<HTMLInputElement>(null)
+  const formRef = useRef<HTMLFormElement>(null)
+  const editorBoxRef = useRef<HTMLDivElement>(null)
+
+  // Ctrl/Cmd+S 는 브라우저의 페이지 저장 대신 글을 저장한다. 에디터(ProseMirror)가 먼저 처리하지 못하게 캡처 단계에서 받는다.
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && !e.altKey && e.key.toLowerCase() === 's') {
+        e.preventDefault()
+        formRef.current?.requestSubmit()
+      }
+    }
+    window.addEventListener('keydown', onKeyDown, true)
+    return () => window.removeEventListener('keydown', onKeyDown, true)
+  }, [])
+
+  // 제목에서 Enter 를 치면 저장하지 않고 본문으로 넘어간다. 한글 조합 중의 Enter 는 글자 확정이므로 건드리지 않는다.
+  const onTitleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key !== 'Enter' || e.nativeEvent.isComposing) return
+    e.preventDefault()
+    editorBoxRef.current?.querySelector<HTMLElement>('[contenteditable="true"]')?.focus()
+  }
   const [focusRequest, setFocusRequest] = useState(0)
   useEffect(() => {
     if (focusRequest > 0) titleRef.current?.focus()
@@ -234,7 +263,7 @@ export default function StudyLogEditor({ date, log, onCreated }: StudyLogEditorP
   }
 
   const handleDelete = () => {
-    if (savedId === null || !window.confirm('이 글을 삭제할까요?')) return
+    if (savedId === null || !window.confirm(`'${saved.title}' 글을 삭제할까요?`)) return
     remove.mutate(savedId, {
       onSuccess: () => {
         if (key !== null) clearDraft(key)
@@ -255,22 +284,33 @@ export default function StudyLogEditor({ date, log, onCreated }: StudyLogEditorP
           <ArrowLeft size={16} aria-hidden />
           목록으로
         </button>
-        <span className="hidden text-sm text-ink-600 sm:block">{formatDateLabel(date)}</span>
+        <span className="min-w-0 truncate text-xs text-ink-600 sm:text-sm">{formatDateLabel(date)}</span>
         <div className="flex items-center gap-2">
-          <span role="status" className="text-xs text-ink-600">{status}</span>
+          <span role="status" className="inline-flex items-center gap-1 text-xs text-ink-600">
+            {savedClean && <Check size={12} aria-hidden />}
+            {status}
+          </span>
           {savedId !== null && (
             <Button type="button" variant="ghost" size="sm" onClick={handleDelete} disabled={isPending} className="text-danger">
               삭제
             </Button>
           )}
-          <Button type="submit" form="study-log-form" variant="brand" size="sm" disabled={!canSave}>
-            {isSaving ? '저장 중...' : '저장'}
+          <Button
+            type="submit"
+            form="study-log-form"
+            variant="brand"
+            size="sm"
+            disabled={!canSave}
+            title={!canSave && !isPending && saveBlocker !== null ? saveBlocker : undefined}
+          >
+            저장
           </Button>
         </div>
       </header>
 
       <form
         id="study-log-form"
+        ref={formRef}
         aria-label="학습 기록 작성"
         onSubmit={handleSubmit}
         className="mx-auto max-w-[720px] px-4 pb-28 pt-8 md:pt-12"
@@ -302,6 +342,7 @@ export default function StudyLogEditor({ date, log, onCreated }: StudyLogEditorP
           maxLength={MAX_TITLE_LENGTH}
           placeholder="제목을 입력하세요"
           onChange={e => edit({ title: e.target.value })}
+          onKeyDown={onTitleKeyDown}
           className="w-full bg-transparent text-2xl font-bold text-ink-900 placeholder:text-ink-400 focus:outline-none md:text-3xl"
         />
 
@@ -326,7 +367,7 @@ export default function StudyLogEditor({ date, log, onCreated }: StudyLogEditorP
         </div>
         {tooLong && <p className="mt-2 text-sm text-danger">10,000자 이하로 줄여주세요</p>}
 
-        <div className="mt-4">
+        <div ref={editorBoxRef} className="mt-4">
           <Suspense fallback={<div aria-hidden className="min-h-[320px] animate-pulse rounded-md bg-surface" />}>
             <MarkdownEditor
               key={editorSeed}
@@ -360,7 +401,7 @@ export default function StudyLogEditor({ date, log, onCreated }: StudyLogEditorP
                   onClick={() => item.id !== savedId && leave(`/study-logs/${item.id}`)}
                   className={chipClass(item.id === savedId)}
                 >
-                  {item.title}
+                  <span className="min-w-0 truncate">{item.title}</span>
                 </button>
               </li>
             ))}
