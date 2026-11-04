@@ -605,6 +605,22 @@ describe('StudyLogEditor', () => {
       })
     })
 
+    it('공백이 섞인 제목과 빈 공부 시간으로 저장해도 서버에 저장된 값의 해시가 기준이 된다', async () => {
+      createMutate.mockImplementationOnce((_vars, options?: { onSuccess?: (created: { id: number }) => void }) => options?.onSuccess?.({ id: 7 }))
+      const user = setup()
+      await renderEditor()
+      await user.type(screen.getByLabelText('제목'), '  JPA 정리  ')
+      await user.type(screen.getByLabelText('공부한 내용'), 'JPA 공부')
+      await user.click(screen.getByRole('button', { name: '저장' }))
+
+      await user.type(screen.getByLabelText('제목'), '!')
+      advance(500)
+
+      expect(stored('study-log-draft:v1:7:7')).toMatchObject({
+        baseHash: hashDraftBase({ title: 'JPA 정리', content: 'JPA 공부', minutesInput: '0' }),
+      })
+    })
+
     describe('이탈 시점 저장', () => {
       const hideTab = () => {
         vi.spyOn(document, 'visibilityState', 'get').mockReturnValue('hidden')

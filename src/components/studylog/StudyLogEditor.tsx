@@ -35,9 +35,14 @@ function formatSavedAt(timestamp: number, now: number = Date.now()): string {
   return time.toDateString() === new Date(now).toDateString() ? clock : `${time.getMonth() + 1}월 ${time.getDate()}일 ${clock}`
 }
 
+// 서버가 저장한 모양(제목 앞뒤 공백 제거, 빈 공부 시간은 0분)으로 맞춘다. 다시 열었을 때 서버 글의 해시와 같아야 한다.
+function asServerValues(draft: Draft): Draft {
+  return { ...draft, title: draft.title.trim(), minutesInput: String(parseMinutes(draft.minutesInput) ?? draft.minutesInput) }
+}
+
 // 기존 글이면 마지막으로 저장된 값의 해시를 기준으로 함께 남겨, 나중에 서버 글이 바뀌었는지 비교할 수 있게 한다.
 function persistDraft(key: string, draft: Draft, saved: Draft, savedId: number | null): void {
-  saveDraft(key, { ...draft, baseHash: savedId === null ? null : hashDraftBase(saved) })
+  saveDraft(key, { ...draft, baseHash: savedId === null ? null : hashDraftBase(asServerValues(saved)) })
 }
 
 interface Draft {
