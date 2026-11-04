@@ -25,14 +25,14 @@ export default function StudyLogWrite() {
   const hasValidId = isNew || (id !== undefined && Number.isInteger(id))
   const log = useStudyLog(hasValidId ? id : undefined)
 
-  // 주소가 바뀌면 에디터를 새로 시작한다. 단, 새 글 주소에서 방금 만든 글의 주소로 교체된 경우에만 이어 쓴다.
-  // 이력에 남은 state만 보고 판단하면 뒤로가기로 돌아왔을 때 다른 글의 에디터가 남으므로, 이전 위치가 새 글 주소였는지도 함께 본다.
-  const [session, setSession] = useState({ locationKey: location.key, pathname: location.pathname, count: 0 })
+  // 주소가 바뀌면 에디터를 새로 시작한다. 단, 지금 떠 있는 에디터가 방금 만든 글의 주소로 교체된 경우에만 이어 쓴다.
+  // 이력(state)으로 추측하지 않고 "어느 에디터 세션이 어떤 글을 만들었는지"를 직접 기록하므로, 뒤로가기·앞으로가기로 어떤 항목에 돌아와도 어긋나지 않는다.
+  const [session, setSession] = useState({ locationKey: location.key, count: 0 })
+  const [created, setCreated] = useState<{ session: number; id: number } | null>(null)
   if (session.locationKey !== location.key) {
-    const createdId = (location.state as { createdId?: number } | null)?.createdId
-    const fromNewPost = session.pathname === '/study-logs/new'
-    const keepEditor = fromNewPost && createdId !== undefined && location.pathname === `/study-logs/${createdId}`
-    setSession({ locationKey: location.key, pathname: location.pathname, count: keepEditor ? session.count : session.count + 1 })
+    const keepEditor =
+      created !== null && created.session === session.count && location.pathname === `/study-logs/${created.id}`
+    setSession({ locationKey: location.key, count: keepEditor ? session.count : session.count + 1 })
   }
 
   if (!hasValidId) return <Notice role="alert">글을 찾을 수 없습니다.</Notice>
@@ -42,5 +42,12 @@ export default function StudyLogWrite() {
   const date = isNew
     ? resolveWriteDate(searchParams.get('date'), toDateKey(new Date()))
     : (log.data as NonNullable<typeof log.data>).studyDate
-  return <StudyLogEditor key={session.count} date={date} log={isNew ? null : (log.data ?? null)} />
+  return (
+    <StudyLogEditor
+      key={session.count}
+      date={date}
+      log={isNew ? null : (log.data ?? null)}
+      onCreated={id => setCreated({ session: session.count, id })}
+    />
+  )
 }

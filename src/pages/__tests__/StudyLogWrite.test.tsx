@@ -10,9 +10,14 @@ let mounts = 0
 const existing: StudyLog = { id: 5, studyDate: '2026-10-20', title: '기존 글', content: '내용', studyMinutes: 30 }
 
 vi.mock('@/components/studylog/StudyLogEditor', () => ({
-  default: function EditorStub({ date, log }: { date: string; log: StudyLog | null }) {
+  default: function EditorStub({ date, log, onCreated }: { date: string; log: StudyLog | null; onCreated?: (id: number) => void }) {
     const [instance] = useState(() => ++mounts)
-    return <div data-testid="editor" data-instance={instance} data-date={date} data-log-id={log?.id ?? ''} />
+    return (
+      <>
+        <div data-testid="editor" data-instance={instance} data-date={date} data-log-id={log?.id ?? ''} />
+        <button onClick={() => onCreated?.(5)}>글 만들기</button>
+      </>
+    )
   },
 }))
 
@@ -29,9 +34,9 @@ function Nav() {
   const navigate = useNavigate()
   return (
     <>
-      <button onClick={() => navigate('/study-logs/5', { replace: true, state: { createdId: 5 } })}>저장 후 주소 교체</button>
+      <button onClick={() => navigate('/study-logs/5', { replace: true })}>저장 후 주소 교체</button>
       <button onClick={() => navigate('/study-logs/6')}>다른 글로 이동</button>
-      <button onClick={() => navigate('/study-logs/6', { state: { createdId: 5 } })}>엉뚱한 상태로 이동</button>
+      <button onClick={() => navigate('/study-logs/new?date=2026-10-20')}>새 글 칩</button>
       <button onClick={() => navigate(-1)}>뒤로가기</button>
     </>
   )
@@ -100,14 +105,25 @@ describe('StudyLogWrite 페이지', () => {
     renderAt('/study-logs/new?date=2026-10-20')
     expect(screen.getByTestId('editor')).toHaveAttribute('data-instance', '1')
 
+    await user.click(screen.getByRole('button', { name: '글 만들기' }))
     await user.click(screen.getByRole('button', { name: '저장 후 주소 교체' }))
 
     expect(screen.getByTestId('editor')).toHaveAttribute('data-instance', '1')
   })
 
+  it('글을 만들지 않았다면 주소가 바뀌어도 에디터를 새로 만든다', async () => {
+    const user = userEvent.setup()
+    renderAt('/study-logs/new?date=2026-10-20')
+
+    await user.click(screen.getByRole('button', { name: '저장 후 주소 교체' }))
+
+    expect(screen.getByTestId('editor')).toHaveAttribute('data-instance', '2')
+  })
+
   it('저장 후 주소를 교체한 글로 뒤로가기하면 에디터를 새로 만든다', async () => {
     const user = userEvent.setup()
     renderAt('/study-logs/new?date=2026-10-20')
+    await user.click(screen.getByRole('button', { name: '글 만들기' }))
     await user.click(screen.getByRole('button', { name: '저장 후 주소 교체' }))
     expect(screen.getByTestId('editor')).toHaveAttribute('data-instance', '1')
     await user.click(screen.getByRole('button', { name: '다른 글로 이동' }))
@@ -119,13 +135,19 @@ describe('StudyLogWrite 페이지', () => {
     expect(screen.getByTestId('editor')).toHaveAttribute('data-log-id', '5')
   })
 
-  it('만든 글이 아닌 주소로 이동하면 이력 상태가 남아 있어도 에디터를 새로 만든다', async () => {
+  it('글을 만든 뒤 새 글로 갔다가 뒤로가기하면 비어 있는 에디터가 남지 않고 새로 만든다', async () => {
     const user = userEvent.setup()
     renderAt('/study-logs/new?date=2026-10-20')
-
-    await user.click(screen.getByRole('button', { name: '엉뚱한 상태로 이동' }))
-
+    await user.click(screen.getByRole('button', { name: '글 만들기' }))
+    await user.click(screen.getByRole('button', { name: '저장 후 주소 교체' }))
+    expect(screen.getByTestId('editor')).toHaveAttribute('data-instance', '1')
+    await user.click(screen.getByRole('button', { name: '새 글 칩' }))
     expect(screen.getByTestId('editor')).toHaveAttribute('data-instance', '2')
+
+    await user.click(screen.getByRole('button', { name: '뒤로가기' }))
+
+    expect(screen.getByTestId('editor')).toHaveAttribute('data-instance', '3')
+    expect(screen.getByTestId('editor')).toHaveAttribute('data-log-id', '5')
   })
 
   it('다른 글로 이동하면 에디터를 새로 만든다', async () => {

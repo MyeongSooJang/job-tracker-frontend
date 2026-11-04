@@ -34,6 +34,8 @@ interface StudyLogEditorProps {
   date: string
   // 기존 글. 없으면 새 글. 시작 값으로만 쓰고 이후 prop 변화는 따라가지 않는다(부모가 key로 새로 마운트한다).
   log: StudyLog | null
+  // 새 글이 만들어진 직후, 주소를 바꾸기 전에 만들어진 글의 id와 함께 호출된다.
+  onCreated?: (id: number) => void
 }
 
 const chipClass = (current: boolean) =>
@@ -44,7 +46,7 @@ const chipClass = (current: boolean) =>
       : 'border-line bg-white text-ink-600 hover:bg-surface',
   )
 
-export default function StudyLogEditor({ date, log }: StudyLogEditorProps) {
+export default function StudyLogEditor({ date, log, onCreated }: StudyLogEditorProps) {
   const navigate = useNavigate()
   const create = useCreateStudyLog()
   const update = useUpdateStudyLog()
@@ -102,8 +104,9 @@ export default function StudyLogEditor({ date, log }: StudyLogEditorProps) {
         onSuccess: created => {
           setSaved(submitted)
           setSavedId(created.id)
-          // 에디터를 다시 만들지 않도록 만든 글의 id를 state로 남기고 주소만 글 주소로 바꾼다.
-          navigate(`/study-logs/${created.id}`, { replace: true, state: { createdId: created.id } })
+          // 부모가 이 에디터를 유지할지 판단하도록 만든 글을 먼저 알린 뒤, 주소만 글 주소로 바꾼다.
+          onCreated?.(created.id)
+          navigate(`/study-logs/${created.id}`, { replace: true })
         },
       })
     } else {

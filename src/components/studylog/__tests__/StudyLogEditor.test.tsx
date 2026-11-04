@@ -36,10 +36,10 @@ function LocationProbe() {
   return <p data-testid="location">{location.pathname + location.search}</p>
 }
 
-async function renderEditor(existing: StudyLog | null = null) {
+async function renderEditor(existing: StudyLog | null = null, onCreated?: (id: number) => void) {
   render(
     <MemoryRouter>
-      <StudyLogEditor date={DATE} log={existing} />
+      <StudyLogEditor date={DATE} log={existing} onCreated={onCreated} />
       <LocationProbe />
     </MemoryRouter>,
   )
@@ -179,6 +179,20 @@ describe('StudyLogEditor', () => {
     await user.click(screen.getByRole('button', { name: '저장' }))
 
     expect(updateMutate).toHaveBeenCalledWith(expect.objectContaining({ id: 7 }), expect.anything())
+  })
+
+  it('새 글을 처음 저장하면 만들어진 글의 id를 알린다', async () => {
+    createMutate.mockImplementationOnce((_data, options?: { onSuccess?: (created: StudyLog) => void }) =>
+      options?.onSuccess?.({ ...log, id: 7 }))
+    const onCreated = vi.fn()
+    const user = userEvent.setup()
+    await renderEditor(null, onCreated)
+
+    await user.type(screen.getByLabelText('제목'), 'JPA 정리')
+    await user.type(screen.getByLabelText('공부한 내용'), 'JPA 공부')
+    await user.click(screen.getByRole('button', { name: '저장' }))
+
+    expect(onCreated).toHaveBeenCalledWith(7)
   })
 
   it('새 글에는 삭제 버튼이 없다', async () => {
