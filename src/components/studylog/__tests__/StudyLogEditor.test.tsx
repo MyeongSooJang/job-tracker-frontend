@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, within } from '@testing-library/react'
+import { act, fireEvent, render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter, useLocation } from 'react-router-dom'
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
@@ -294,5 +294,234 @@ describe('StudyLogEditor', () => {
     await renderEditor()
 
     expect(screen.queryByRole('navigation', { name: '이 날의 글' })).not.toBeInTheDocument()
+  })
+
+  describe('임시 저장', () => {
+    const base64url = (value: string) => btoa(value).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '')
+    const tokenFor = (sub: string) => `${base64url('{"alg":"HS256"}')}.${base64url(JSON.stringify({ sub }))}.signature`
+    const NEW_KEY = `study-log-draft:v1:7:new-${DATE}`
+    const LOG_KEY = 'study-log-draft:v1:7:1'
+    const savedAt = new Date(2026, 10, 3, 14, 5).getTime()
+    const stored = (key: string) => {
+      const raw = localStorage.getItem(key)
+      return raw === null ? null : JSON.parse(raw)
+    }
+    const store = (key: string, value: object) => localStorage.setItem(key, JSON.stringify(value))
+    const advance = (ms: number) => act(() => { vi.advanceTimersByTime(ms) })
+    const setup = () => userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
+
+    beforeEach(() => {
+      localStorage.clear()
+      localStorage.setItem('job-tracker.accessToken', tokenFor('7'))
+      vi.useFakeTimers({ shouldAdvanceTime: true })
+    })
+    afterEach(() => {
+      vi.useRealTimers()
+      localStorage.clear()
+    })
+
+    it('고친 내용은 500ms 동안 입력이 멈춘 뒤에 임시 저장한다', async () => {
+      const user = setup()
+      await renderEditor()
+
+      await user.type(screen.getByLabelText('제목'), 'JPA')
+      expect(stored(NEW_KEY)).toBeNull()
+
+      advance(500)
+      expect(stored(NEW_KEY)).toMatchObject({ title: 'JPA', content: '', minutesInput: '' })
+    })
+
+    it('변경이 없으면 아무것도 저장하지 않는다', async () => {
+      await renderEditor(log)
+      advance(2000)
+
+      expect(stored(LOG_KEY)).toBeNull()
+      expect(localStorage.length).toBe(1)
+    })
+
+    it('로그인 정보가 없으면 임시 저장을 읽거나 쓰지 않는다', async () => {
+      localStorage.clear()
+      const getItem = vi.spyOn(Storage.prototype, 'getItem')
+      const setItem = vi.spyOn(Storage.prototype, 'setItem')
+      const user = setup()
+      await renderEditor()
+
+      await user.type(screen.getByLabelText('제목'), 'JPA')
+      advance(1000)
+
+      const draftCalls = [...getItem.mock.calls, ...setItem.mock.calls].filter(([key]) => String(key).startsWith('study-log-draft'))
+      expect(draftCalls).toEqual([])
+    })
+
+    it('저장되지 않은 임시 글이 있으면 시각과 함께 안내한다', async () => {
+      store(NEW_KEY, { title: '쓰던 글', content: '쓰던 내용', minutesInput: '45', savedAt })
+      await renderEditor()
+
+      const banner = screen.getByRole('region', { name: '임시 저장된 글' })
+      expect(banner).toHaveTextContent('저장하지 않은 글이 있어요. 14:05에 임시 저장됐어요.')
+    })
+
+    it('이어 쓰기를 누르면 임시 글로 제목, 공부 시간, 내용을 채운다', async () => {
+      store(NEW_KEY, { title: '쓰던 글', content: '쓰던 내용', minutesInput: '45', savedAt })
+      const user = setup()
+      await renderEditor()
+
+      await user.click(screen.getByRole('button', { name: '이어 쓰기' }))
+
+      expect(screen.getByLabelText('제목')).toHaveValue('쓰던 글')
+      expect(screen.getByLabelText('공부 시간(분)')).toHaveValue(45)
+      expect(screen.getByLabelText('공부한 내용')).toHaveValue('쓰던 내용')
+      expect(screen.queryByRole('region', { name: '임시 저장된 글' })).not.toBeInTheDocument()
+      expect(screen.getByRole('status')).toHaveTextContent('저장하지 않은 변경')
+    })
+
+    it('이어 쓰기 뒤에도 계속 임시 저장한다', async () => {
+      store(NEW_KEY, { title: '쓰던 글', content: '쓰던 내용', minutesInput: '45', savedAt })
+      const user = setup()
+      await renderEditor()
+      await user.click(screen.getByRole('button', { name: '이어 쓰기' }))
+
+      await user.type(screen.getByLabelText('제목'), '!')
+      advance(500)
+
+      expect(stored(NEW_KEY)).toMatchObject({ title: '쓰던 글!', content: '쓰던 내용' })
+    })
+
+    it('버리기를 누르면 임시 글을 지우고 안내를 숨긴다', async () => {
+      store(NEW_KEY, { title: '쓰던 글', content: '쓰던 내용', minutesInput: '45', savedAt })
+      const user = setup()
+      await renderEditor()
+
+      await user.click(screen.getByRole('button', { name: '버리기' }))
+
+      expect(stored(NEW_KEY)).toBeNull()
+      expect(screen.queryByRole('region', { name: '임시 저장된 글' })).not.toBeInTheDocument()
+      expect(screen.getByLabelText('제목')).toHaveValue('')
+    })
+
+    it('임시 글이 시작 값과 같으면 안내하지 않고 지운다', async () => {
+      store(LOG_KEY, { title: 'JPA 정리', content: '## JPA', minutesInput: '90', savedAt })
+      await renderEditor(log)
+
+      expect(screen.queryByRole('region', { name: '임시 저장된 글' })).not.toBeInTheDocument()
+      expect(stored(LOG_KEY)).toBeNull()
+    })
+
+    it('안내가 떠 있는 동안에는 임시 글을 지우거나 덮어쓰지 않는다', async () => {
+      const draft = { title: '쓰던 글', content: '쓰던 내용', minutesInput: '45', savedAt }
+      store(NEW_KEY, draft)
+      const user = setup()
+      await renderEditor()
+      advance(1000)
+
+      expect(stored(NEW_KEY)).toEqual(draft)
+
+      await user.type(screen.getByLabelText('제목'), '새로 입력')
+      advance(1000)
+
+      expect(stored(NEW_KEY)).toEqual(draft)
+    })
+
+    it('수정을 저장하면 임시 글을 지운다', async () => {
+      updateMutate.mockImplementationOnce((_vars, options?: { onSuccess?: () => void }) => options?.onSuccess?.())
+      const user = setup()
+      await renderEditor(log)
+      await user.type(screen.getByLabelText('제목'), ' 보강')
+      advance(500)
+      expect(stored(LOG_KEY)).not.toBeNull()
+
+      await user.click(screen.getByRole('button', { name: '저장' }))
+
+      expect(stored(LOG_KEY)).toBeNull()
+    })
+
+    it('새 글을 처음 저장하면 날짜 기준 임시 글을 지우고 글 id 기준으로 넘어간다', async () => {
+      createMutate.mockImplementationOnce((_data, options?: { onSuccess?: (created: StudyLog) => void }) =>
+        options?.onSuccess?.({ ...log, id: 7 }))
+      const user = setup()
+      await renderEditor()
+      await user.type(screen.getByLabelText('제목'), 'JPA 정리')
+      await user.type(screen.getByLabelText('공부한 내용'), 'JPA 공부')
+      advance(500)
+      expect(stored(NEW_KEY)).not.toBeNull()
+
+      await user.click(screen.getByRole('button', { name: '저장' }))
+      advance(1000)
+
+      expect(stored(NEW_KEY)).toBeNull()
+      expect(stored('study-log-draft:v1:7:7')).toBeNull()
+
+      await user.type(screen.getByLabelText('제목'), ' 보강')
+      advance(500)
+
+      expect(stored('study-log-draft:v1:7:7')).toMatchObject({ title: 'JPA 정리 보강' })
+      expect(stored(NEW_KEY)).toBeNull()
+    })
+
+    it('글을 삭제하면 임시 글을 지운다', async () => {
+      vi.spyOn(window, 'confirm').mockReturnValue(true)
+      deleteMutate.mockImplementationOnce((_id, options?: { onSuccess?: () => void }) => options?.onSuccess?.())
+      const user = setup()
+      await renderEditor(log)
+      await user.type(screen.getByLabelText('제목'), ' 보강')
+      advance(500)
+      expect(stored(LOG_KEY)).not.toBeNull()
+
+      await user.click(screen.getByRole('button', { name: '삭제' }))
+      advance(1000)
+
+      expect(stored(LOG_KEY)).toBeNull()
+    })
+
+    it('저장하지 않은 변경을 버리고 나가면 임시 글을 지운다', async () => {
+      vi.spyOn(window, 'confirm').mockReturnValue(true)
+      const user = setup()
+      await renderEditor(log)
+      await user.type(screen.getByLabelText('제목'), ' 보강')
+      advance(500)
+      expect(stored(LOG_KEY)).not.toBeNull()
+
+      await user.click(screen.getByRole('button', { name: '목록으로' }))
+
+      expect(stored(LOG_KEY)).toBeNull()
+    })
+
+    it('나가기를 취소하면 임시 글을 남긴다', async () => {
+      vi.spyOn(window, 'confirm').mockReturnValue(false)
+      const user = setup()
+      await renderEditor(log)
+      await user.type(screen.getByLabelText('제목'), ' 보강')
+      advance(500)
+
+      await user.click(screen.getByRole('button', { name: '목록으로' }))
+
+      expect(stored(LOG_KEY)).not.toBeNull()
+    })
+
+    it('탭을 닫거나 새로고침해도 임시 글을 지우지 않는다', async () => {
+      const user = setup()
+      await renderEditor(log)
+      await user.type(screen.getByLabelText('제목'), ' 보강')
+      advance(500)
+
+      window.dispatchEvent(new Event('beforeunload', { cancelable: true }))
+
+      expect(stored(LOG_KEY)).not.toBeNull()
+    })
+
+    it('다른 사용자의 임시 글은 불러오지도 덮어쓰지도 않는다', async () => {
+      const others = { title: '남의 글', content: '남의 내용', minutesInput: '10', savedAt }
+      store('study-log-draft:v1:8:1', others)
+      const user = setup()
+      await renderEditor(log)
+
+      expect(screen.queryByRole('region', { name: '임시 저장된 글' })).not.toBeInTheDocument()
+
+      await user.type(screen.getByLabelText('제목'), ' 보강')
+      advance(500)
+
+      expect(stored('study-log-draft:v1:8:1')).toEqual(others)
+      expect(stored(LOG_KEY)).toMatchObject({ title: 'JPA 정리 보강' })
+    })
   })
 })

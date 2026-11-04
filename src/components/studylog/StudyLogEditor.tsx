@@ -3,8 +3,10 @@ import { ArrowLeft, Plus } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import type { StudyLog } from '@/api/types'
 import { useCreateStudyLog, useDayStudyLogs, useDeleteStudyLog, useUpdateStudyLog } from '@/hooks/useStudyLogs'
+import { getToken } from '@/lib/auth'
 import { getErrorMessage } from '@/lib/errors'
 import { formatDateLabel, formatMinutes } from '@/lib/studyLog'
+import { clearDraft, draftKey, loadDraft, saveDraft, userIdFromToken, type StudyLogDraft } from '@/lib/studyLogDraft'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 
@@ -21,6 +23,14 @@ function parseMinutes(input: string): number | null {
   if (input.trim() === '') return 0
   const value = Number(input)
   return Number.isInteger(value) && value >= 0 && value <= MAX_MINUTES ? value : null
+}
+
+const AUTOSAVE_DELAY_MS = 500
+
+// 임시 저장 시각을 24시간제 HH:mm 으로 보여준다.
+function formatClock(timestamp: number): string {
+  const time = new Date(timestamp)
+  return `${String(time.getHours()).padStart(2, '0')}:${String(time.getMinutes()).padStart(2, '0')}`
 }
 
 interface Draft {
@@ -58,6 +68,21 @@ export default function StudyLogEditor({ date, log, onCreated }: StudyLogEditorP
   const [saved, setSaved] = useState<Draft>(initial)
   const [savedId, setSavedId] = useState<number | null>(log?.id ?? null)
 
+  // 임시 저장은 로그인한 사용자를 알 때만 쓴다. 키에 사용자 id가 들어가 다른 계정의 글과 섞이지 않는다.
+  const [userId] = useState(() => userIdFromToken(getToken()))
+  const key = userId === null ? null : draftKey(userId, { logId: savedId, date })
+  // 시작 값과 다른 임시 글이 남아 있으면 덮어쓰기 전에 사용자에게 먼저 묻는다.
+  const [pendingRestore, setPendingRestore] = useState<StudyLogDraft | null>(() => {
+    if (key === null) return null
+    const stored = loadDraft(key)
+    const same = stored !== null && stored.title === initial.title && stored.content === initial.content
+      && stored.minutesInput === initial.minutesInput
+    return same ? null : stored
+  })
+  // MarkdownEditor는 마운트 때만 initialValue를 읽으므로, 복원할 때는 seed를 올려 새로 마운트한다.
+  const [editorContent, setEditorContent] = useState(initial.content)
+  const [editorSeed, setEditorSeed] = useState(0)
+
   const minutes = parseMinutes(draft.minutesInput)
   const dirty = draft.title !== saved.title || draft.content !== saved.content || draft.minutesInput !== saved.minutesInput
   const isSaving = create.isPending || update.isPending
@@ -81,6 +106,31 @@ export default function StudyLogEditor({ date, log, onCreated }: StudyLogEditorP
     return () => window.removeEventListener('beforeunload', warn)
   }, [dirty])
 
+  // 안내가 떠 있는 동안에는 저장된 임시 글을 건드리지 않는다.
+  useEffect(() => {
+    if (key === null || pendingRestore !== null) return
+    if (!dirty) {
+      clearDraft(key)
+      return
+    }
+    const timer = setTimeout(() => saveDraft(key, draft), AUTOSAVE_DELAY_MS)
+    return () => clearTimeout(timer)
+  }, [key, pendingRestore, dirty, draft])
+
+  const restoreDraft = () => {
+    if (pendingRestore === null) return
+    const { title, content, minutesInput } = pendingRestore
+    setDraft({ title, content, minutesInput })
+    setEditorContent(content)
+    setEditorSeed(seed => seed + 1)
+    setPendingRestore(null)
+  }
+
+  const discardDraft = () => {
+    if (key !== null) clearDraft(key)
+    setPendingRestore(null)
+  }
+
   const edit = (patch: Partial<Draft>) => {
     create.reset()
     update.reset()
@@ -90,7 +140,11 @@ export default function StudyLogEditor({ date, log, onCreated }: StudyLogEditorP
 
   // 앱 안에서 나가는 모든 길(목록으로, 칩)은 여기를 거쳐 저장하지 않은 변경을 확인한다.
   const leave = (to: string) => {
-    if (dirty && !window.confirm(LEAVE_CONFIRM)) return
+    if (dirty) {
+      if (!window.confirm(LEAVE_CONFIRM)) return
+      // 복원 안내를 아직 고르지 않았다면 남아 있는 임시 글은 다음에 고를 수 있게 둔다.
+      if (key !== null && pendingRestore === null) clearDraft(key)
+    }
     navigate(to)
   }
 
@@ -102,6 +156,7 @@ export default function StudyLogEditor({ date, log, onCreated }: StudyLogEditorP
     if (savedId === null) {
       create.mutate({ studyDate: date, ...data }, {
         onSuccess: created => {
+          if (userId !== null) clearDraft(draftKey(userId, { logId: null, date }))
           setSaved(submitted)
           setSavedId(created.id)
           // 부모가 이 에디터를 유지할지 판단하도록 만든 글을 먼저 알린 뒤, 주소만 글 주소로 바꾼다.
@@ -116,7 +171,12 @@ export default function StudyLogEditor({ date, log, onCreated }: StudyLogEditorP
 
   const handleDelete = () => {
     if (savedId === null || !window.confirm('이 글을 삭제할까요?')) return
-    remove.mutate(savedId, { onSuccess: () => navigate('/study-logs', { replace: true }) })
+    remove.mutate(savedId, {
+      onSuccess: () => {
+        if (key !== null) clearDraft(key)
+        navigate('/study-logs', { replace: true })
+      },
+    })
   }
 
   return (
@@ -150,6 +210,20 @@ export default function StudyLogEditor({ date, log, onCreated }: StudyLogEditorP
         onSubmit={handleSubmit}
         className="mx-auto max-w-[720px] px-4 pb-28 pt-8 md:pt-12"
       >
+        {pendingRestore !== null && (
+          <div
+            role="region"
+            aria-label="임시 저장된 글"
+            className="mb-4 flex flex-wrap items-center justify-between gap-x-3 gap-y-2 rounded-lg border border-brand-100 bg-brand-50 px-3 py-2 text-sm text-ink-900"
+          >
+            <p>저장하지 않은 글이 있어요. {formatClock(pendingRestore.savedAt)}에 임시 저장됐어요.</p>
+            <div className="flex items-center gap-2">
+              <Button type="button" variant="brand" size="sm" onClick={restoreDraft}>이어 쓰기</Button>
+              <Button type="button" variant="ghost" size="sm" onClick={discardDraft}>버리기</Button>
+            </div>
+          </div>
+        )}
+
         <label htmlFor="study-title" className="sr-only">제목</label>
         <input
           id="study-title"
@@ -184,7 +258,8 @@ export default function StudyLogEditor({ date, log, onCreated }: StudyLogEditorP
         <div className="mt-4">
           <Suspense fallback={<div aria-hidden className="min-h-[320px] animate-pulse rounded-md bg-surface" />}>
             <MarkdownEditor
-              initialValue={initial.content}
+              key={editorSeed}
+              initialValue={editorContent}
               ariaLabel="공부한 내용"
               placeholder="공부한 내용을 정리해보세요. / 를 누르면 제목, 표, 목록 같은 블록을 추가할 수 있어요."
               onChange={content => edit({ content })}
