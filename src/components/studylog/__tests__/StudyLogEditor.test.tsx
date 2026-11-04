@@ -244,7 +244,7 @@ describe('StudyLogEditor', () => {
 
     await user.click(screen.getByRole('button', { name: '목록으로' }))
 
-    expect(confirm).toHaveBeenCalledWith('저장하지 않은 변경이 있어요. 나갈까요?')
+    expect(screen.getByTestId('location')).toHaveTextContent(/^\/$/)
     expect(screen.getByTestId('location')).not.toHaveTextContent('/study-logs')
   })
 
@@ -316,6 +316,8 @@ describe('StudyLogEditor', () => {
       localStorage.clear()
       localStorage.setItem('job-tracker.accessToken', tokenFor('7'))
       vi.useFakeTimers({ shouldAdvanceTime: true })
+      // 보관 기간 정리와 "오늘" 표기가 실제 날짜에 흔들리지 않도록 시계를 고정한다.
+      vi.setSystemTime(new Date(2026, 10, 3, 18, 0))
     })
     afterEach(() => {
       vi.useRealTimers()
@@ -323,13 +325,16 @@ describe('StudyLogEditor', () => {
     })
 
     it('고친 내용은 500ms 동안 입력이 멈춘 뒤에 임시 저장한다', async () => {
-      const user = setup()
       await renderEditor()
 
-      await user.type(screen.getByLabelText('제목'), 'JPA')
+      // user.type은 키마다 시계를 흘려보내 경계를 흐리므로 한 번에 바꾼다.
+      fireEvent.change(screen.getByLabelText('제목'), { target: { value: 'JPA' } })
       expect(stored(NEW_KEY)).toBeNull()
 
-      advance(500)
+      advance(499)
+      expect(stored(NEW_KEY)).toBeNull()
+
+      advance(1)
       expect(stored(NEW_KEY)).toMatchObject({ title: 'JPA', content: '', minutesInput: '' })
     })
 
@@ -345,13 +350,14 @@ describe('StudyLogEditor', () => {
       localStorage.clear()
       const getItem = vi.spyOn(Storage.prototype, 'getItem')
       const setItem = vi.spyOn(Storage.prototype, 'setItem')
+      const removeItem = vi.spyOn(Storage.prototype, 'removeItem')
       const user = setup()
       await renderEditor()
 
       await user.type(screen.getByLabelText('제목'), 'JPA')
       advance(1000)
 
-      const draftCalls = [...getItem.mock.calls, ...setItem.mock.calls].filter(([key]) => String(key).startsWith('study-log-draft'))
+      const draftCalls = [...getItem.mock.calls, ...setItem.mock.calls, ...removeItem.mock.calls].filter(([key]) => String(key).startsWith('study-log-draft'))
       expect(draftCalls).toEqual([])
     })
 
@@ -361,6 +367,48 @@ describe('StudyLogEditor', () => {
 
       const banner = screen.getByRole('region', { name: '임시 저장된 글' })
       expect(banner).toHaveTextContent('저장하지 않은 글이 있어요. 14:05에 임시 저장됐어요.')
+    })
+
+    it('오늘이 아닌 날 저장된 임시 글은 날짜와 함께 안내한다', async () => {
+      store(NEW_KEY, { title: '쓰던 글', content: '쓰던 내용', minutesInput: '45', savedAt: new Date(2026, 10, 2, 21, 40).getTime() })
+      await renderEditor()
+
+      expect(screen.getByRole('region', { name: '임시 저장된 글' }))
+        .toHaveTextContent('저장하지 않은 글이 있어요. 11월 2일 21:40에 임시 저장됐어요.')
+    })
+
+    it('이어 쓰기를 누르면 제목 입력 칸으로 포커스를 옮긴다', async () => {
+      store(NEW_KEY, { title: '쓰던 글', content: '쓰던 내용', minutesInput: '45', savedAt })
+      const user = setup()
+      await renderEditor()
+
+      await user.click(screen.getByRole('button', { name: '이어 쓰기' }))
+
+      expect(screen.getByLabelText('제목')).toHaveFocus()
+    })
+
+    it('버리기를 누르면 제목 입력 칸으로 포커스를 옮긴다', async () => {
+      store(NEW_KEY, { title: '쓰던 글', content: '쓰던 내용', minutesInput: '45', savedAt })
+      const user = setup()
+      await renderEditor()
+
+      await user.click(screen.getByRole('button', { name: '버리기' }))
+
+      expect(screen.getByLabelText('제목')).toHaveFocus()
+    })
+
+    it('마운트하면 같은 사용자의 30일 지난 임시 글만 정리한다', async () => {
+      const day = 24 * 60 * 60 * 1000
+      const now = Date.now()
+      const entry = (age: number) => ({ title: 'a', content: 'b', minutesInput: '', baseHash: null, savedAt: now - age })
+      store('study-log-draft:v1:7:99', entry(31 * day))
+      store('study-log-draft:v1:7:98', entry(day))
+      store('study-log-draft:v1:8:99', entry(31 * day))
+      await renderEditor(log)
+
+      expect(stored('study-log-draft:v1:7:99')).toBeNull()
+      expect(stored('study-log-draft:v1:7:98')).not.toBeNull()
+      expect(stored('study-log-draft:v1:8:99')).not.toBeNull()
     })
 
     it('이어 쓰기를 누르면 임시 글로 제목, 공부 시간, 내용을 채운다', async () => {
@@ -744,7 +792,49 @@ describe('StudyLogEditor', () => {
 
       await user.click(screen.getByRole('button', { name: '목록으로' }))
 
-      expect(stored(LOG_KEY)).not.toBeNull()
+      expect(screen.getByTestId('location')).toHaveTextContent(/^\/$/)
+      expect(stored(LOG_KEY)).toMatchObject({ title: 'JPA 정리 보강' })
+    })
+
+    it('복원 안내를 고르지 않은 채 나가기를 확인해도 이전 임시 글은 남긴다', async () => {
+      vi.spyOn(window, 'confirm').mockReturnValue(true)
+      const draft = { title: '쓰던 글', content: '쓰던 내용', minutesInput: '45', baseHash: null, savedAt }
+      store(NEW_KEY, draft)
+      const user = setup()
+      const { unmount } = await renderEditor()
+      await user.type(screen.getByLabelText('제목'), '새로 입력')
+
+      await user.click(screen.getByRole('button', { name: '목록으로' }))
+      unmount()
+
+      expect(stored(NEW_KEY)).toEqual(draft)
+    })
+
+    it('저장에 실패하면(성공 콜백이 불리지 않으면) 임시 글을 지우지 않는다', async () => {
+      const user = setup()
+      await renderEditor(log)
+      await user.type(screen.getByLabelText('제목'), ' 보강')
+      advance(500)
+
+      await user.click(screen.getByRole('button', { name: '저장' }))
+      advance(1000)
+
+      expect(updateMutate).toHaveBeenCalled()
+      expect(stored(LOG_KEY)).toMatchObject({ title: 'JPA 정리 보강' })
+    })
+
+    it('새 글 저장에 실패해도 임시 글을 지우지 않는다', async () => {
+      const user = setup()
+      await renderEditor()
+      await user.type(screen.getByLabelText('제목'), 'JPA 정리')
+      await user.type(screen.getByLabelText('공부한 내용'), 'JPA 공부')
+      advance(500)
+
+      await user.click(screen.getByRole('button', { name: '저장' }))
+      advance(1000)
+
+      expect(createMutate).toHaveBeenCalled()
+      expect(stored(NEW_KEY)).toMatchObject({ title: 'JPA 정리', content: 'JPA 공부' })
     })
 
     it('탭을 닫거나 새로고침해도 임시 글을 지우지 않는다', async () => {

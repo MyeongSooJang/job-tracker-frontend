@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { clearDraft, draftKey, hashDraftBase, loadDraft, saveDraft, userIdFromToken } from '../studyLogDraft'
+import { clearDraft, draftKey, hashDraftBase, loadDraft, purgeStaleDrafts, saveDraft, userIdFromToken } from '../studyLogDraft'
 
 const base64url = (value: string) =>
   btoa(String.fromCharCode(...new TextEncoder().encode(value))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '')
@@ -26,8 +26,19 @@ describe('studyLogDraft', () => {
     })
 
     it('base64url 문자(-, _)와 패딩 생략이 있는 payload도 읽는다', () => {
-      const sub = '사용자?>>'
-      expect(userIdFromToken(tokenWith({ sub }))).toBe(sub)
+      // 정렬이 다른 위치마다 표준 base64의 +, /가 나오도록 여러 번 섞는다.
+      const sub = '사용자???>>>~~~a???>>>~~~aa???>>>~~~'
+      const payloadJson = JSON.stringify({ sub })
+      const standard = btoa(String.fromCharCode(...new TextEncoder().encode(payloadJson)))
+      expect(standard).toContain('+')
+      expect(standard).toContain('/')
+
+      const token = tokenWith({ sub })
+      const payload = token.split('.')[1]
+      expect(payload).toContain('-')
+      expect(payload).toContain('_')
+      expect(payload).not.toMatch(/[+/=]/)
+      expect(userIdFromToken(token)).toBe(sub)
     })
 
     it('토큰이 없거나 형식이 틀리면 null이다', () => {
@@ -67,6 +78,63 @@ describe('studyLogDraft', () => {
     it('알려진 FNV-1a 값과 일치한다', () => {
       // JSON.stringify(['', '', '']) === '["","",""]' 의 FNV-1a 32비트 값
       expect(hashDraftBase({ title: '', content: '', minutesInput: '' })).toBe(fnv1a('["","",""]'))
+    })
+  })
+
+  describe('purgeStaleDrafts', () => {
+    const DAY = 24 * 60 * 60 * 1000
+    const NOW = new Date(2026, 10, 5, 12, 0).getTime()
+    const put = (key: string, savedAt: number) =>
+      localStorage.setItem(key, JSON.stringify({ title: 'a', content: 'b', minutesInput: '', baseHash: null, savedAt }))
+
+    it('같은 사용자의 30일 지난 임시 글만 지운다', () => {
+      put('study-log-draft:v1:7:old', NOW - 31 * DAY)
+      put('study-log-draft:v1:7:fresh', NOW - 29 * DAY)
+      put('study-log-draft:v1:7:new-2026-11-03', NOW - DAY)
+
+      purgeStaleDrafts('7', NOW)
+
+      expect(localStorage.getItem('study-log-draft:v1:7:old')).toBeNull()
+      expect(localStorage.getItem('study-log-draft:v1:7:fresh')).not.toBeNull()
+      expect(localStorage.getItem('study-log-draft:v1:7:new-2026-11-03')).not.toBeNull()
+    })
+
+    it('보관 기간을 바꿀 수 있다', () => {
+      put('study-log-draft:v1:7:a', NOW - 8 * DAY)
+
+      purgeStaleDrafts('7', NOW, 7)
+
+      expect(localStorage.getItem('study-log-draft:v1:7:a')).toBeNull()
+    })
+
+    it('모양이 깨진 같은 사용자의 항목도 지운다', () => {
+      localStorage.setItem('study-log-draft:v1:7:broken', '{not json')
+      localStorage.setItem('study-log-draft:v1:7:wrong', JSON.stringify({ title: 1 }))
+
+      purgeStaleDrafts('7', NOW)
+
+      expect(localStorage.getItem('study-log-draft:v1:7:broken')).toBeNull()
+      expect(localStorage.getItem('study-log-draft:v1:7:wrong')).toBeNull()
+    })
+
+    it('다른 사용자나 다른 키는 오래됐어도 건드리지 않는다', () => {
+      put('study-log-draft:v1:8:old', NOW - 90 * DAY)
+      put('study-log-draft:v1:70:old', NOW - 90 * DAY)
+      put('other-feature:7:old', NOW - 90 * DAY)
+      localStorage.setItem('job-tracker.accessToken', 'token')
+
+      purgeStaleDrafts('7', NOW)
+
+      expect(localStorage.length).toBe(4)
+    })
+
+    it('저장소를 쓸 수 없어도 예외를 던지지 않는다', () => {
+      put('study-log-draft:v1:7:old', NOW - 90 * DAY)
+      vi.spyOn(Storage.prototype, 'key').mockImplementation(() => { throw new Error('blocked') })
+      vi.spyOn(Storage.prototype, 'getItem').mockImplementation(() => { throw new Error('blocked') })
+      vi.spyOn(Storage.prototype, 'removeItem').mockImplementation(() => { throw new Error('blocked') })
+
+      expect(() => purgeStaleDrafts('7', NOW)).not.toThrow()
     })
   })
 

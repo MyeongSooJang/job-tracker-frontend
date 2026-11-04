@@ -6,7 +6,7 @@ import { useCreateStudyLog, useDayStudyLogs, useDeleteStudyLog, useUpdateStudyLo
 import { getToken } from '@/lib/auth'
 import { getErrorMessage } from '@/lib/errors'
 import { formatDateLabel, formatMinutes } from '@/lib/studyLog'
-import { clearDraft, draftKey, hashDraftBase, loadDraft, saveDraft, userIdFromToken, type StudyLogDraft } from '@/lib/studyLogDraft'
+import { clearDraft, draftKey, hashDraftBase, loadDraft, purgeStaleDrafts, saveDraft, userIdFromToken, type StudyLogDraft } from '@/lib/studyLogDraft'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 
@@ -28,9 +28,11 @@ function parseMinutes(input: string): number | null {
 const AUTOSAVE_DELAY_MS = 500
 
 // 임시 저장 시각을 24시간제 HH:mm 으로 보여준다.
-function formatClock(timestamp: number): string {
+// 오늘 저장된 것이면 시각만, 이전 날이면 날짜를 붙인다(예: 11월 3일 21:40).
+function formatSavedAt(timestamp: number, now: number = Date.now()): string {
   const time = new Date(timestamp)
-  return `${String(time.getHours()).padStart(2, '0')}:${String(time.getMinutes()).padStart(2, '0')}`
+  const clock = `${String(time.getHours()).padStart(2, '0')}:${String(time.getMinutes()).padStart(2, '0')}`
+  return time.toDateString() === new Date(now).toDateString() ? clock : `${time.getMonth() + 1}월 ${time.getDate()}일 ${clock}`
 }
 
 // 기존 글이면 마지막으로 저장된 값의 해시를 기준으로 함께 남겨, 나중에 서버 글이 바뀌었는지 비교할 수 있게 한다.
@@ -155,6 +157,18 @@ export default function StudyLogEditor({ date, log, onCreated }: StudyLogEditorP
     }
   }, [canFlushOnHide])
 
+  // 안내가 사라지면 누르던 버튼도 함께 사라져 포커스가 문서 처음으로 돌아가므로, 쓰던 자리인 제목으로 옮긴다.
+  const titleRef = useRef<HTMLInputElement>(null)
+  const [focusRequest, setFocusRequest] = useState(0)
+  useEffect(() => {
+    if (focusRequest > 0) titleRef.current?.focus()
+  }, [focusRequest])
+
+  // 오래 방치된 임시 글이 쌓이지 않도록 열 때 한 번 정리한다.
+  useEffect(() => {
+    if (userId !== null) purgeStaleDrafts(userId)
+  }, [userId])
+
   const restoreDraft = () => {
     if (pendingRestore === null) return
     const { title, content, minutesInput } = pendingRestore
@@ -162,11 +176,13 @@ export default function StudyLogEditor({ date, log, onCreated }: StudyLogEditorP
     setEditorContent(content)
     setEditorSeed(seed => seed + 1)
     setPendingRestore(null)
+    setFocusRequest(request => request + 1)
   }
 
   const discardDraft = () => {
     if (key !== null) clearDraft(key)
     setPendingRestore(null)
+    setFocusRequest(request => request + 1)
   }
 
   const edit = (patch: Partial<Draft>) => {
@@ -261,7 +277,7 @@ export default function StudyLogEditor({ date, log, onCreated }: StudyLogEditorP
             className="mb-4 flex flex-wrap items-center justify-between gap-x-3 gap-y-2 rounded-lg border border-brand-100 bg-brand-50 px-3 py-2 text-sm text-ink-900"
           >
             <div className="space-y-1">
-              <p>저장하지 않은 글이 있어요. {formatClock(pendingRestore.savedAt)}에 임시 저장됐어요.</p>
+              <p>저장하지 않은 글이 있어요. {formatSavedAt(pendingRestore.savedAt)}에 임시 저장됐어요.</p>
               {baseChanged && (
                 <p className="font-medium text-ink-900">다른 곳에서 수정된 글이에요. 이어 쓰면 서버의 최신 내용을 덮어써요.</p>
               )}
@@ -276,6 +292,7 @@ export default function StudyLogEditor({ date, log, onCreated }: StudyLogEditorP
         <label htmlFor="study-title" className="sr-only">제목</label>
         <input
           id="study-title"
+          ref={titleRef}
           value={draft.title}
           maxLength={MAX_TITLE_LENGTH}
           placeholder="제목을 입력하세요"

@@ -76,3 +76,23 @@ export function clearDraft(key: string): void {
     // 위와 동일
   }
 }
+
+const DAY_MS = 24 * 60 * 60 * 1000
+
+// 쓰다 만 채 잊힌 임시 글이 저장소에 쌓이지 않도록, 이 사용자의 오래된(또는 깨진) 항목만 지운다.
+export function purgeStaleDrafts(userId: string, now: number = Date.now(), maxAgeDays = 30): void {
+  try {
+    const prefix = `study-log-draft:v1:${userId}:`
+    const keys: string[] = []
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i)
+      if (key !== null && key.startsWith(prefix)) keys.push(key)
+    }
+    for (const key of keys) {
+      const draft = loadDraft(key)
+      if (draft === null || now - draft.savedAt > maxAgeDays * DAY_MS) clearDraft(key)
+    }
+  } catch {
+    // 저장소를 쓸 수 없으면 정리도 건너뛴다.
+  }
+}
