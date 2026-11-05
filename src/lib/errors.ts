@@ -8,3 +8,12 @@ export function getErrorMessage(error: unknown, fallback: string): string {
   }
   return fallback
 }
+
+// 백엔드 ErrorResponse의 code(예: EMAIL_NOT_VERIFIED)로 분기할 때 쓴다.
+export function getErrorCode(error: unknown): string | undefined {
+  if (isAxiosError(error)) {
+    const code = (error.response?.data as { code?: unknown } | undefined)?.code
+    if (typeof code === 'string') return code
+  }
+  return undefined
+}
