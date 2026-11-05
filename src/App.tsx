@@ -10,6 +10,7 @@ import InterviewDetail from '@/pages/InterviewDetail'
 import Schedules from '@/pages/Schedules'
 import Reviews from '@/pages/Reviews'
 import StudyLogs from '@/pages/StudyLogs'
+import StudyLogWrite from '@/pages/StudyLogWrite'
 import MyPage from '@/pages/MyPage'
 import Login from '@/pages/Login'
 import Signup from '@/pages/Signup'
@@ -19,6 +20,14 @@ export default function App() {
     <Routes>
       <Route path="/login" element={<Login />} />
       <Route path="/signup" element={<Signup />} />
+      <Route
+        path="/study-logs/:logId"
+        element={
+          <RequireAuth>
+            <StudyLogWrite />
+          </RequireAuth>
+        }
+      />
       <Route
         path="/*"
         element={
