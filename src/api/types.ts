@@ -126,6 +126,15 @@ export interface SignupRequest {
   password: string
 }
 
+export interface EmailVerificationRequest {
+  email: string
+}
+
+export interface EmailVerificationConfirmRequest {
+  email: string
+  code: string
+}
+
 export interface LoginRequest {
   email: string
   password: string
