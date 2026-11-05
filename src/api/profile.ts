@@ -1,5 +1,5 @@
 import { apiClient } from '@/lib/axios'
-import type { Profile, ProfileRequest, ResumeInfo } from './types'
+import type { Profile, ProfileRequest, ResumeDownloadUrl, ResumeInfo } from './types'
 
 export const getMyProfile = () =>
   apiClient.get<Profile>('/api/me/profile').then(r => r.data)
@@ -16,8 +16,13 @@ export const uploadResume = (file: File) => {
     .then(r => r.data)
 }
 
-export const downloadResume = () =>
-  apiClient.get<Blob>('/api/me/resume', { responseType: 'blob' }).then(r => r.data)
+// Presigned URL에 Authorization 헤더가 같이 가면 S3가 요청을 거부하므로 apiClient 대신 fetch로 받는다.
+export const downloadResume = async (): Promise<Blob> => {
+  const { url } = await apiClient.get<ResumeDownloadUrl>('/api/me/resume').then(r => r.data)
+  const response = await fetch(url)
+  if (!response.ok) throw new Error(`이력서 파일을 받지 못했습니다. (${response.status})`)
+  return response.blob()
+}
 
 export const deleteResume = () =>
   apiClient.delete('/api/me/resume').then(() => undefined)
