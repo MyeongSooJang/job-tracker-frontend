@@ -135,6 +135,12 @@ export interface TokenResponse {
   accessToken: string
 }
 
+export interface ResumeDownloadUrl {
+  url: string
+  fileName: string
+  expiresAt: string
+}
+
 export interface ResumeInfo {
   fileName: string
   sizeBytes: number

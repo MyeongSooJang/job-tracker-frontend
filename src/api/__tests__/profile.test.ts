@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { apiClient } from '@/lib/axios'
 import { deleteResume, downloadResume, getMyProfile, updateMyProfile, uploadResume } from '@/api/profile'
 
@@ -8,6 +8,7 @@ vi.mock('@/lib/axios', () => ({
 
 describe('profile API', () => {
   beforeEach(() => vi.clearAllMocks())
+  afterEach(() => vi.unstubAllGlobals())
 
   it('getMyProfile: GET /api/me/profile을 호출한다', async () => {
     vi.mocked(apiClient.get).mockResolvedValue({ data: { name: '홍길동' } })
@@ -44,14 +45,29 @@ describe('profile API', () => {
     expect(config?.headers).toEqual({ 'Content-Type': 'multipart/form-data' })
   })
 
-  it('downloadResume: blob 응답으로 GET /api/me/resume을 호출한다', async () => {
+  it('downloadResume: 다운로드 주소를 받아 인증 헤더 없이 S3에서 Blob을 받는다', async () => {
     const blob = new Blob(['%PDF-1.7'])
-    vi.mocked(apiClient.get).mockResolvedValue({ data: blob })
+    const url = 'https://bucket.s3.amazonaws.com/resumes/1/a.pdf?X-Amz-Signature=x'
+    vi.mocked(apiClient.get).mockResolvedValue({
+      data: { url, fileName: '이력서.pdf', expiresAt: '2026-11-05T01:05:00Z' },
+    })
+    const fetchMock = vi.fn().mockResolvedValue({ ok: true, blob: () => Promise.resolve(blob) })
+    vi.stubGlobal('fetch', fetchMock)
 
     const result = await downloadResume()
 
-    expect(apiClient.get).toHaveBeenCalledWith('/api/me/resume', { responseType: 'blob' })
+    expect(apiClient.get).toHaveBeenCalledWith('/api/me/resume')
+    expect(fetchMock).toHaveBeenCalledWith(url)
     expect(result).toBe(blob)
+  })
+
+  it('downloadResume: S3 응답이 실패면 에러를 던진다', async () => {
+    vi.mocked(apiClient.get).mockResolvedValue({
+      data: { url: 'https://bucket.s3.amazonaws.com/x', fileName: '이력서.pdf', expiresAt: '' },
+    })
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: false, status: 403 }))
+
+    await expect(downloadResume()).rejects.toThrow('이력서 파일을 받지 못했습니다. (403)')
   })
 
   it('deleteResume: DELETE /api/me/resume을 호출한다', async () => {
