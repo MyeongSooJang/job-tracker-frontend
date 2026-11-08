@@ -1,20 +1,12 @@
-import type { ApplicationStatus, CompanyReview } from '@/api/types'
+import type { CompanyReview } from '@/api/types'
 import RatingStars from '@/components/reviews/RatingStars'
 import DifficultyMeter from '@/components/reviews/DifficultyMeter'
-import { ATMOSPHERE_LABELS, ROUTE_LABELS } from '@/lib/review'
+import { ATMOSPHERE_LABELS, ROUTE_LABELS, STAGE_TONE } from '@/lib/review'
 import { STATUS_LABELS } from '@/lib/status'
 import { cn } from '@/lib/utils'
 
 interface ReviewCardProps {
   review: CompanyReview
-}
-
-// 전형 결과가 카드에서 가장 먼저 읽히도록 상태별로 색을 달리한다.
-const STAGE_TONE: Record<ApplicationStatus, string> = {
-  ACCEPTED: 'bg-emerald-50 text-emerald-700',
-  REJECTED: 'bg-red-50 text-red-700',
-  INTERVIEW: 'bg-brand-50 text-brand-600',
-  RESUME_SUBMITTED: 'bg-surface text-ink-600',
 }
 
 const formatDate = (iso: string) =>

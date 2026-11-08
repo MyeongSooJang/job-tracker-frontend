@@ -1,67 +1,51 @@
-import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { useReviews, useWriteReview } from '@/hooks/useReviews'
-import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
-import { Textarea } from '@/components/ui/textarea'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { useReviews } from '@/hooks/useReviews'
+import ReviewForm from '@/components/reviews/ReviewForm'
 import { STATUS_LABELS } from '@/lib/status'
-import RatingInput from '@/components/reviews/RatingInput'
+import { STAGE_TONE } from '@/lib/review'
+import { cn } from '@/lib/utils'
 import type { Review } from '@/api/types'
 
-function ReviewCard({ review }: { review: Review }) {
-  const { mutate: writeReview, isPending } = useWriteReview()
-  const [content, setContent] = useState(review.content ?? '')
-  const [rating, setRating] = useState(review.rating ?? 0)
-  const unchanged = content === (review.content ?? '') && rating === (review.rating ?? 0)
+function MyReviewCard({ review }: { review: Review }) {
+  const company = review.application.company.name
 
   return (
-    <Card>
-      <CardHeader className="pb-2">
-        <div className="flex items-center justify-between gap-2">
-          <CardTitle className="text-base">
-            <Link to={`/applications/${review.application.id}`} className="hover:underline">
-              {review.application.company.name}
-            </Link>
-            <span className="text-slate-400 font-normal ml-2">— {review.application.position}</span>
-          </CardTitle>
-          <div className="flex items-center gap-2">
-            <Badge variant="outline" className="text-xs">
-              {STATUS_LABELS[review.application.status]}
-            </Badge>
-            {!review.content && (
-              <Badge variant="outline" className="text-xs border-amber-300 text-amber-700">
-                작성 전
-              </Badge>
-            )}
-          </div>
-        </div>
-      </CardHeader>
-      <CardContent className="space-y-3">
-        <RatingInput
-          value={rating}
-          onChange={setRating}
-          label={`${review.application.company.name} 평점`}
-        />
-        <Textarea
-          autoResize
-          rows={4}
-          placeholder="면접 분위기, 받은 질문, 아쉬운 점 등 후기를 남겨 보세요."
-          aria-label={`${review.application.company.name} 후기`}
-          value={content}
-          onChange={(e) => setContent(e.target.value)}
-        />
-        <div className="flex justify-end">
-          <Button
-            size="sm"
-            disabled={isPending || unchanged || !content.trim() || rating === 0}
-            onClick={() => writeReview({ id: review.id, data: { content, rating } })}
+    <article className="space-y-5 rounded-xl border border-line bg-white p-5">
+      <header className="flex flex-wrap items-center justify-between gap-2">
+        <div className="flex min-w-0 items-baseline gap-2">
+          <Link
+            to={`/applications/${review.application.id}`}
+            className="truncate text-base font-semibold text-ink-900 hover:underline"
           >
-            {isPending ? '저장 중...' : '저장'}
-          </Button>
+            {company}
+          </Link>
+          <span className="truncate text-sm text-ink-400">{review.application.position}</span>
         </div>
-      </CardContent>
-    </Card>
+        <div className="flex items-center gap-2">
+          <span
+            className={cn(
+              'rounded-full px-2.5 py-0.5 text-xs font-semibold',
+              STAGE_TONE[review.application.status],
+            )}
+          >
+            {STATUS_LABELS[review.application.status]}
+          </span>
+          {!review.content && (
+            <span className="rounded-full bg-amber-50 px-2.5 py-0.5 text-xs font-semibold text-amber-700">
+              작성 전
+            </span>
+          )}
+        </div>
+      </header>
+
+      <ReviewForm
+        review={review}
+        subject={company}
+        contentLabel={`${company} 후기`}
+        contentPlaceholder="면접 분위기, 아쉬운 점, 다음 지원자에게 해주고 싶은 말을 남겨 보세요."
+        saveLabel="저장"
+      />
+    </article>
   )
 }
 
@@ -72,26 +56,26 @@ export default function Reviews() {
     (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
   )
 
-  if (isLoading) return <div className="text-slate-500">불러오는 중...</div>
-  if (isError) return <div className="text-red-500 p-4">데이터를 불러오지 못했습니다.</div>
+  if (isLoading) return <div className="text-ink-600">불러오는 중...</div>
+  if (isError) return <div className="p-4 text-red-500">데이터를 불러오지 못했습니다.</div>
 
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-slate-800">후기</h1>
-        <p className="text-sm text-slate-500 mt-1">
-          서류합격한 지원 건은 후기가 자동으로 만들어집니다.
+        <h1 className="text-2xl font-bold text-ink-900">내 면접 기록</h1>
+        <p className="mt-1 text-sm text-ink-600">
+          서류합격한 지원 건은 기록이 자동으로 만들어집니다.
         </p>
       </div>
 
       {sorted.length === 0 ? (
-        <p className="text-slate-400 text-sm">
-          아직 후기가 없습니다. 지원 건이 서류합격되면 이곳에 나타납니다.
+        <p className="text-sm text-ink-400">
+          아직 면접 기록이 없습니다. 지원 건이 서류합격되면 이곳에 나타납니다.
         </p>
       ) : (
         <div className="space-y-4">
-          {sorted.map((r) => (
-            <ReviewCard key={r.id} review={r} />
+          {sorted.map(r => (
+            <MyReviewCard key={r.id} review={r} />
           ))}
         </div>
       )}

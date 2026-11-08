@@ -1,4 +1,12 @@
-import type { ApplyRoute, InterviewAtmosphere } from '@/api/types'
+import type { ApplicationStatus, ApplyRoute, InterviewAtmosphere } from '@/api/types'
+
+// 전형 결과가 가장 먼저 읽히도록 상태별로 배지 색을 달리한다.
+export const STAGE_TONE: Record<ApplicationStatus, string> = {
+  ACCEPTED: 'bg-emerald-50 text-emerald-700',
+  REJECTED: 'bg-red-50 text-red-700',
+  INTERVIEW: 'bg-brand-50 text-brand-600',
+  RESUME_SUBMITTED: 'bg-surface text-ink-600',
+}
 
 // 값은 백엔드 InterviewAtmosphere / ApplyRoute enum과 일치해야 한다.
 export const ATMOSPHERE_LABELS: Record<InterviewAtmosphere, string> = {
