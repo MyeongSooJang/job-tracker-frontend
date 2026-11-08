@@ -13,6 +13,8 @@ function renderFeed(overrides: Partial<React.ComponentProps<typeof StudyLogFeed>
     today: TODAY,
     selectedDate: TODAY,
     weekday: null,
+    onlyDate: null,
+    onShowAll: vi.fn(),
     isLoading: false,
     isError: false,
     hasMore: true,
@@ -121,6 +123,27 @@ describe('StudyLogFeed', () => {
       renderFeed({ logs: [log(1, '2026-11-03')], weekday: 1 })
 
       expect(screen.getByText(/월요일에 쓴 글이 없어요/)).toBeInTheDocument()
+    })
+  })
+
+  describe('날짜로 거르기', () => {
+    it('고른 날짜의 글만 보여주고 전체 기록 보기로 되돌린다', async () => {
+      const { onShowAll } = renderFeed({ onlyDate: '2026-11-02' })
+
+      const headings = screen.getAllByRole('heading', { level: 3 })
+      expect(headings).toHaveLength(1)
+      expect(headings[0]).toHaveTextContent('11월 2일')
+      expect(screen.queryByRole('button', { name: '이전 기록 더 보기' })).not.toBeInTheDocument()
+
+      await userEvent.click(screen.getByRole('button', { name: '전체 기록 보기' }))
+      expect(onShowAll).toHaveBeenCalled()
+    })
+
+    it('고른 날짜에 글이 없어도 그 날짜 묶음과 새 글 버튼을 보여준다', () => {
+      renderFeed({ onlyDate: '2026-11-03', selectedDate: '2026-11-03' })
+
+      expect(screen.getAllByRole('heading', { level: 3 })).toHaveLength(1)
+      expect(screen.getByRole('button', { name: '+ 이 날짜에 새 글' })).toBeInTheDocument()
     })
   })
 })

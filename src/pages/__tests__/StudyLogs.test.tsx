@@ -60,6 +60,17 @@ describe('StudyLogs 페이지', () => {
     expect(screen.getByText('21일')).toBeInTheDocument()
     expect(screen.getByRole('group', { name: '최근 1년 학습 잔디' })).toBeInTheDocument()
     expect(screen.getByRole('region', { name: /11월 4일/ })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /JPA 정리/ })).toBeInTheDocument()
+  })
+
+  it('처음에는 오늘 쓴 글만 보여주고, 전체 기록 보기를 누르면 모두 보여준다', async () => {
+    const user = userEvent.setup()
+    renderPage()
+
+    expect(screen.queryByRole('button', { name: /알고리즘/ })).not.toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: '전체 기록 보기' }))
+
     expect(screen.getByRole('button', { name: /알고리즘/ })).toBeInTheDocument()
   })
 
@@ -76,9 +87,9 @@ describe('StudyLogs 페이지', () => {
     const user = userEvent.setup()
     renderPage()
 
-    await user.click(screen.getByRole('button', { name: /알고리즘/ }))
+    await user.click(screen.getByRole('button', { name: /JPA 정리/ }))
 
-    expect(screen.getByTestId('location')).toHaveTextContent('/study-logs/1')
+    expect(screen.getByTestId('location')).toHaveTextContent('/study-logs/2')
   })
 
   it('오늘 묶음의 새 글 버튼은 오늘 날짜로 새 글쓰기를 시작한다', async () => {
@@ -115,6 +126,7 @@ describe('StudyLogs 페이지', () => {
     const user = userEvent.setup()
     renderPage()
 
+    await user.click(screen.getByRole('button', { name: '전체 기록 보기' }))
     await user.click(screen.getByRole('button', { name: '이전 기록 더 보기' }))
 
     expect(fetchNextPage).toHaveBeenCalled()

@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { Pencil } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { useHeatmap, useStudyLogFeed, useStudyStats } from '@/hooks/useStudyLogs'
-import { feedWindow, heatmapRange, monthRange, toDateKey, toMonthKey, weekdayIndex } from '@/lib/studyLog'
+import { feedWindow, heatmapRange, monthRange, toDateKey, toMonthKey } from '@/lib/studyLog'
 import { cardClass } from '@/components/studylog/cardClass'
 import StudyHeatmap from '@/components/studylog/StudyHeatmap'
 import StudyLogCalendar from '@/components/studylog/StudyLogCalendar'
@@ -17,6 +17,7 @@ export default function StudyLogs() {
   const [selectedDate, setSelectedDate] = useState(today)
   const [month, setMonth] = useState(toMonthKey(today))
   const [weekday, setWeekday] = useState<number | null>(null)
+  const [onlyDate, setOnlyDate] = useState<string | null>(today)
   const [jumpTo, setJumpTo] = useState<string | null>(null)
 
   const stats = useStudyStats()
@@ -46,8 +47,9 @@ export default function StudyLogs() {
   // 다른 달의 날짜(잔디 칸 등)를 고르면 달력도 그 달로 따라간다.
   const selectDate = (date: string) => {
     setSelectedDate(date)
-    // 고른 날짜가 거르는 요일과 다르면 목록에서 사라지므로 요일 거르기를 푼다.
-    setWeekday(current => (current !== null && current !== weekdayIndex(date) ? null : current))
+    // 날짜를 고르면 그 날짜의 글만 보여준다. 요일 거르기와는 함께 쓰지 않는다.
+    setWeekday(null)
+    setOnlyDate(date)
     setMonth(toMonthKey(date))
     setJumpTo(date)
   }
@@ -94,8 +96,10 @@ export default function StudyLogs() {
 
       <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
         <StudyLogFeed
-          key={weekday ?? 'all'}
+          key={onlyDate ?? weekday ?? 'all'}
           weekday={weekday}
+          onlyDate={onlyDate}
+          onShowAll={() => setOnlyDate(null)}
           logs={logs}
           today={today}
           selectedDate={selectedDate}
@@ -115,7 +119,7 @@ export default function StudyLogs() {
             selectedDate={selectedDate}
             writtenDates={writtenDates}
             weekday={weekday}
-            onWeekdayChange={setWeekday}
+            onWeekdayChange={next => { setWeekday(next); setOnlyDate(null) }}
             onMonthChange={setMonth}
             onSelect={selectDate}
           />
