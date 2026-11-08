@@ -120,6 +120,105 @@ describe('Reviews', () => {
     expect(hard).toHaveAttribute('aria-pressed', 'false')
   })
 
+  describe('여러 건일 때', () => {
+    const reviewOf = (id: number, name: string, position: string, createdAt: string, extra = {}) => ({
+      ...emptyReview,
+      id,
+      application: {
+        ...application,
+        id,
+        company: { ...application.company, id, name },
+        position,
+      },
+      createdAt,
+      ...extra,
+    })
+
+    // 최신순으로 카카오, 토스, 네이버
+    beforeEach(() => {
+      useReviews.mockReturnValue({
+        data: [
+          reviewOf(3, '네이버', '프론트엔드', '2026-10-20T10:00:00'),
+          reviewOf(1, '카카오', '백엔드', '2026-11-05T10:00:00'),
+          reviewOf(2, '토스', '서버', '2026-11-01T10:00:00', { questions: ['격리 수준을 설명해보세요'] }),
+        ],
+        isLoading: false,
+        isError: false,
+      })
+    })
+
+    it('한 페이지에 2건씩 최신순으로 보여준다', () => {
+      render(<Reviews />, { wrapper })
+
+      expect(screen.getByText('카카오')).toBeInTheDocument()
+      expect(screen.getByText('토스')).toBeInTheDocument()
+      expect(screen.queryByText('네이버')).not.toBeInTheDocument()
+    })
+
+    it('다음 페이지로 이동하면 나머지 기록을 보여준다', async () => {
+      render(<Reviews />, { wrapper })
+
+      await userEvent.click(screen.getByRole('button', { name: '다음 페이지' }))
+
+      expect(screen.getByText('네이버')).toBeInTheDocument()
+      expect(screen.queryByText('카카오')).not.toBeInTheDocument()
+    })
+
+    it('기록이 2건 이하면 페이지 이동을 보여주지 않는다', () => {
+      useReviews.mockReturnValue({ data: [reviewOf(1, '카카오', '백엔드', '2026-11-05T10:00:00')], isLoading: false, isError: false })
+      render(<Reviews />, { wrapper })
+
+      expect(screen.queryByRole('navigation', { name: '페이지 이동' })).not.toBeInTheDocument()
+    })
+
+    it('회사명으로 검색하면 맞는 기록만 보여준다', async () => {
+      render(<Reviews />, { wrapper })
+
+      await userEvent.type(screen.getByRole('searchbox', { name: '면접 기록 검색' }), '네이버')
+
+      expect(screen.getByText('네이버')).toBeInTheDocument()
+      expect(screen.queryByText('카카오')).not.toBeInTheDocument()
+    })
+
+    it('받은 질문으로도 검색할 수 있다', async () => {
+      render(<Reviews />, { wrapper })
+
+      await userEvent.type(screen.getByRole('searchbox', { name: '면접 기록 검색' }), '격리 수준')
+
+      expect(screen.getByText('토스')).toBeInTheDocument()
+      expect(screen.queryByText('카카오')).not.toBeInTheDocument()
+    })
+
+    it('2페이지를 보다가 검색하면 결과의 첫 페이지부터 보여준다', async () => {
+      // 세 건 모두 검색어에 걸려서 결과가 계속 2페이지로 나뉜다.
+      useReviews.mockReturnValue({
+        data: [
+          reviewOf(3, '네이버', '프론트엔드 개발자', '2026-10-20T10:00:00'),
+          reviewOf(1, '카카오', '백엔드 개발자', '2026-11-05T10:00:00'),
+          reviewOf(2, '토스', '서버 개발자', '2026-11-01T10:00:00'),
+        ],
+        isLoading: false,
+        isError: false,
+      })
+      render(<Reviews />, { wrapper })
+      await userEvent.click(screen.getByRole('button', { name: '다음 페이지' }))
+      expect(screen.getByText('네이버')).toBeInTheDocument()
+
+      await userEvent.type(screen.getByRole('searchbox', { name: '면접 기록 검색' }), '개발자')
+
+      expect(screen.getByText('카카오')).toBeInTheDocument()
+      expect(screen.queryByText('네이버')).not.toBeInTheDocument()
+    })
+
+    it('검색 결과가 없으면 안내한다', async () => {
+      render(<Reviews />, { wrapper })
+
+      await userEvent.type(screen.getByRole('searchbox', { name: '면접 기록 검색' }), '없는회사')
+
+      expect(screen.getByText(/에 대한 검색 결과가 없습니다/)).toBeInTheDocument()
+    })
+  })
+
   it('저장된 면접 상세를 폼에 복원하고 바꾸기 전에는 저장할 수 없다', () => {
     useReviews.mockReturnValue({
       data: [

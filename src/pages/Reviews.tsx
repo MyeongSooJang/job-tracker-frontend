@@ -1,8 +1,13 @@
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useReviews } from '@/hooks/useReviews'
 import ReviewForm from '@/components/reviews/ReviewForm'
+import { Pagination } from '@/components/ui/pagination'
+import { SearchInput } from '@/components/ui/search-input'
 import { STATUS_LABELS } from '@/lib/status'
 import { STAGE_TONE } from '@/lib/review'
+import { filterReviews } from '@/lib/reviewSearch'
+import { clampPage, paginate, totalPages } from '@/lib/pagination'
 import { cn } from '@/lib/utils'
 import type { Review } from '@/api/types'
 
@@ -49,12 +54,27 @@ function MyReviewCard({ review }: { review: Review }) {
   )
 }
 
+// 카드마다 입력 폼이 펼쳐져 있어 길기 때문에 한 페이지에 두 건만 보여준다.
+const PAGE_SIZE = 2
+
 export default function Reviews() {
   const { data: reviews = [], isLoading, isError } = useReviews()
+  const [query, setQuery] = useState('')
+  const [page, setPage] = useState(1)
 
   const sorted = [...reviews].sort(
     (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
   )
+  const filtered = filterReviews(sorted, query)
+  const pageCount = totalPages(filtered.length, PAGE_SIZE)
+  const currentPage = clampPage(page, pageCount)
+  const visible = paginate(filtered, currentPage, PAGE_SIZE)
+
+  // 검색어가 바뀌면 결과의 처음부터 보여준다.
+  const handleQueryChange = (value: string) => {
+    setQuery(value)
+    setPage(1)
+  }
 
   if (isLoading) return <div className="text-ink-600">불러오는 중...</div>
   if (isError) return <div className="p-4 text-red-500">데이터를 불러오지 못했습니다.</div>
@@ -73,11 +93,32 @@ export default function Reviews() {
           아직 면접 기록이 없습니다. 지원 건이 서류합격되면 이곳에 나타납니다.
         </p>
       ) : (
-        <div className="space-y-4">
-          {sorted.map(r => (
-            <MyReviewCard key={r.id} review={r} />
-          ))}
-        </div>
+        <>
+          <SearchInput
+            label="면접 기록 검색"
+            value={query}
+            onChange={handleQueryChange}
+            placeholder="회사명, 직무, 후기, 받은 질문으로 검색"
+          />
+
+          {filtered.length === 0 ? (
+            <p className="py-16 text-center text-sm text-ink-400">
+              &lsquo;{query.trim()}&rsquo;에 대한 검색 결과가 없습니다.
+            </p>
+          ) : (
+            <>
+              <p className="text-sm text-ink-600">
+                총 <span className="font-semibold text-ink-900">{filtered.length}</span>건
+              </p>
+              <div className="space-y-4">
+                {visible.map(r => (
+                  <MyReviewCard key={r.id} review={r} />
+                ))}
+              </div>
+              <Pagination page={currentPage} totalPages={pageCount} onChange={setPage} />
+            </>
+          )}
+        </>
       )}
     </div>
   )
