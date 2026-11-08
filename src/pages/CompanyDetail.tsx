@@ -5,6 +5,9 @@ import CompanyAvatar from '@/components/companies/CompanyAvatar'
 import ReviewCard from '@/components/companies/ReviewCard'
 import RatingStars from '@/components/reviews/RatingStars'
 
+// 평균을 믿고 비교하기에 후기가 너무 적은 경계. 넘기 전에는 참고용이라고 알린다.
+const MIN_RELIABLE_REVIEWS = 5
+
 export default function CompanyDetail() {
   const { id } = useParams()
   const companyId = Number(id)
@@ -54,15 +57,21 @@ export default function CompanyDetail() {
         <div className="flex items-center gap-4 sm:flex-col sm:items-end sm:gap-1.5">
           {hasReviews ? (
             <>
-              <div className="flex items-baseline gap-1">
-                <span className="text-4xl font-bold text-ink-900">
-                  {company.averageRating!.toFixed(1)}
-                </span>
-                <span className="text-sm text-ink-400">/ 5</span>
+              <div className="flex flex-col sm:items-end">
+                <span className="text-xs text-ink-400">평균 면접 경험 만족도</span>
+                <div className="flex items-baseline gap-1">
+                  <span className="text-4xl font-bold text-ink-900">
+                    {company.averageRating!.toFixed(1)}
+                  </span>
+                  <span className="text-sm text-ink-400">/ 5</span>
+                </div>
               </div>
               <div className="flex flex-col gap-1 sm:items-end">
                 <RatingStars value={company.averageRating!} size={18} />
                 <span className="text-sm text-ink-600">후기 {company.reviewCount}개</span>
+                {company.reviewCount < MIN_RELIABLE_REVIEWS && (
+                  <span className="text-xs text-ink-400">후기가 적어 참고용이에요</span>
+                )}
               </div>
             </>
           ) : (
