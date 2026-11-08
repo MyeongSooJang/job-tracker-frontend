@@ -11,6 +11,8 @@ function renderCalendar(overrides: Partial<React.ComponentProps<typeof StudyLogC
     today: TODAY,
     selectedDate: TODAY,
     writtenDates: new Set(['2026-11-01']),
+    weekday: null,
+    onWeekdayChange: vi.fn(),
     onMonthChange: vi.fn(),
     onSelect: vi.fn(),
     ...overrides,
@@ -65,5 +67,19 @@ describe('StudyLogCalendar', () => {
     renderCalendar()
 
     expect(screen.getByRole('button', { name: '다음 달' })).toBeDisabled()
+  })
+
+  it('요일을 누르면 그 요일로 거르고, 같은 요일을 다시 누르면 푼다', async () => {
+    const { onWeekdayChange } = renderCalendar()
+    await userEvent.click(screen.getByRole('button', { name: '월요일만 보기' }))
+    expect(onWeekdayChange).toHaveBeenCalledWith(1)
+  })
+
+  it('거르는 중인 요일을 누르면 거르기를 푼다', async () => {
+    const { onWeekdayChange } = renderCalendar({ weekday: 1 })
+    const monday = screen.getByRole('button', { name: '월요일만 보기' })
+    expect(monday).toHaveAttribute('aria-pressed', 'true')
+    await userEvent.click(monday)
+    expect(onWeekdayChange).toHaveBeenCalledWith(null)
   })
 })

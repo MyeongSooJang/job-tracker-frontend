@@ -12,6 +12,7 @@ function renderFeed(overrides: Partial<React.ComponentProps<typeof StudyLogFeed>
     logs: [log(2, '2026-11-04'), log(1, '2026-11-02')],
     today: TODAY,
     selectedDate: TODAY,
+    weekday: null,
     isLoading: false,
     isError: false,
     hasMore: true,
@@ -92,5 +93,34 @@ describe('StudyLogFeed', () => {
 
     expect(screen.queryByRole('button', { name: '이전 기록 더 보기' })).not.toBeInTheDocument()
     expect(screen.getByText('최근 1년 기록을 모두 불러왔어요.')).toBeInTheDocument()
+  })
+
+  describe('요일로 거르기', () => {
+    // 2026-11-02, 11-09, 11-16, 11-23, 11-30 은 월요일, 11-03 은 화요일
+    const mondays = ['2026-11-30', '2026-11-23', '2026-11-16', '2026-11-09', '2026-11-02']
+    const logs = [...mondays.map((d, i) => log(10 + i, d)), log(1, '2026-11-03')]
+
+    it('그 요일의 날짜만 최대 3일까지 보여준다', () => {
+      renderFeed({ logs, weekday: 1, today: '2026-11-30', selectedDate: '2026-11-30' })
+
+      const headings = screen.getAllByRole('heading', { level: 3 }).map(h => h.textContent)
+      expect(headings).toHaveLength(3)
+      expect(headings.every(h => h?.includes('월요일'))).toBe(true)
+    })
+
+    it('더 보기를 누르면 3일씩 더 펼친다', async () => {
+      renderFeed({ logs, weekday: 1, today: '2026-11-30', selectedDate: '2026-11-30' })
+
+      await userEvent.click(screen.getByRole('button', { name: /더 보기 \(2일 더\)/ }))
+
+      expect(screen.getAllByRole('heading', { level: 3 })).toHaveLength(5)
+      expect(screen.queryByRole('button', { name: /^더 보기/ })).not.toBeInTheDocument()
+    })
+
+    it('그 요일에 쓴 글이 없으면 안내한다', () => {
+      renderFeed({ logs: [log(1, '2026-11-03')], weekday: 1 })
+
+      expect(screen.getByText(/월요일에 쓴 글이 없어요/)).toBeInTheDocument()
+    })
   })
 })

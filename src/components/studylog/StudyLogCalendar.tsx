@@ -11,13 +11,16 @@ interface StudyLogCalendarProps {
   today: string
   selectedDate: string
   writtenDates: ReadonlySet<string>
+  // 목록을 거를 요일(0=일~6=토). 없으면 전체.
+  weekday: number | null
+  onWeekdayChange: (weekday: number | null) => void
   onMonthChange: (month: string) => void
   onSelect: (date: string) => void
 }
 
 // 기록이 있는 날에 점을 찍고, 오늘 이후 날짜는 기록할 수 없으므로 선택하지 못하게 막는다.
 export default function StudyLogCalendar({
-  month, today, selectedDate, writtenDates, onMonthChange, onSelect,
+  month, today, selectedDate, writtenDates, weekday, onWeekdayChange, onMonthChange, onSelect,
 }: StudyLogCalendarProps) {
   const [year, monthNumber] = month.split('-').map(Number)
 
@@ -43,7 +46,19 @@ export default function StudyLogCalendar({
       </header>
       <div className="grid grid-cols-7 gap-1 text-center text-xs">
         {WEEKDAYS.map((w, i) => (
-          <div key={w} className={cn('py-1 font-medium', i === 0 ? 'text-danger' : 'text-ink-600')}>{w}</div>
+          <button
+            key={w}
+            type="button"
+            aria-pressed={weekday === i}
+            aria-label={`${w}요일만 보기`}
+            onClick={() => onWeekdayChange(weekday === i ? null : i)}
+            className={cn(
+              'rounded-md py-1 font-medium transition-colors',
+              weekday === i ? 'bg-brand-50 text-brand-700' : cn('hover:bg-surface', i === 0 ? 'text-danger' : 'text-ink-600'),
+            )}
+          >
+            {w}
+          </button>
         ))}
         {buildMonthCells(month).map((date, i) => {
           if (!date) return <div key={`blank-${i}`} />
