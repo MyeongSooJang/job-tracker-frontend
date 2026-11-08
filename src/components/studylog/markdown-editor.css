@@ -31,3 +31,14 @@
     padding: 12px 4px 96px 4px;
   }
 }
+
+/* 커서는 테두리용 옅은 색(outline)이 아니라 글자색을 따른다. */
+.study-editor .milkdown .ProseMirror,
+.study-editor .milkdown .milkdown-code-block .cm-content,
+.study-editor .milkdown .milkdown-code-block .cm-panel input {
+  caret-color: theme('colors.ink.900');
+}
+
+.study-editor .milkdown .milkdown-code-block .cm-cursor {
+  border-left-color: theme('colors.ink.900');
+}
