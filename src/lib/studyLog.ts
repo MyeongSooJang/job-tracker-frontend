@@ -33,9 +33,14 @@ export function formatMinutes(minutes: number): string {
   return rest === 0 ? `${hours}시간` : `${hours}시간 ${rest}분`
 }
 
-export function weekdayLabel(dateKey: string): string {
+// 0(일)~6(토)
+export function weekdayIndex(dateKey: string): number {
   const [year, month, day] = dateKey.split('-').map(Number)
-  return WEEKDAYS[new Date(year, month - 1, day).getDay()]
+  return new Date(year, month - 1, day).getDay()
+}
+
+export function weekdayLabel(dateKey: string): string {
+  return WEEKDAYS[weekdayIndex(dateKey)]
 }
 
 export function formatDateLabel(dateKey: string): string {

@@ -1,5 +1,6 @@
+import { useState } from 'react'
 import type { StudyLog } from '@/api/types'
-import { groupByDate } from '@/lib/studyLog'
+import { groupByDate, weekdayIndex } from '@/lib/studyLog'
 import { Button } from '@/components/ui/button'
 import DayGroup from './DayGroup'
 import { cn } from '@/lib/utils'
@@ -9,6 +10,11 @@ interface StudyLogFeedProps {
   logs: StudyLog[]
   today: string
   selectedDate: string
+  // 요일(0=일~6=토)로 거르는 중이면 그 요일의 날짜만 보여준다.
+  weekday: number | null
+  // 날짜를 눌러 그 날짜만 보는 중이면 그 날짜. 없으면 전체.
+  onlyDate: string | null
+  onShowAll: () => void
   isLoading: boolean
   isError: boolean
   hasMore: boolean
@@ -19,11 +25,22 @@ interface StudyLogFeedProps {
   onWrite: (date: string) => void
 }
 
+const WEEKDAY_PAGE_SIZE = 3
+const WEEKDAY_NAMES = ['일', '월', '화', '수', '목', '금', '토']
+
 // 날짜별로 묶은 글 목록. 오늘과 고른 날은 글이 없어도 묶음을 보여 새 글을 바로 시작할 수 있게 한다.
 export default function StudyLogFeed({
-  logs, today, selectedDate, isLoading, isError, hasMore, isFetchingMore, onRetry, onLoadMore, onOpen, onWrite,
+  logs, today, selectedDate, weekday, onlyDate, onShowAll, isLoading, isError, hasMore, isFetchingMore, onRetry, onLoadMore, onOpen, onWrite,
 }: StudyLogFeedProps) {
-  const days = groupByDate(logs, [today, selectedDate])
+  const [visibleCount, setVisibleCount] = useState(WEEKDAY_PAGE_SIZE)
+  // 요일로 거를 때는 글이 있는 날짜만 남기고, 한 번에 3일씩 펼친다. (요일이 바뀌면 부모가 key로 새로 마운트한다.)
+  const allDays = onlyDate !== null
+    ? groupByDate(logs.filter(item => item.studyDate === onlyDate), [onlyDate])
+    : weekday === null
+      ? groupByDate(logs, [today, selectedDate])
+      : groupByDate(logs.filter(item => weekdayIndex(item.studyDate) === weekday), [])
+  const days = weekday === null ? allDays : allDays.slice(0, visibleCount)
+  const hiddenDays = allDays.length - days.length
 
   return (
     <section
@@ -42,7 +59,17 @@ export default function StudyLogFeed({
         </div>
       ) : (
         <>
-          {logs.length === 0 && (
+          {onlyDate !== null && (
+            <Button type="button" variant="outline" size="sm" className="mb-3" onClick={onShowAll}>
+              전체 기록 보기
+            </Button>
+          )}
+          {weekday !== null && allDays.length === 0 && (
+            <p className="mb-4 rounded-lg bg-surface px-3 py-2 text-sm text-ink-600">
+              불러온 기록 중 {WEEKDAY_NAMES[weekday]}요일에 쓴 글이 없어요.
+            </p>
+          )}
+          {weekday === null && onlyDate === null && logs.length === 0 && (
             <p className="mb-4 rounded-lg bg-surface px-3 py-2 text-sm text-ink-600">
               첫 글을 남겨보세요. 제목과 내용을 적고 저장하면 잔디가 채워져요.
             </p>
@@ -59,7 +86,17 @@ export default function StudyLogFeed({
               />
             ))}
           </div>
-          {hasMore ? (
+          {hiddenDays > 0 && (
+            <Button
+              type="button"
+              variant="outline"
+              className="mt-4 w-full"
+              onClick={() => setVisibleCount(count => count + WEEKDAY_PAGE_SIZE)}
+            >
+              더 보기 ({hiddenDays}일 더)
+            </Button>
+          )}
+          {onlyDate !== null ? null : hasMore ? (
             <Button type="button" variant="outline" className="mt-4 w-full" onClick={onLoadMore} disabled={isFetchingMore}>
               {isFetchingMore ? '불러오는 중...' : '이전 기록 더 보기'}
             </Button>
