@@ -48,6 +48,26 @@ describe('CompanyDetail', () => {
     expect(screen.getByText('후기 2개')).toBeInTheDocument()
   })
 
+  it('평균 별점이 면접 경험 만족도의 평균임을 알려 준다', () => {
+    renderPage()
+    expect(screen.getByText('평균 면접 경험 만족도')).toBeInTheDocument()
+  })
+
+  it('후기가 5건 미만이면 참고용이라고 안내한다', () => {
+    renderPage()
+    expect(screen.getByText('후기가 적어 참고용이에요')).toBeInTheDocument()
+  })
+
+  it('후기가 5건 이상이면 참고용 안내를 하지 않는다', () => {
+    useCompany.mockReturnValue({
+      data: { ...company, reviewCount: 5 },
+      isLoading: false,
+      isError: false,
+    })
+    renderPage()
+    expect(screen.queryByText('후기가 적어 참고용이에요')).not.toBeInTheDocument()
+  })
+
   it('홈페이지를 새 탭 링크로 연다', () => {
     renderPage()
     const link = screen.getByRole('link', { name: /홈페이지/ })

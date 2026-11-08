@@ -20,8 +20,20 @@ export interface CompanyWithStats extends Company {
   averageRating: number | null
 }
 
+export type InterviewAtmosphere = 'COMFORTABLE' | 'NORMAL' | 'TENSE'
+
+export type ApplyRoute = 'ONLINE' | 'REFERRAL' | 'RECRUITER' | 'OTHER'
+
+// 면접 상세. 모두 선택값이라 백엔드에서 null로 내려올 수 있다.
+export interface InterviewDetail {
+  difficulty?: number | null
+  atmosphere?: InterviewAtmosphere | null
+  route?: ApplyRoute | null
+  questions?: string[]
+}
+
 // 회사별 공개 후기. 작성자 식별 정보는 내려오지 않는다(익명).
-export interface CompanyReview {
+export interface CompanyReview extends InterviewDetail {
   id: number
   rating: number
   content: string
@@ -56,7 +68,7 @@ export interface Interview {
   questions: InterviewQuestion[]
 }
 
-export interface Review {
+export interface Review extends InterviewDetail {
   id: number
   application: Application
   content: string | null
@@ -105,7 +117,7 @@ export interface CreateQuestionRequest {
   memo?: string
 }
 
-export interface WriteReviewRequest {
+export interface WriteReviewRequest extends InterviewDetail {
   content: string
   rating: number
 }
