@@ -1,16 +1,13 @@
 import type { CompanyReview } from '@/api/types'
 import RatingStars from '@/components/reviews/RatingStars'
 import DifficultyMeter from '@/components/reviews/DifficultyMeter'
-import { ATMOSPHERE_LABELS, ROUTE_LABELS, STAGE_TONE } from '@/lib/review'
+import { ATMOSPHERE_LABELS, ROUTE_LABELS, STAGE_TONE, formatDate } from '@/lib/review'
 import { STATUS_LABELS } from '@/lib/status'
 import { cn } from '@/lib/utils'
 
 interface ReviewCardProps {
   review: CompanyReview
 }
-
-const formatDate = (iso: string) =>
-  new Date(iso).toLocaleDateString('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit' })
 
 function Chip({ children }: { children: React.ReactNode }) {
   return (

@@ -22,6 +22,12 @@ export const ROUTE_LABELS: Record<ApplyRoute, string> = {
   OTHER: '기타',
 }
 
+// 서류합격하면 서버가 본문 없는 기록을 먼저 만든다. 본문이 채워져야 작성된 기록이다.
+export const isWritten = (review: { content: string | null }) => !!review.content
+
+export const formatDate = (iso: string) =>
+  new Date(iso).toLocaleDateString('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit' })
+
 export const DIFFICULTIES = [1, 2, 3, 4, 5] as const
 
 const DIFFICULTY_LABELS = ['매우 쉬움', '쉬움', '보통', '어려움', '매우 어려움']

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { difficultyLabel, joinQuestions, parseQuestions } from '../review'
+import { difficultyLabel, isWritten, joinQuestions, parseQuestions } from '../review'
 
 describe('parseQuestions', () => {
   it('줄마다 질문 하나로 나눈다', () => {
@@ -31,5 +31,16 @@ describe('difficultyLabel', () => {
     expect(difficultyLabel(1)).toBe('매우 쉬움')
     expect(difficultyLabel(3)).toBe('보통')
     expect(difficultyLabel(5)).toBe('매우 어려움')
+  })
+})
+
+describe('isWritten', () => {
+  it('본문이 있으면 작성된 기록이다', () => {
+    expect(isWritten({ content: '분위기가 좋았다' })).toBe(true)
+  })
+
+  it('서버가 자동으로 만든 본문 없는 기록은 작성 전이다', () => {
+    expect(isWritten({ content: null })).toBe(false)
+    expect(isWritten({ content: '' })).toBe(false)
   })
 })
