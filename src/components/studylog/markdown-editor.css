@@ -42,3 +42,21 @@
 .study-editor .milkdown .milkdown-code-block .cm-cursor {
   border-left-color: theme('colors.ink.900');
 }
+
+/* 본문의 깜빡이는 커서는 브라우저 caret이 아니라 가상 커서라서 전용 변수로 색을 정한다. */
+.study-editor .milkdown .ProseMirror-focused {
+  --prosemirror-virtual-cursor-color: #000000;
+}
+
+/* 목록 점·번호와 왼쪽 블록 핸들(+, 드래그)도 옅은 outline 색이라 잘 안 보인다. */
+.study-editor .milkdown .milkdown-list-item-block li .label-wrapper {
+  color: #000000;
+}
+
+.study-editor .milkdown .milkdown-list-item-block li .label-wrapper svg {
+  fill: #000000;
+}
+
+.study-editor .milkdown .milkdown-block-handle .operation-item svg {
+  fill: theme('colors.ink.600');
+}
