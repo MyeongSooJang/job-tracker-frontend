@@ -1,78 +1,126 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
+import { ChevronRight } from 'lucide-react'
 import { useReviews } from '@/hooks/useReviews'
-import ReviewForm from '@/components/reviews/ReviewForm'
+import RatingStars from '@/components/reviews/RatingStars'
+import DifficultyMeter from '@/components/reviews/DifficultyMeter'
 import { Pagination } from '@/components/ui/pagination'
 import { SearchInput } from '@/components/ui/search-input'
 import { STATUS_LABELS } from '@/lib/status'
-import { STAGE_TONE } from '@/lib/review'
+import { ATMOSPHERE_LABELS, STAGE_TONE, formatDate, isWritten } from '@/lib/review'
 import { filterReviews } from '@/lib/reviewSearch'
 import { clampPage, paginate, totalPages } from '@/lib/pagination'
 import { cn } from '@/lib/utils'
 import type { Review } from '@/api/types'
 
-function MyReviewCard({ review }: { review: Review }) {
-  const company = review.application.company.name
+const PAGE_SIZE = 8
+
+// 목록은 훑기와 찾기만 맡는다. 글은 지원 상세의 면접 메모에서 쓴다.
+function ReviewRow({ review }: { review: Review }) {
+  const { application } = review
 
   return (
-    <article className="space-y-5 rounded-xl border border-line bg-white p-5">
-      <header className="flex flex-wrap items-center justify-between gap-2">
-        <div className="flex min-w-0 items-baseline gap-2">
-          <Link
-            to={`/applications/${review.application.id}`}
-            className="truncate text-base font-semibold text-ink-900 hover:underline"
-          >
-            {company}
-          </Link>
-          <span className="truncate text-sm text-ink-400">{review.application.position}</span>
+    <li>
+      <Link
+        to={`/applications/${application.id}`}
+        className="group flex items-center gap-4 rounded-xl border border-line bg-white p-4 transition-colors hover:border-brand-100 hover:bg-surface"
+      >
+        <div className="min-w-0 flex-1 space-y-2">
+          <div className="flex min-w-0 items-baseline gap-2">
+            <span className="truncate font-semibold text-ink-900">{application.company.name}</span>
+            <span className="truncate text-sm text-ink-400">{application.position}</span>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5">
+            {isWritten(review) ? (
+              <>
+                <RatingStars value={review.rating ?? 0} size={14} />
+                {review.difficulty ? <DifficultyMeter value={review.difficulty} /> : null}
+                {review.atmosphere ? (
+                  <span className="text-xs text-ink-600">분위기 {ATMOSPHERE_LABELS[review.atmosphere]}</span>
+                ) : null}
+              </>
+            ) : (
+              <span className="rounded-full bg-amber-50 px-2.5 py-0.5 text-xs font-semibold text-amber-700">
+                작성 전
+              </span>
+            )}
+          </div>
         </div>
-        <div className="flex items-center gap-2">
+
+        <div className="flex shrink-0 flex-col items-end gap-1.5">
           <span
             className={cn(
               'rounded-full px-2.5 py-0.5 text-xs font-semibold',
-              STAGE_TONE[review.application.status],
+              STAGE_TONE[application.status],
             )}
           >
-            {STATUS_LABELS[review.application.status]}
+            {STATUS_LABELS[application.status]}
           </span>
-          {!review.content && (
-            <span className="rounded-full bg-amber-50 px-2.5 py-0.5 text-xs font-semibold text-amber-700">
-              작성 전
-            </span>
-          )}
+          <time className="text-xs text-ink-400" dateTime={review.createdAt}>
+            {formatDate(review.createdAt)}
+          </time>
         </div>
-      </header>
 
-      <ReviewForm
-        review={review}
-        subject={company}
-        contentLabel={`${company} 후기`}
-        contentPlaceholder="면접 분위기, 아쉬운 점, 다음 지원자에게 해주고 싶은 말을 남겨 보세요."
-        saveLabel="저장"
-      />
-    </article>
+        <ChevronRight
+          size={16}
+          aria-hidden="true"
+          className="shrink-0 text-ink-400 transition-colors group-hover:text-brand-600"
+        />
+      </Link>
+    </li>
   )
 }
 
-// 카드마다 입력 폼이 펼쳐져 있어 길기 때문에 한 페이지에 두 건만 보여준다.
-const PAGE_SIZE = 2
+function FilterButton({
+  active,
+  onClick,
+  children,
+}: {
+  active: boolean
+  onClick: () => void
+  children: React.ReactNode
+}) {
+  return (
+    <button
+      type="button"
+      aria-pressed={active}
+      onClick={onClick}
+      className={cn(
+        'rounded-full border px-3 py-1 text-xs font-medium transition-colors',
+        active
+          ? 'border-brand-500 bg-brand-50 text-brand-600'
+          : 'border-line bg-white text-ink-600 hover:bg-surface',
+      )}
+    >
+      {children}
+    </button>
+  )
+}
 
 export default function Reviews() {
   const { data: reviews = [], isLoading, isError } = useReviews()
   const [query, setQuery] = useState('')
+  const [unwrittenOnly, setUnwrittenOnly] = useState(false)
   const [page, setPage] = useState(1)
 
   const sorted = [...reviews].sort(
     (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
   )
-  const filtered = filterReviews(sorted, query)
+  const unwrittenCount = sorted.filter(r => !isWritten(r)).length
+  const scoped = unwrittenOnly ? sorted.filter(r => !isWritten(r)) : sorted
+  const filtered = filterReviews(scoped, query)
   const pageCount = totalPages(filtered.length, PAGE_SIZE)
   const currentPage = clampPage(page, pageCount)
   const visible = paginate(filtered, currentPage, PAGE_SIZE)
 
-  // 검색어가 바뀌면 결과의 처음부터 보여준다.
+  // 검색어나 필터가 바뀌면 결과의 처음부터 보여준다.
   const handleQueryChange = (value: string) => {
     setQuery(value)
+    setPage(1)
+  }
+  const handleFilterChange = (onlyUnwritten: boolean) => {
+    setUnwrittenOnly(onlyUnwritten)
     setPage(1)
   }
 
@@ -84,7 +132,7 @@ export default function Reviews() {
       <div>
         <h1 className="text-2xl font-bold text-ink-900">내 면접 기록</h1>
         <p className="mt-1 text-sm text-ink-600">
-          서류합격한 지원 건은 기록이 자동으로 만들어집니다.
+          서류합격한 지원 건은 기록이 자동으로 만들어집니다. 기록을 누르면 지원 상세에서 작성할 수 있어요.
         </p>
       </div>
 
@@ -101,20 +149,35 @@ export default function Reviews() {
             placeholder="회사명, 직무, 후기, 받은 질문으로 검색"
           />
 
-          {filtered.length === 0 ? (
-            <p className="py-16 text-center text-sm text-ink-400">
-              &lsquo;{query.trim()}&rsquo;에 대한 검색 결과가 없습니다.
-            </p>
-          ) : (
-            <>
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="flex gap-1.5" role="group" aria-label="보기">
+              <FilterButton active={!unwrittenOnly} onClick={() => handleFilterChange(false)}>
+                전체 {sorted.length}
+              </FilterButton>
+              <FilterButton active={unwrittenOnly} onClick={() => handleFilterChange(true)}>
+                작성 전 {unwrittenCount}
+              </FilterButton>
+            </div>
+            {filtered.length > 0 && (
               <p className="text-sm text-ink-600">
                 총 <span className="font-semibold text-ink-900">{filtered.length}</span>건
               </p>
-              <div className="space-y-4">
+            )}
+          </div>
+
+          {filtered.length === 0 ? (
+            <p className="py-16 text-center text-sm text-ink-400">
+              {query.trim() !== ''
+                ? `‘${query.trim()}’에 대한 검색 결과가 없습니다.`
+                : '작성 전인 기록이 없습니다. 모두 작성하셨어요.'}
+            </p>
+          ) : (
+            <>
+              <ul className="space-y-2.5">
                 {visible.map(r => (
-                  <MyReviewCard key={r.id} review={r} />
+                  <ReviewRow key={r.id} review={r} />
                 ))}
-              </div>
+              </ul>
               <Pagination page={currentPage} totalPages={pageCount} onChange={setPage} />
             </>
           )}
