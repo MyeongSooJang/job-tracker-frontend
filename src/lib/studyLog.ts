@@ -166,3 +166,32 @@ export function feedWindow(today: string, page: number): { from: string; to: str
 export function hasMoreFeed(page: number): boolean {
   return (page + 1) * FEED_WINDOW_DAYS < FEED_MAX_DAYS
 }
+
+export interface GrowthStage {
+  stage: 0 | 1 | 2 | 3 | 4 | 5
+  name: string
+  nextName: string | null
+  daysToNext: number | null
+}
+
+// 연속 일수가 min 이상이면 해당 단계다. 단계 번호는 이 배열의 위치와 같다.
+const GROWTH_STAGES = [
+  { min: 0, name: '씨앗' },
+  { min: 1, name: '싹' },
+  { min: 3, name: '쌍떡잎' },
+  { min: 7, name: '본잎' },
+  { min: 14, name: '큰 식물' },
+  { min: 30, name: '꽃' },
+] as const
+
+export function growthStage(streak: number): GrowthStage {
+  const days = Math.max(0, Math.floor(streak))
+  const index = GROWTH_STAGES.reduce((found, { min }, i) => (days >= min ? i : found), 0)
+  const next = GROWTH_STAGES[index + 1]
+  return {
+    stage: index as GrowthStage['stage'],
+    name: GROWTH_STAGES[index].name,
+    nextName: next ? next.name : null,
+    daysToNext: next ? next.min - days : null,
+  }
+}
