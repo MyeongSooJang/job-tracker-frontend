@@ -29,17 +29,17 @@ describe('StudyStatsBar', () => {
   })
 
   it('연속 중이면 단계 이름과 다음 단계까지 남은 일수를 보여준다', () => {
-    render(<StudyStatsBar stats={{ currentStreak: 5, longestStreak: 21, monthWrittenDays: 9, todayMinutes: 200 }} />)
+    render(<StudyStatsBar stats={{ currentStreak: 25, longestStreak: 31, monthWrittenDays: 9, todayMinutes: 200 }} />)
 
-    expect(screen.getByRole('img', { name: '새싹 3단계 쌍떡잎, 연속 5일' })).toBeInTheDocument()
+    expect(screen.getByRole('img', { name: '새싹 3단계 쌍떡잎, 연속 25일' })).toBeInTheDocument()
     expect(screen.getByText('쌍떡잎')).toBeInTheDocument()
-    expect(screen.getByText('2일 더 쓰면 본잎 단계예요')).toBeInTheDocument()
+    expect(screen.getByText('5일 더 쓰면 본잎 단계예요')).toBeInTheDocument()
   })
 
   it('마지막 단계에서는 다음 단계 대신 활짝 피었다고 알려준다', () => {
-    render(<StudyStatsBar stats={{ currentStreak: 30, longestStreak: 30, monthWrittenDays: 20, todayMinutes: 0 }} />)
+    render(<StudyStatsBar stats={{ currentStreak: 50, longestStreak: 60, monthWrittenDays: 20, todayMinutes: 0 }} />)
 
-    expect(screen.getByRole('img', { name: '새싹 6단계 꽃, 연속 30일' })).toBeInTheDocument()
+    expect(screen.getByRole('img', { name: '새싹 6단계 꽃, 연속 50일' })).toBeInTheDocument()
     expect(screen.getByText('활짝 피었어요')).toBeInTheDocument()
   })
 })

@@ -177,11 +177,11 @@ export interface GrowthStage {
 // 연속 일수가 min 이상이면 해당 단계다. 단계 번호는 이 배열의 위치와 같다.
 const GROWTH_STAGES = [
   { min: 0, name: '씨앗' },
-  { min: 1, name: '싹' },
-  { min: 3, name: '쌍떡잎' },
-  { min: 7, name: '본잎' },
-  { min: 14, name: '큰 식물' },
-  { min: 30, name: '꽃' },
+  { min: 10, name: '싹' },
+  { min: 20, name: '쌍떡잎' },
+  { min: 30, name: '본잎' },
+  { min: 40, name: '큰 식물' },
+  { min: 50, name: '꽃' },
 ] as const
 
 export function growthStage(streak: number): GrowthStage {
