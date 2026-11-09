@@ -53,6 +53,13 @@ export default {
           'dreamer-bg': '#F3F0FF',
           'dreamer-fg': '#5F3DC4',
         },
+        // 학습 잔디 농도. 크림에서 연두, 황금빛, 호박색으로 어두워진다 (GitHub 잔디의 초록과 구분하려고 따뜻한 색을 쓴다)
+        heat: {
+          1: '#C9E27A',
+          2: '#E3B93C',
+          3: '#D98A1F',
+          4: '#A9560F',
+        },
         line: '#E2E5DD',
         surface: '#F6F4EC', // 로고 크림색
         border: 'hsl(var(--border))',
