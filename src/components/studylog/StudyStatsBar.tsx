@@ -13,7 +13,7 @@ export default function StudyStatsBar({ stats }: { stats: StudyStats }) {
   ]
   const growth = growthStage(stats.currentStreak)
   const stageLabel = `새싹 ${growth.stage + 1}단계 ${growth.name}`
-  const label = stats.currentStreak > 0 ? `${stageLabel}, 연속 ${stats.currentStreak}일` : stageLabel
+  const sproutLabel = stats.currentStreak > 0 ? `${stageLabel}, 연속 ${stats.currentStreak}일` : stageLabel
   const hint =
     growth.nextName === null || growth.daysToNext === null
       ? '활짝 피었어요'
@@ -22,7 +22,7 @@ export default function StudyStatsBar({ stats }: { stats: StudyStats }) {
   return (
     <div className="grid grid-cols-3 gap-3 md:grid-cols-[1.5fr_1fr_1fr_1fr]">
       <div className={cn(cardClass, 'col-span-3 flex items-center gap-4 md:col-span-1')}>
-        <SproutIllustration stage={growth.stage} label={label} className="h-16 w-16 shrink-0" />
+        <SproutIllustration stage={growth.stage} label={sproutLabel} className="h-16 w-16 shrink-0" />
         <div className="min-w-0">
           <p className="text-xs text-ink-600">현재 연속</p>
           {stats.currentStreak > 0 ? (

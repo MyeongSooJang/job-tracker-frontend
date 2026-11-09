@@ -25,6 +25,7 @@ describe('StudyStatsBar', () => {
     expect(screen.getByText('오늘 기록하면 새싹이 돋아요')).toBeInTheDocument()
     expect(screen.getByRole('img', { name: '새싹 1단계 씨앗' })).toBeInTheDocument()
     expect(screen.getByText('4일')).toBeInTheDocument()
+    expect(screen.queryByText('0일')).not.toBeInTheDocument()
   })
 
   it('연속 중이면 단계 이름과 다음 단계까지 남은 일수를 보여준다', () => {
