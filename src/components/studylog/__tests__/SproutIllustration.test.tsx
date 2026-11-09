@@ -19,6 +19,13 @@ describe('SproutIllustration', () => {
     expect(count(container, '.fill-brand-500')).toBe(0)
   })
 
+  it('씨앗 단계에는 씨앗이 하나 있고 아직 나오지 않은 싹의 윤곽이 점선으로 있다', () => {
+    const { container } = render(<SproutIllustration stage={0} label="씨앗" />)
+
+    expect(count(container, '.fill-heat-4')).toBe(1)
+    expect(count(container, '.stroke-leaf')).toBe(1)
+  })
+
   it('싹 단계에는 줄기 하나와 잎 한 장이 있다', () => {
     const { container } = render(<SproutIllustration stage={1} label="싹" />)
 
@@ -31,7 +38,7 @@ describe('SproutIllustration', () => {
     [2, 1],
     [3, 2],
     [4, 3],
-    [5, 3],
+    [5, 2],
   ])('%i단계에는 잎이 %i쌍 있다', (stage, pairs) => {
     const { container } = render(<SproutIllustration stage={stage as 2 | 3 | 4 | 5} label="식물" />)
 
@@ -45,6 +52,7 @@ describe('SproutIllustration', () => {
 
     const last = render(<SproutIllustration stage={5} label="꽃" />)
     expect(count(last.container, '.fill-heat-4')).toBe(1)
-    expect(count(last.container, '.fill-heat-2')).toBe(5)
+    expect(count(last.container, '.fill-heat-2')).toBe(6)
+    expect(count(last.container, '.fill-heat-3')).toBe(6)
   })
 })
