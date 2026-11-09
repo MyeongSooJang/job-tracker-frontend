@@ -8,6 +8,7 @@ import StudyHeatmap from '@/components/studylog/StudyHeatmap'
 import StudyLogCalendar from '@/components/studylog/StudyLogCalendar'
 import StudyLogFeed from '@/components/studylog/StudyLogFeed'
 import StudyStatsBar from '@/components/studylog/StudyStatsBar'
+import StudyTimeChart from '@/components/studylog/StudyTimeChart'
 import { Button } from '@/components/ui/button'
 
 // 둘러보기 화면. 글쓰기는 /study-logs/new, /study-logs/:id 의 몰입 화면에서 한다.
@@ -93,6 +94,12 @@ export default function StudyLogs() {
           <StudyHeatmap today={today} selectedDate={selectedDate} days={yearHeatmap.data ?? []} onSelect={selectDate} />
         )}
       </section>
+
+      {yearHeatmap.data ? (
+        <StudyTimeChart today={today} days={yearHeatmap.data} />
+      ) : yearHeatmap.isLoading ? (
+        <div aria-hidden className="h-[280px] animate-pulse rounded-xl bg-surface" />
+      ) : null}
 
       <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
         <StudyLogFeed
