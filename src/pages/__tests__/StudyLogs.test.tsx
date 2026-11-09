@@ -63,6 +63,18 @@ describe('StudyLogs 페이지', () => {
     expect(screen.getByRole('button', { name: /JPA 정리/ })).toBeInTheDocument()
   })
 
+  it('잔디 아래에 공부 시간 차트를 보여준다', () => {
+    renderPage()
+
+    const heatmapSection = screen.getByRole('group', { name: '최근 1년 학습 잔디' })
+    const chart = screen.getByRole('region', { name: '공부 시간' })
+
+    expect(chart).toBeInTheDocument()
+    expect(within(chart).getByText('최근 12주')).toBeInTheDocument()
+    // 잔디가 문서에서 차트보다 앞에 있다
+    expect(heatmapSection.compareDocumentPosition(chart) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+  })
+
   it('처음에는 오늘 쓴 글만 보여주고, 전체 기록 보기를 누르면 모두 보여준다', async () => {
     const user = userEvent.setup()
     renderPage()
