@@ -73,7 +73,7 @@ export default function StudyLogs() {
         </div>
       ) : (
         <div aria-hidden className="grid grid-cols-2 gap-3 md:grid-cols-4">
-          {[0, 1, 2, 3].map(i => <div key={i} className="h-[86px] animate-pulse rounded-xl bg-surface" />)}
+          {[0, 1, 2, 3].map(i => <div key={i} className="h-[122px] animate-pulse rounded-xl bg-surface" />)}
         </div>
       )}
 

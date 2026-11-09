@@ -22,24 +22,28 @@ export default function StudyStatsBar({ stats }: { stats: StudyStats }) {
   return (
     <div className="grid grid-cols-3 gap-3 md:grid-cols-[1.5fr_1fr_1fr_1fr]">
       <div className={cn(cardClass, 'col-span-3 flex items-center gap-4 md:col-span-1')}>
-        <SproutIllustration stage={growth.stage} label={sproutLabel} className="h-16 w-16 shrink-0" />
+        {/* 그림 높이가 카드 높이를 정해서, 연속이 0일이든 아니든 카드 크기가 같다 */}
+        <SproutIllustration stage={growth.stage} label={sproutLabel} className="h-[5.5rem] w-[5.5rem] shrink-0" />
         <div className="min-w-0">
-          <p className="text-xs text-ink-600">현재 연속</p>
+          <p className="text-sm text-ink-600">현재 연속</p>
           {stats.currentStreak > 0 ? (
             <>
               <p className="mt-1 text-4xl font-bold tabular-nums text-brand-700">{stats.currentStreak}일</p>
-              <p className="mt-0.5 text-sm font-semibold text-ink-900">{growth.name}</p>
-              <p className="text-xs text-ink-600">{hint}</p>
+              <p className="mt-1 text-sm text-ink-600">
+                <span className="font-semibold text-ink-900">{growth.name}</span>
+                <span aria-hidden> · </span>
+                <span>{hint}</span>
+              </p>
             </>
           ) : (
-            <p className="mt-2 text-base font-semibold text-ink-900">오늘 기록하면 새싹이 돋아요</p>
+            <p className="mt-2 text-lg font-semibold text-ink-900">오늘 기록하면 새싹이 돋아요</p>
           )}
         </div>
       </div>
       {secondary.map(({ label, value }) => (
         <div key={label} className={cardClass}>
-          <p className="text-xs text-ink-600">{label}</p>
-          <p className="mt-1 text-lg font-semibold tabular-nums text-ink-900">{value}</p>
+          <p className="text-sm text-ink-600">{label}</p>
+          <p className="mt-1 text-xl font-semibold tabular-nums text-ink-900">{value}</p>
         </div>
       ))}
     </div>
