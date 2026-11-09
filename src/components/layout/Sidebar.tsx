@@ -19,12 +19,8 @@ export default function Sidebar() {
       {/* Brand mark */}
       <div className="px-5 pt-4 pb-3 md:pt-7 md:pb-6 border-b border-slate-800">
         <div className="flex items-center gap-2.5">
-          <div className="w-6 h-6 rounded-sm bg-white/10 border border-white/20 flex items-center justify-center">
-            <div className="w-2.5 h-2.5 rounded-[2px] bg-white/80" />
-          </div>
-          <span className="text-[13px] font-semibold tracking-[0.08em] uppercase text-white/90 font-mono">
-            Job Tracker
-          </span>
+          <img src="/brand/mark-dark.svg" alt="" className="w-7 h-7" />
+          <span className="text-base font-bold tracking-tight text-white/90">쌍떡잎</span>
         </div>
       </div>
 

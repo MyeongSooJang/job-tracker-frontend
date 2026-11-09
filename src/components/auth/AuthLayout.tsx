@@ -11,10 +11,8 @@ export default function AuthLayout({ title, description, children, footer }: Aut
   return (
     <div className="min-h-screen bg-surface flex flex-col items-center justify-center px-4 py-10 font-sans">
       <div className="flex items-center gap-2.5 mb-8">
-        <div className="w-7 h-7 rounded-lg bg-brand-500 flex items-center justify-center">
-          <div className="w-3 h-3 rounded-[3px] bg-white" />
-        </div>
-        <span className="text-lg font-bold text-ink-900 tracking-tight">Job Tracker</span>
+        <img src="/brand/mark-light.svg" alt="" className="w-8 h-8" />
+        <span className="text-lg font-bold text-ink-900 tracking-tight">쌍떡잎</span>
       </div>
       <Card className="w-full max-w-sm rounded-xl border-line p-6 sm:p-8 shadow-[0_1px_2px_rgba(16,24,40,0.05)] animate-fade-up motion-reduce:animate-none">
         <h1 className="text-2xl font-bold text-ink-900">{title}</h1>
