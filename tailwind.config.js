@@ -16,9 +16,20 @@ export default {
           '0%': { opacity: '0', transform: 'translateY(8px)' },
           '100%': { opacity: '1', transform: 'translateY(0)' },
         },
+        sway: {
+          '0%, 100%': { transform: 'rotate(-2deg)' },
+          '50%': { transform: 'rotate(2deg)' },
+        },
+        breathe: {
+          '0%, 100%': { opacity: '0.4' },
+          '50%': { opacity: '1' },
+        },
       },
       animation: {
         'fade-up': 'fade-up 0.4s ease-out both',
+        // 새싹 그림: 식물이 바람에 살랑이고, 씨앗 단계의 싹 윤곽이 숨 쉬듯 변한다
+        sway: 'sway 5s ease-in-out infinite',
+        breathe: 'breathe 3.4s ease-in-out infinite',
       },
       colors: {
         // 마이페이지/인증 화면용 브랜드 토큰. 색상은 여기 한 곳에서만 바꾼다.
@@ -58,6 +69,8 @@ export default {
           'dreamer-bg': '#F3F0FF',
           'dreamer-fg': '#5F3DC4',
         },
+        // 로고의 연두. 새싹 그림의 잎 색
+        leaf: '#6B9A1F',
         // 학습 잔디 농도. 크림에서 연두, 황금빛, 호박색으로 어두워진다 (GitHub 잔디의 초록과 구분하려고 따뜻한 색을 쓴다)
         heat: {
           1: '#C9E27A',

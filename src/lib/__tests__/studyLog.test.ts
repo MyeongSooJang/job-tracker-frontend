@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest'
 import {
   FEED_MAX_DAYS, HEATMAP_WEEKS,
   addDays, buildMonthCells, buildHeatmapWeeks, feedWindow, formatDateLabel, formatDayHeading, formatMinutes,
-  groupByDate, hasMoreFeed, heatLevel, heatmapCellLabel, heatmapMonthLabels, heatmapRange, monthRange,
+  groupByDate, growthStage, hasMoreFeed, heatLevel, heatmapCellLabel, heatmapMonthLabels, heatmapRange, monthRange,
   resolveWriteDate, shiftMonth, summarize, toDateKey, toMonthKey, weekdayLabel,
 } from '@/lib/studyLog'
 
@@ -248,5 +248,32 @@ describe('hasMoreFeed', () => {
     expect(hasMoreFeed(11)).toBe(true)
     expect(hasMoreFeed(12)).toBe(false)
     expect(13 * 30).toBeGreaterThanOrEqual(FEED_MAX_DAYS)
+  })
+})
+
+describe('growthStage', () => {
+  it.each([
+    [0, 0, '씨앗', '싹', 10],
+    [9, 0, '씨앗', '싹', 1],
+    [10, 1, '싹', '쌍떡잎', 10],
+    [19, 1, '싹', '쌍떡잎', 1],
+    [20, 2, '쌍떡잎', '본잎', 10],
+    [29, 2, '쌍떡잎', '본잎', 1],
+    [30, 3, '본잎', '큰 식물', 10],
+    [39, 3, '본잎', '큰 식물', 1],
+    [40, 4, '큰 식물', '꽃', 10],
+    [49, 4, '큰 식물', '꽃', 1],
+  ])('연속 %i일은 %i단계 %s이고 다음 %s까지 %i일이다', (streak, stage, name, nextName, daysToNext) => {
+    expect(growthStage(streak)).toEqual({ stage, name, nextName, daysToNext })
+  })
+
+  it('50일 이상은 마지막 단계라 다음 단계가 없다', () => {
+    expect(growthStage(50)).toEqual({ stage: 5, name: '꽃', nextName: null, daysToNext: null })
+    expect(growthStage(100)).toEqual({ stage: 5, name: '꽃', nextName: null, daysToNext: null })
+  })
+
+  it('음수와 소수는 0 이상의 정수로 다룬다', () => {
+    expect(growthStage(-3).stage).toBe(0)
+    expect(growthStage(19.9).stage).toBe(1)
   })
 })
