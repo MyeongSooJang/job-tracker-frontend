@@ -20,7 +20,7 @@ const TYPE_LABELS: Record<ScheduleType, string> = {
 }
 
 const TYPE_BADGE_VARIANTS: Record<ScheduleType, string> = {
-  INTERVIEW: 'bg-blue-100 text-blue-700 border-blue-200',
+  INTERVIEW: 'bg-brand-100 text-brand-700 border-brand-100',
   DOCUMENT_SUBMISSION: 'bg-orange-100 text-orange-700 border-orange-200',
   TASK: 'bg-purple-100 text-purple-700 border-purple-200',
   OTHER: 'bg-slate-100 text-slate-700 border-slate-200',

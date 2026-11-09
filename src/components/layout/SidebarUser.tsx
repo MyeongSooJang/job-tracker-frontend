@@ -9,12 +9,12 @@ function LoggedInUser({ onLogout }: { onLogout: () => void }) {
 
   return (
     <div className="flex items-center justify-between gap-2">
-      <p className="truncate text-[12px] text-slate-300">{profile?.name ?? '내 계정'}</p>
+      <p className="truncate text-[12px] text-white/80">{profile?.name ?? '내 계정'}</p>
       <button
         type="button"
         onClick={onLogout}
         aria-label="로그아웃"
-        className="flex shrink-0 items-center gap-1 text-[11px] text-slate-500 hover:text-slate-200 transition-colors"
+        className="flex shrink-0 items-center gap-1 text-[11px] text-white/55 hover:text-white/90 transition-colors"
       >
         <LogOut size={12} aria-hidden /> 로그아웃
       </button>
@@ -27,7 +27,7 @@ export default function SidebarUser() {
 
   if (!isAuthenticated) {
     return (
-      <Link to="/login" className="text-[12px] text-slate-400 hover:text-slate-200 transition-colors">
+      <Link to="/login" className="text-[12px] text-white/60 hover:text-white/90 transition-colors">
         로그인
       </Link>
     )

@@ -11,8 +11,8 @@ const UPCOMING_DAYS = 10
 
 const STATUS_BADGE_CLASS: Record<ApplicationStatus, string> = {
   RESUME_SUBMITTED: 'border-slate-300 text-slate-600',
-  INTERVIEW: 'border-blue-400 text-blue-700',
-  ACCEPTED: 'border-emerald-400 text-emerald-700',
+  INTERVIEW: 'border-brand-500 text-brand-700',
+  ACCEPTED: 'border-success text-success-strong',
   REJECTED: 'border-rose-400 text-rose-600',
 }
 
@@ -49,21 +49,21 @@ export default function Dashboard() {
           </CardContent>
         </Card>
 
-        <Card className="border-blue-100 shadow-sm bg-blue-50/40">
+        <Card className="border-brand-100 shadow-sm bg-brand-50/60">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-slate-500">진행 중</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-3xl font-bold text-blue-600">{inProgress}건</p>
+            <p className="text-3xl font-bold text-brand-600">{inProgress}건</p>
           </CardContent>
         </Card>
 
-        <Card className="border-emerald-100 shadow-sm bg-emerald-50/40">
+        <Card className="border-success-soft shadow-sm bg-success-soft/60">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-slate-500">최종합격</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-3xl font-bold text-emerald-600">{accepted}</p>
+            <p className="text-3xl font-bold text-success">{accepted}</p>
           </CardContent>
         </Card>
 

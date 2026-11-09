@@ -20,13 +20,13 @@ interface StudyHeatmapProps {
 const CELL_PX = 12
 const GAP_PX = 3
 
-// 글 없음(0)은 회색 테두리 칸, 1~4는 브랜드색이 진해진다. 흑백으로 봐도 단계가 구분되도록 명도 차를 둔다.
+// 글 없음(0)은 테두리 칸, 1~4는 연두에서 호박색으로 진해진다. 흑백으로 봐도 단계가 구분되도록 명도 차를 둔다.
 const LEVEL_CLASS: Record<HeatLevel, string> = {
   0: 'bg-surface ring-1 ring-inset ring-line',
-  1: 'bg-brand-100',
-  2: 'bg-brand-500/60',
-  3: 'bg-brand-500',
-  4: 'bg-brand-700',
+  1: 'bg-heat-1',
+  2: 'bg-heat-2',
+  3: 'bg-heat-3',
+  4: 'bg-heat-4',
 }
 
 const ARROW_STEP: Record<string, number> = { ArrowLeft: -7, ArrowRight: 7, ArrowUp: -1, ArrowDown: 1 }

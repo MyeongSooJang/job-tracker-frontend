@@ -75,7 +75,7 @@ export default function InterviewCalendar({ schedules }: { schedules: Schedule[]
                   <>
                     <span
                       className={`inline-block rounded-full px-1.5 tabular-nums ${
-                        dateKey(d) === todayKey ? 'bg-blue-600 text-white' : 'text-slate-600'
+                        dateKey(d) === todayKey ? 'bg-brand-500 text-white' : 'text-slate-600'
                       }`}
                     >
                       {d.getDate()}
@@ -85,7 +85,7 @@ export default function InterviewCalendar({ schedules }: { schedules: Schedule[]
                         key={s.id}
                         to={`/applications/${s.application.id}`}
                         title={`${s.title}${s.address ? ` · ${s.address}` : ''}`}
-                        className="mt-1 block truncate rounded bg-blue-50 px-1 py-0.5 text-blue-700 hover:bg-blue-100"
+                        className="mt-1 block truncate rounded bg-brand-50 px-1 py-0.5 text-brand-700 hover:bg-brand-100"
                       >
                         {timeLabel(s.scheduledAt)} {s.application.company.name}
                       </Link>
