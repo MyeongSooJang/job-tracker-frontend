@@ -20,6 +20,20 @@ describe('SproutIllustration', () => {
     expect(count(container, 'shovel')).toBe(1)
   })
 
+  it.each([1, 2, 3, 4, 5] as const)('%i단계 식물은 살랑이되 움직임 줄이기 설정에서는 멈춘다', stage => {
+    const { container } = render(<SproutIllustration stage={stage} label="식물" />)
+
+    const sway = container.querySelector('[data-part="sway"]')
+    expect(sway).toHaveClass('animate-sway', 'motion-reduce:animate-none')
+  })
+
+  it('씨앗 단계는 싹 윤곽이 숨 쉬되 움직임 줄이기 설정에서는 멈춘다', () => {
+    const { container } = render(<SproutIllustration stage={0} label="씨앗" />)
+
+    expect(container.querySelector('[data-part="breathe"]')).toHaveClass('animate-breathe', 'motion-reduce:animate-none')
+    expect(count(container, 'sway')).toBe(0)
+  })
+
   it('씨앗 단계에는 씨앗과 나오지 않은 싹의 윤곽만 있다', () => {
     const { container } = render(<SproutIllustration stage={0} label="씨앗" />)
 

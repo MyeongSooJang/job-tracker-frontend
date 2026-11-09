@@ -50,11 +50,17 @@ export default function SproutIllustration({ stage, label, className }: SproutIl
       <Ground />
       {/* 식물은 흙 중앙(48, 80)을 기준으로 키워 그린다 */}
       <g transform="translate(48 80) scale(1.15) translate(-48 -80)">
-        {stage === 0 && <Seed />}
-        {stage === 1 && <Sprout />}
-        {stage === 2 && <Cotyledons />}
-        {stage === 3 && <Leafy />}
-        {(stage === 4 || stage === 5) && <Tree stage={stage} />}
+        {stage === 0 ? (
+          <Seed />
+        ) : (
+          // 밑동(흙 중앙)을 축으로 살랑인다. 움직임 줄이기 설정에서는 멈춘다.
+          <g data-part="sway" className="animate-sway [transform-origin:48px_80px] motion-reduce:animate-none">
+            {stage === 1 && <Sprout />}
+            {stage === 2 && <Cotyledons />}
+            {stage === 3 && <Leafy />}
+            {(stage === 4 || stage === 5) && <Tree stage={stage} />}
+          </g>
+        )}
       </g>
       <Props />
     </svg>
@@ -105,7 +111,14 @@ function Stem({ top }: { top: number }) {
 function Seed() {
   return (
     <g data-part="seed-stage">
-      <g fill="none" strokeWidth="1.8" strokeLinecap="round" strokeDasharray="1 4" className="stroke-leaf">
+      <g
+        data-part="breathe"
+        fill="none"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+        strokeDasharray="1 4"
+        className="animate-breathe stroke-leaf motion-reduce:animate-none"
+      >
         <path data-part="ghost" d="M48 66V48" />
         <path d="M48 52C48 44 56 39 64 41C64 49 58 54 48 52Z" />
       </g>

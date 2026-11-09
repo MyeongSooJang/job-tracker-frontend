@@ -16,9 +16,20 @@ export default {
           '0%': { opacity: '0', transform: 'translateY(8px)' },
           '100%': { opacity: '1', transform: 'translateY(0)' },
         },
+        sway: {
+          '0%, 100%': { transform: 'rotate(-2deg)' },
+          '50%': { transform: 'rotate(2deg)' },
+        },
+        breathe: {
+          '0%, 100%': { opacity: '0.4' },
+          '50%': { opacity: '1' },
+        },
       },
       animation: {
         'fade-up': 'fade-up 0.4s ease-out both',
+        // 새싹 그림: 식물이 바람에 살랑이고, 씨앗 단계의 싹 윤곽이 숨 쉬듯 변한다
+        sway: 'sway 5s ease-in-out infinite',
+        breathe: 'breathe 3.4s ease-in-out infinite',
       },
       colors: {
         // 마이페이지/인증 화면용 브랜드 토큰. 색상은 여기 한 곳에서만 바꾼다.
