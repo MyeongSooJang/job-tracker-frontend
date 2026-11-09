@@ -41,7 +41,7 @@ export default function StudyStatsBar({ stats }: { stats: StudyStats }) {
         </div>
       </div>
       {secondary.map(({ label, value }) => (
-        <div key={label} className={cn(cardClass, 'flex flex-col justify-center')}>
+        <div key={label} className={cn(cardClass, 'flex flex-col items-center justify-center text-center')}>
           <p className="text-sm text-ink-600">{label}</p>
           <p className="mt-1 text-lg font-semibold tabular-nums text-ink-900 md:text-2xl">{value}</p>
         </div>
