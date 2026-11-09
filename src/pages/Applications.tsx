@@ -16,7 +16,7 @@ import type { ApplicationStatus } from '@/api/types'
 const STATUS_COLORS: Record<ApplicationStatus, string> = {
   RESUME_SUBMITTED: 'bg-slate-100 text-slate-700',
   INTERVIEW: 'bg-brand-100 text-brand-700',
-  ACCEPTED: 'bg-green-100 text-green-700',
+  ACCEPTED: 'bg-success-soft text-success-strong',
   REJECTED: 'bg-red-100 text-red-700',
 }
 

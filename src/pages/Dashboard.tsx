@@ -12,7 +12,7 @@ const UPCOMING_DAYS = 10
 const STATUS_BADGE_CLASS: Record<ApplicationStatus, string> = {
   RESUME_SUBMITTED: 'border-slate-300 text-slate-600',
   INTERVIEW: 'border-brand-500 text-brand-700',
-  ACCEPTED: 'border-emerald-400 text-emerald-700',
+  ACCEPTED: 'border-success text-success-strong',
   REJECTED: 'border-rose-400 text-rose-600',
 }
 
@@ -58,12 +58,12 @@ export default function Dashboard() {
           </CardContent>
         </Card>
 
-        <Card className="border-emerald-100 shadow-sm bg-emerald-50/40">
+        <Card className="border-success-soft shadow-sm bg-success-soft/60">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-slate-500">최종합격</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-3xl font-bold text-emerald-600">{accepted}</p>
+            <p className="text-3xl font-bold text-success">{accepted}</p>
           </CardContent>
         </Card>
 
