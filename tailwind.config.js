@@ -31,7 +31,12 @@ export default {
           700: '#144934',
           950: '#12201A',
         },
-        success: '#12B886',
+        // 성공 표시는 브랜드 초록과 헷갈리지 않게 청록을 쓴다
+        success: {
+          DEFAULT: '#0B7A7F',
+          soft: '#E2F3F3',
+          strong: '#0B6A6E',
+        },
         warn: '#F59F00',
         danger: '#E03131',
         // 글자색은 로고 먹색(900)에서 초록 기운을 유지한 회색 단계
@@ -46,8 +51,8 @@ export default {
           'rookie-fg': '#495057',
           'challenger-bg': '#E7F5FF',
           'challenger-fg': '#1864AB',
-          'striver-bg': '#E6FCF5',
-          'striver-fg': '#087F5B',
+          'striver-bg': '#E2F3F3',
+          'striver-fg': '#0B6A6E',
           'diligent-bg': '#FFF4E6',
           'diligent-fg': '#D9480F',
           'dreamer-bg': '#F3F0FF',
