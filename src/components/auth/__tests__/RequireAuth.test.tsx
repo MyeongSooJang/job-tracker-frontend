@@ -7,9 +7,9 @@ import { clearToken, setToken, UNAUTHORIZED_EVENT } from '@/lib/auth'
 import { AuthProvider } from '../AuthProvider'
 import RequireAuth from '../RequireAuth'
 
-function LoginProbe() {
+function IntroProbe() {
   const from = (useLocation().state as { from?: string } | null)?.from
-  return <div>로그인 화면 from={from}</div>
+  return <div>소개 화면 from={from}</div>
 }
 
 const renderAt = (entry: string) =>
@@ -18,7 +18,7 @@ const renderAt = (entry: string) =>
       <AuthProvider>
         <MemoryRouter initialEntries={[entry]}>
           <Routes>
-            <Route path="/login" element={<LoginProbe />} />
+            <Route path="/intro" element={<IntroProbe />} />
             <Route path="/study-logs/new" element={<RequireAuth><div>보호된 화면</div></RequireAuth>} />
           </Routes>
         </MemoryRouter>
@@ -32,7 +32,7 @@ const renderProtected = () =>
       <AuthProvider>
         <MemoryRouter initialEntries={['/mypage']}>
           <Routes>
-            <Route path="/login" element={<div>로그인 화면</div>} />
+            <Route path="/intro" element={<div>소개 화면</div>} />
             <Route path="/mypage" element={<RequireAuth><div>보호된 화면</div></RequireAuth>} />
           </Routes>
         </MemoryRouter>
@@ -43,17 +43,17 @@ const renderProtected = () =>
 describe('RequireAuth', () => {
   beforeEach(() => clearToken())
 
-  it('로그인하지 않았으면 로그인 화면으로 이동한다', () => {
+  it('로그인하지 않았으면 소개 화면으로 이동한다', () => {
     renderProtected()
 
-    expect(screen.getByText('로그인 화면')).toBeInTheDocument()
+    expect(screen.getByText('소개 화면')).toBeInTheDocument()
     expect(screen.queryByText('보호된 화면')).not.toBeInTheDocument()
   })
 
   it('로그인 후 돌아올 주소에 쿼리 문자열도 담아 보낸다', () => {
     renderAt('/study-logs/new?date=2026-10-20')
 
-    expect(screen.getByText('로그인 화면 from=/study-logs/new?date=2026-10-20')).toBeInTheDocument()
+    expect(screen.getByText('소개 화면 from=/study-logs/new?date=2026-10-20')).toBeInTheDocument()
   })
 
   it('로그인했다면 보호된 화면을 보여준다', () => {
@@ -63,7 +63,7 @@ describe('RequireAuth', () => {
     expect(screen.getByText('보호된 화면')).toBeInTheDocument()
   })
 
-  it('토큰이 만료되어 401 이벤트가 오면 로그인 화면으로 이동한다', () => {
+  it('토큰이 만료되어 401 이벤트가 오면 소개 화면으로 이동한다', () => {
     setToken('jwt-token')
     renderProtected()
     expect(screen.getByText('보호된 화면')).toBeInTheDocument()
@@ -72,6 +72,6 @@ describe('RequireAuth', () => {
       window.dispatchEvent(new Event(UNAUTHORIZED_EVENT))
     })
 
-    expect(screen.getByText('로그인 화면')).toBeInTheDocument()
+    expect(screen.getByText('소개 화면')).toBeInTheDocument()
   })
 })
