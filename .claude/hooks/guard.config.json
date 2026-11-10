@@ -1,0 +1,4 @@
+{
+  "mockFiles": ["mock-preview.html", "src/mock-preview.tsx"],
+  "previewPort": 5173
+}

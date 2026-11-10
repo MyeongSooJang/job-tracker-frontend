@@ -54,3 +54,24 @@
 - 캡처로 확인한 범위만 "확인했다"고 쓰고, 찍지 못한 동작(예: 백엔드 연동, 삭제 버튼)은 PR 본문의 "알아둘 점"에 확인하지 못했다고 적는다.
 - 캡처하다 발견한 이번 변경과 무관한 문제(잘림 등)는 고치지 말고 PR 본문에 적는다.
 - 끝나면 `mock-preview.*`를 지우고 개발 서버를 종료한 뒤 `git status`로 남은 임시 파일이 없는지 확인한다.
+
+## Hook으로 강제되는 규칙
+
+지침만으로는 놓칠 수 있어서, 아래 규칙은 `.claude/settings.json`의 Hook이 명령 실행 직전에 검사하고 어기면 **차단**한다. 스크립트는 `.claude/hooks/`에 있다.
+
+| 상황 | 검사 | 어기면 |
+|---|---|---|
+| `git commit` | `mock-preview.*`가 스테이징돼 있는가 | 차단 (`git restore --staged`로 뺀다) |
+| `git push`, `gh pr create`, `gh pr merge` | `mock-preview.*`가 git에 추적되고 있는가 | 차단 (`git rm`으로 제거) |
+| `gh pr create`, `gh pr merge` | 남은 `mock-preview.*` 파일 | **자동으로 삭제**하고 알린다 |
+| `gh pr merge` | 미리보기 개발 서버(127.0.0.1:5173)가 켜져 있는가 | 차단 (서버를 종료한다) |
+| `gh pr create` | 현재 커밋(HEAD)에 대한 `/security-review` 기록이 있는가 | 차단 (스킬을 실행한다) |
+| `gh pr merge` | PR 최신 커밋에 대한 `/security-review` 기록이 있는가 | 차단 |
+| `git commit`, `gh pr create` | `commit-and-pr-format` 스킬을 이 세션에서 실행했는가 | 스킬이 설치돼 있으면 차단, 없으면 알리기만 한다 |
+
+- **보안 리뷰는 커밋마다 유효하다.** 리뷰 뒤에 커밋이 하나라도 늘면(문서·스크린샷 커밋 포함) PR을 만들거나 머지하기 전에 `/security-review`를 다시 실행한다. 그래서 리뷰는 **마지막 커밋 뒤에** 돌린다.
+- 스킬 실행 기록은 `mark-skill.cjs`(PostToolUse)가 `.claude/.state/`(git 제외)에 남긴다. 스킬을 **호출한** 사실만 기록하며, 리뷰 결과를 반영했는지는 확인하지 못한다.
+- mock 파일은 `npm run clean:mock`으로 언제든 직접 지울 수 있다.
+- 훅 동작 검증: `npm run test:hooks` (임시 git 저장소에 스크립트를 복사해 실행한다). 훅을 고치면 함께 돌린다.
+- 훅은 명령 문자열에서 heredoc·따옴표 속 글을 제외하고 판단하며, `cd 경로 &&`로 다른 저장소에서 실행하는 명령에는 적용하지 않는다. 사용자가 직접 입력하는 `! 명령`은 훅을 거치지 않는다.
+- 새 훅 설정은 이미 열려 있는 세션에서는 `/hooks`를 한 번 열거나 세션을 다시 시작해야 적용될 수 있다.
