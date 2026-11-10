@@ -122,9 +122,10 @@ function Seed() {
         <path data-part="ghost" d="M48 66V48" />
         <path d="M48 52C48 44 56 39 64 41C64 49 58 54 48 52Z" />
       </g>
-      <g transform="rotate(-16 48 76)">
-        <path data-part="seed" d="M48 67C54 69 56 77 48 85C40 77 42 69 48 67Z" fill="url(#sprout-brown)" />
-        <ellipse cx="45.6" cy="73" rx="1.5" ry="3.6" className="fill-white/45" />
+      {/* 씨앗은 짙은 흙 위에서 또렷이 보이도록 금빛으로 칠하고 한 단계 크게 그린다 */}
+      <g transform="rotate(-16 48 76) translate(48 72) scale(1.3) translate(-48 -76)">
+        <path data-part="seed" d="M48 67C54 69 56 77 48 85C40 77 42 69 48 67Z" fill="url(#sprout-gold)" />
+        <ellipse cx="45.6" cy="73" rx="1.5" ry="3.6" className="fill-white/55" />
       </g>
       <ellipse cx="48" cy="82" rx="11" ry="3.4" className="fill-heat-4" />
     </g>

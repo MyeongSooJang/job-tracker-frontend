@@ -14,12 +14,14 @@ import StudyLogWrite from '@/pages/StudyLogWrite'
 import MyPage from '@/pages/MyPage'
 import Login from '@/pages/Login'
 import Signup from '@/pages/Signup'
+import Intro from '@/pages/Intro'
 
 export default function App() {
   return (
     <Routes>
       <Route path="/login" element={<Login />} />
       <Route path="/signup" element={<Signup />} />
+      <Route path="/intro" element={<Intro />} />
       <Route
         path="/study-logs/:logId"
         element={
