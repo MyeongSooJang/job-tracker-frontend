@@ -11,7 +11,7 @@ const h = vi.hoisted(() => ({
 
 vi.mock('@milkdown/crepe', () => {
   class Crepe {
-    static Feature = { ImageBlock: 'image-block', Latex: 'latex', Placeholder: 'placeholder', Toolbar: 'toolbar', BlockEdit: 'block-edit', LinkTooltip: 'link-tooltip' }
+    static Feature = { ImageBlock: 'image-block', Latex: 'latex', Placeholder: 'placeholder', Toolbar: 'toolbar', BlockEdit: 'block-edit', LinkTooltip: 'link-tooltip', CodeMirror: 'code-mirror' }
     editor = { config() { return this }, use() { return this } }
     constructor(config: Record<string, unknown>) {
       h.configs.push(config)
@@ -128,5 +128,16 @@ describe('MarkdownEditor 한글 문구', () => {
     expect(configs['block-edit'].listGroup).toMatchObject({ bulletList: { label: '글머리 기호 목록' } })
     expect(configs['block-edit'].advancedGroup).toMatchObject({ table: { label: '표' } })
     expect(configs.toolbar).toMatchObject({ boldLabel: '굵게', linkLabel: '링크' })
+  })
+})
+
+describe('MarkdownEditor 코드 블록', () => {
+  it('노션 스타일 코드 테마를 넘긴다', async () => {
+    h.configs.length = 0
+    render(<MarkdownEditor initialValue="" onChange={vi.fn()} />)
+    await waitFor(() => expect(h.configs.length).toBeGreaterThan(0))
+
+    const codeMirror = (h.configs[0].featureConfigs as Record<string, { theme?: unknown }>)['code-mirror']
+    expect(Array.isArray(codeMirror.theme)).toBe(true)
   })
 })

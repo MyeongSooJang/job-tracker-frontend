@@ -7,6 +7,7 @@ import { stringifyTextColor, textColorPlugins } from './textColor'
 import { buildColorToolbar } from './colorToolbar'
 import { buildColorMenu } from './colorMenu'
 import { blockDeletePlugin } from './blockDelete'
+import { notionCodeTheme } from './codeTheme'
 import { BLOCK_EDIT_KO, LINK_TOOLTIP_KO, TOOLBAR_KO } from './crepeKo'
 
 interface MarkdownEditorProps {
@@ -41,6 +42,7 @@ export default function MarkdownEditor({ initialValue, onChange, placeholder, ar
         [Crepe.Feature.Toolbar]: { ...TOOLBAR_KO, buildToolbar: buildColorToolbar },
         [Crepe.Feature.BlockEdit]: { ...BLOCK_EDIT_KO, buildMenu: buildColorMenu },
         [Crepe.Feature.LinkTooltip]: LINK_TOOLTIP_KO,
+        [Crepe.Feature.CodeMirror]: { theme: notionCodeTheme },
       },
     })
     // 글자색·배경색: 마크다운에는 <span style="color:…">로 저장하는 커스텀 마크.
