@@ -44,11 +44,11 @@ describe('MarkdownEditor', () => {
     expect(h.configs[0].defaultValue).toBe('## 시작')
   })
 
-  it('이미지 블록과 수식 기능은 끄고 안내 문구를 넘긴다', async () => {
+  it('수식 기능은 끄고(이미지는 켜 둔 채) 안내 문구를 넘긴다', async () => {
     render(<MarkdownEditor initialValue="" placeholder="여기에 쓰세요" onChange={vi.fn()} />)
 
     await waitFor(() => expect(h.calls).toEqual(['create']))
-    expect(h.configs[0].features).toEqual({ 'image-block': false, latex: false })
+    expect(h.configs[0].features).toEqual({ latex: false })
     expect(h.configs[0].featureConfigs).toMatchObject({ placeholder: { text: '여기에 쓰세요' } })
   })
 
@@ -139,5 +139,18 @@ describe('MarkdownEditor 코드 블록', () => {
 
     const codeMirror = (h.configs[0].featureConfigs as Record<string, { theme?: unknown }>)['code-mirror']
     expect(Array.isArray(codeMirror.theme)).toBe(true)
+  })
+})
+
+describe('MarkdownEditor 이미지', () => {
+  it('이미지 블록에 업로드 함수와 화면용 주소 변환을 넘긴다', async () => {
+    h.configs.length = 0
+    render(<MarkdownEditor initialValue="" onChange={vi.fn()} />)
+    await waitFor(() => expect(h.configs.length).toBeGreaterThan(0))
+
+    const image = (h.configs[0].featureConfigs as Record<string, Record<string, unknown>>)['image-block']
+    expect(typeof image.onUpload).toBe('function')
+    expect(typeof image.proxyDomURL).toBe('function')
+    expect(image.blockUploadButton).toBe('이미지 업로드')
   })
 })

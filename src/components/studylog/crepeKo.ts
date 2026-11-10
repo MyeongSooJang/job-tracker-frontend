@@ -20,6 +20,7 @@ export const BLOCK_EDIT_KO = {
   },
   advancedGroup: {
     label: '고급',
+    image: { label: '이미지' },
     codeBlock: { label: '코드 블록' },
     table: { label: '표' },
   },
@@ -35,4 +36,14 @@ export const TOOLBAR_KO = {
 
 export const LINK_TOOLTIP_KO = {
   inputPlaceholder: '링크 주소를 붙여넣으세요',
+}
+
+export const IMAGE_BLOCK_KO = {
+  inlineUploadButton: '업로드',
+  inlineConfirmButton: '확인',
+  inlineUploadPlaceholderText: '또는 링크 붙여넣기',
+  blockUploadButton: '이미지 업로드',
+  blockConfirmButton: '확인',
+  blockUploadPlaceholderText: '또는 링크 붙여넣기',
+  blockCaptionPlaceholderText: '설명 입력',
 }

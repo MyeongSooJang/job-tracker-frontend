@@ -2,10 +2,10 @@ import { $prose } from '@milkdown/kit/utils'
 import { Plugin, PluginKey } from '@milkdown/kit/prose/state'
 import type { EditorView } from '@milkdown/kit/prose/view'
 
-// 표·코드 블록 위에 마우스를 올리면 오른쪽 위에 "삭제" 버튼이 뜨고, 누르면 그 블록을 통째로 지운다.
+// 표·코드 블록·이미지 위에 마우스를 올리면 오른쪽 위에 "삭제" 버튼이 뜨고, 누르면 그 블록을 통째로 지운다.
 // Crepe는 표의 행/열 삭제만 있고 표 전체나 코드 블록을 지우는 UI가 없다.
-const DELETABLE: Record<string, string> = { table: '표', code_block: '코드 블록' }
-const TARGET_SELECTOR = 'table, .milkdown-code-block, pre'
+const DELETABLE: Record<string, string> = { table: '표', code_block: '코드 블록', 'image-block': '이미지' }
+const TARGET_SELECTOR = 'table, .milkdown-code-block, pre, .milkdown-image-block'
 const HIDE_DELAY_MS = 200
 const BUTTON_CLASS = 'study-block-delete'
 const TRASH_ICON =
