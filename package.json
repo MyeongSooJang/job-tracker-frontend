@@ -8,7 +8,9 @@
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "test": "vitest"
+    "test": "vitest",
+    "clean:mock": "node .claude/hooks/cleanup-mock.cjs",
+    "test:hooks": "node --test .claude/hooks/guard-check.cjs"
   },
   "devDependencies": {
     "@tanstack/react-query-devtools": "^5.105.0",
