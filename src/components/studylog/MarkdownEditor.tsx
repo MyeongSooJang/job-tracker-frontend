@@ -3,6 +3,21 @@ import { Crepe } from '@milkdown/crepe'
 import '@milkdown/crepe/theme/common/style.css'
 import '@milkdown/crepe/theme/frame.css'
 import './markdown-editor.css'
+import { stringifyTextColor, textColorPlugins } from './textColor'
+import { buildColorToolbar } from './colorToolbar'
+import { buildColorMenu } from './colorMenu'
+import { blockDeletePlugin } from './blockDelete'
+import { notionCodeTheme } from './codeTheme'
+import { createImagePastePlugin } from './imagePaste'
+import { uploadImage, toDisplayUrl } from '@/api/images'
+import { getErrorMessage } from '@/lib/errors'
+import { BLOCK_EDIT_KO, IMAGE_BLOCK_KO, LINK_TOOLTIP_KO, TOOLBAR_KO } from './crepeKo'
+
+// 붙여넣기·드래그로 올린 이미지가 실패하면 알린다.
+const imagePastePlugin = createImagePastePlugin({
+  upload: uploadImage,
+  onError: error => window.alert(getErrorMessage(error, '이미지를 올리지 못했어요. 잠시 후 다시 시도해 주세요.')),
+})
 
 interface MarkdownEditorProps {
   initialValue: string
@@ -29,10 +44,19 @@ export default function MarkdownEditor({ initialValue, onChange, placeholder, ar
     const crepe = new Crepe({
       root,
       defaultValue: initialValue,
-      features: { [Crepe.Feature.ImageBlock]: false, [Crepe.Feature.Latex]: false },
+      features: { [Crepe.Feature.Latex]: false },
       // text가 undefined이면 Crepe의 기본 문구를 덮어쓰므로 지정했을 때만 넘긴다.
-      ...(placeholder !== undefined && { featureConfigs: { [Crepe.Feature.Placeholder]: { text: placeholder } } }),
+      featureConfigs: {
+        ...(placeholder !== undefined && { [Crepe.Feature.Placeholder]: { text: placeholder } }),
+        [Crepe.Feature.Toolbar]: { ...TOOLBAR_KO, buildToolbar: buildColorToolbar },
+        [Crepe.Feature.BlockEdit]: { ...BLOCK_EDIT_KO, buildMenu: buildColorMenu },
+        [Crepe.Feature.LinkTooltip]: LINK_TOOLTIP_KO,
+        [Crepe.Feature.CodeMirror]: { theme: notionCodeTheme },
+        [Crepe.Feature.ImageBlock]: { ...IMAGE_BLOCK_KO, onUpload: uploadImage, proxyDomURL: toDisplayUrl },
+      },
     })
+    // 글자색·배경색: 마크다운에는 <span style="color:…">로 저장하는 커스텀 마크.
+    crepe.editor.config(stringifyTextColor).use(textColorPlugins).use(blockDeletePlugin).use(imagePastePlugin)
     crepe.on(listener => {
       listener.markdownUpdated((_ctx, markdown, previous) => {
         if (markdown !== previous) onChangeRef.current(markdown)

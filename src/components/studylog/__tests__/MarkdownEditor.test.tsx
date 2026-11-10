@@ -11,7 +11,8 @@ const h = vi.hoisted(() => ({
 
 vi.mock('@milkdown/crepe', () => {
   class Crepe {
-    static Feature = { ImageBlock: 'image-block', Latex: 'latex', Placeholder: 'placeholder' }
+    static Feature = { ImageBlock: 'image-block', Latex: 'latex', Placeholder: 'placeholder', Toolbar: 'toolbar', BlockEdit: 'block-edit', LinkTooltip: 'link-tooltip', CodeMirror: 'code-mirror' }
+    editor = { config() { return this }, use() { return this } }
     constructor(config: Record<string, unknown>) {
       h.configs.push(config)
     }
@@ -43,12 +44,12 @@ describe('MarkdownEditor', () => {
     expect(h.configs[0].defaultValue).toBe('## 시작')
   })
 
-  it('이미지 블록과 수식 기능은 끄고 안내 문구를 넘긴다', async () => {
+  it('수식 기능은 끄고(이미지는 켜 둔 채) 안내 문구를 넘긴다', async () => {
     render(<MarkdownEditor initialValue="" placeholder="여기에 쓰세요" onChange={vi.fn()} />)
 
     await waitFor(() => expect(h.calls).toEqual(['create']))
-    expect(h.configs[0].features).toEqual({ 'image-block': false, latex: false })
-    expect(h.configs[0].featureConfigs).toEqual({ placeholder: { text: '여기에 쓰세요' } })
+    expect(h.configs[0].features).toEqual({ latex: false })
+    expect(h.configs[0].featureConfigs).toMatchObject({ placeholder: { text: '여기에 쓰세요' } })
   })
 
   it('내용이 바뀌면 마크다운을 부모에게 알린다', async () => {
@@ -102,5 +103,54 @@ describe('MarkdownEditor', () => {
     )
 
     await waitFor(() => expect(h.calls).toEqual(['create', 'destroy', 'create']))
+  })
+})
+
+describe('MarkdownEditor 색 도구', () => {
+  it('선택 툴바에 색 설정을 넘긴다', async () => {
+    h.configs.length = 0
+    render(<MarkdownEditor initialValue="" onChange={vi.fn()} />)
+    await waitFor(() => expect(h.configs.length).toBeGreaterThan(0))
+
+    const toolbar = (h.configs[0].featureConfigs as Record<string, { buildToolbar?: unknown }>).toolbar
+    expect(typeof toolbar.buildToolbar).toBe('function')
+  })
+})
+
+describe('MarkdownEditor 한글 문구', () => {
+  it('블록 메뉴와 툴바의 영어 문구를 한글로 바꿔 넘긴다', async () => {
+    h.configs.length = 0
+    render(<MarkdownEditor initialValue="" onChange={vi.fn()} />)
+    await waitFor(() => expect(h.configs.length).toBeGreaterThan(0))
+
+    const configs = h.configs[0].featureConfigs as Record<string, Record<string, unknown>>
+    expect(configs['block-edit'].textGroup).toMatchObject({ label: '텍스트', h1: { label: '제목 1' }, quote: { label: '인용' } })
+    expect(configs['block-edit'].listGroup).toMatchObject({ bulletList: { label: '글머리 기호 목록' } })
+    expect(configs['block-edit'].advancedGroup).toMatchObject({ table: { label: '표' } })
+    expect(configs.toolbar).toMatchObject({ boldLabel: '굵게', linkLabel: '링크' })
+  })
+})
+
+describe('MarkdownEditor 코드 블록', () => {
+  it('노션 스타일 코드 테마를 넘긴다', async () => {
+    h.configs.length = 0
+    render(<MarkdownEditor initialValue="" onChange={vi.fn()} />)
+    await waitFor(() => expect(h.configs.length).toBeGreaterThan(0))
+
+    const codeMirror = (h.configs[0].featureConfigs as Record<string, { theme?: unknown }>)['code-mirror']
+    expect(Array.isArray(codeMirror.theme)).toBe(true)
+  })
+})
+
+describe('MarkdownEditor 이미지', () => {
+  it('이미지 블록에 업로드 함수와 화면용 주소 변환을 넘긴다', async () => {
+    h.configs.length = 0
+    render(<MarkdownEditor initialValue="" onChange={vi.fn()} />)
+    await waitFor(() => expect(h.configs.length).toBeGreaterThan(0))
+
+    const image = (h.configs[0].featureConfigs as Record<string, Record<string, unknown>>)['image-block']
+    expect(typeof image.onUpload).toBe('function')
+    expect(typeof image.proxyDomURL).toBe('function')
+    expect(image.blockUploadButton).toBe('이미지 업로드')
   })
 })

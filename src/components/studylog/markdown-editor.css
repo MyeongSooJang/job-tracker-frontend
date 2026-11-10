@@ -12,8 +12,8 @@
   --crepe-color-on-secondary: theme('colors.ink.900');
   --crepe-color-hover: theme('colors.surface');
   --crepe-color-selected: theme('colors.brand.50');
-  --crepe-color-inline-area: theme('colors.surface');
-  --crepe-color-inline-code: theme('colors.brand.700');
+  --crepe-color-inline-area: rgba(135, 131, 120, 0.15);
+  --crepe-color-inline-code: #eb5757;
   --crepe-color-error: theme('colors.danger');
   --crepe-font-title: theme('fontFamily.sans');
   --crepe-font-default: theme('fontFamily.sans');
@@ -59,4 +59,83 @@
 
 .study-editor .milkdown .milkdown-block-handle .operation-item svg {
   fill: theme('colors.ink.600');
+}
+
+/* 선택 툴바의 색 팔레트 (body에 붙으므로 .study-editor 밖) */
+.study-color-palette {
+  position: fixed;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 10px 12px;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  font-family: inherit;
+}
+.study-color-palette__title { margin: 0 0 6px; font-size: 11px; color: #6b7280; }
+.study-color-palette__row { display: flex; gap: 6px; }
+.study-color-palette__swatch {
+  width: 26px; height: 26px; border-radius: 6px; border: 1px solid #e5e7eb;
+  font-size: 13px; font-weight: 700; line-height: 1; background: #fff; cursor: pointer;
+}
+.study-color-palette__swatch:hover { outline: 2px solid #9ca3af; }
+.study-color-palette__swatch[data-none='true'] {
+  background: linear-gradient(135deg, transparent 45%, #9ca3af 45%, #9ca3af 55%, transparent 55%);
+  color: #374151;
+}
+
+/* 표: 기본 테두리는 outline 색을 80% 투명하게 섞어 거의 흰색이라 선이 안 보인다. 글자색(검정 계열)으로 또렷하게 한다. */
+.study-editor .milkdown .milkdown-table-block th,
+.study-editor .milkdown .milkdown-table-block td {
+  border: 1px solid theme('colors.ink.900');
+}
+
+.study-editor .milkdown .milkdown-table-block svg {
+  fill: theme('colors.ink.600');
+}
+
+.study-editor .milkdown .milkdown-table-block .cell-handle {
+  color: theme('colors.ink.600');
+}
+
+/* 표·코드 블록 삭제 버튼 (body에 붙음) */
+.study-block-delete {
+  position: fixed;
+  z-index: 1000;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  font-size: 12px;
+  color: #b91c1c;
+  background: #fff;
+  border: 1px solid #fecaca;
+  border-radius: 6px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  cursor: pointer;
+}
+.study-block-delete[hidden] { display: none; }
+.study-block-delete:hover { background: #fef2f2; }
+
+/* 코드 블록: 노션처럼 연한 회색 배경, 번호 없음, 둥근 모서리. 안쪽 요소들이 쓰는 surface 변수도 같은 색으로 맞춘다. */
+.study-editor .milkdown .milkdown-code-block {
+  --crepe-color-surface: #f7f6f3;
+  --crepe-color-surface-low: #efede8;
+  --crepe-font-code: SFMono-Regular, Menlo, Consolas, 'PT Mono', 'Liberation Mono', Courier, monospace;
+  margin: 8px 0;
+  padding: 8px 16px 14px;
+  border-radius: 4px;
+}
+.study-editor .milkdown .milkdown-code-block .cm-gutters {
+  display: none;
+}
+/* 인라인 코드: 노션처럼 빨간 글자에 옅은 회색 배경, 고정폭 글꼴 */
+.study-editor .milkdown .ProseMirror :not(pre) > code {
+  font-family: SFMono-Regular, Menlo, Consolas, 'PT Mono', 'Liberation Mono', Courier, monospace;
+  font-size: 85%;
+  border-radius: 4px;
+  padding: 0.2em 0.4em;
 }
