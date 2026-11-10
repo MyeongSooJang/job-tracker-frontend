@@ -60,3 +60,29 @@
 .study-editor .milkdown .milkdown-block-handle .operation-item svg {
   fill: theme('colors.ink.600');
 }
+
+/* 선택 툴바의 색 팔레트 (body에 붙으므로 .study-editor 밖) */
+.study-color-palette {
+  position: fixed;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 10px 12px;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  font-family: inherit;
+}
+.study-color-palette__title { margin: 0 0 6px; font-size: 11px; color: #6b7280; }
+.study-color-palette__row { display: flex; gap: 6px; }
+.study-color-palette__swatch {
+  width: 26px; height: 26px; border-radius: 6px; border: 1px solid #e5e7eb;
+  font-size: 13px; font-weight: 700; line-height: 1; background: #fff; cursor: pointer;
+}
+.study-color-palette__swatch:hover { outline: 2px solid #9ca3af; }
+.study-color-palette__swatch[data-none='true'] {
+  background: linear-gradient(135deg, transparent 45%, #9ca3af 45%, #9ca3af 55%, transparent 55%);
+  color: #374151;
+}
