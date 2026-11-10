@@ -3,6 +3,8 @@ import { Crepe } from '@milkdown/crepe'
 import '@milkdown/crepe/theme/common/style.css'
 import '@milkdown/crepe/theme/frame.css'
 import './markdown-editor.css'
+import { stringifyTextColor, textColorPlugins } from './textColor'
+import { buildColorToolbar } from './colorToolbar'
 
 interface MarkdownEditorProps {
   initialValue: string
@@ -31,8 +33,13 @@ export default function MarkdownEditor({ initialValue, onChange, placeholder, ar
       defaultValue: initialValue,
       features: { [Crepe.Feature.ImageBlock]: false, [Crepe.Feature.Latex]: false },
       // text가 undefined이면 Crepe의 기본 문구를 덮어쓰므로 지정했을 때만 넘긴다.
-      ...(placeholder !== undefined && { featureConfigs: { [Crepe.Feature.Placeholder]: { text: placeholder } } }),
+      featureConfigs: {
+        ...(placeholder !== undefined && { [Crepe.Feature.Placeholder]: { text: placeholder } }),
+        [Crepe.Feature.Toolbar]: { buildToolbar: buildColorToolbar },
+      },
     })
+    // 글자색·배경색: 마크다운에는 <span style="color:…">로 저장하는 커스텀 마크.
+    crepe.editor.config(stringifyTextColor).use(textColorPlugins)
     crepe.on(listener => {
       listener.markdownUpdated((_ctx, markdown, previous) => {
         if (markdown !== previous) onChangeRef.current(markdown)

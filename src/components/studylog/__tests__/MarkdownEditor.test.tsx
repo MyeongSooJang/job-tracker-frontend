@@ -11,7 +11,8 @@ const h = vi.hoisted(() => ({
 
 vi.mock('@milkdown/crepe', () => {
   class Crepe {
-    static Feature = { ImageBlock: 'image-block', Latex: 'latex', Placeholder: 'placeholder' }
+    static Feature = { ImageBlock: 'image-block', Latex: 'latex', Placeholder: 'placeholder', Toolbar: 'toolbar' }
+    editor = { config() { return this }, use() { return this } }
     constructor(config: Record<string, unknown>) {
       h.configs.push(config)
     }
@@ -48,7 +49,7 @@ describe('MarkdownEditor', () => {
 
     await waitFor(() => expect(h.calls).toEqual(['create']))
     expect(h.configs[0].features).toEqual({ 'image-block': false, latex: false })
-    expect(h.configs[0].featureConfigs).toEqual({ placeholder: { text: '여기에 쓰세요' } })
+    expect(h.configs[0].featureConfigs).toMatchObject({ placeholder: { text: '여기에 쓰세요' } })
   })
 
   it('내용이 바뀌면 마크다운을 부모에게 알린다', async () => {
@@ -102,5 +103,16 @@ describe('MarkdownEditor', () => {
     )
 
     await waitFor(() => expect(h.calls).toEqual(['create', 'destroy', 'create']))
+  })
+})
+
+describe('MarkdownEditor 색 도구', () => {
+  it('선택 툴바에 색 설정을 넘긴다', async () => {
+    h.configs.length = 0
+    render(<MarkdownEditor initialValue="" onChange={vi.fn()} />)
+    await waitFor(() => expect(h.configs.length).toBeGreaterThan(0))
+
+    const toolbar = (h.configs[0].featureConfigs as Record<string, { buildToolbar?: unknown }>).toolbar
+    expect(typeof toolbar.buildToolbar).toBe('function')
   })
 })
