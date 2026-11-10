@@ -108,6 +108,14 @@ describe('Intro', () => {
     expect(screen.getAllByText('예시')).toHaveLength(4)
   })
 
+  it('일정 예시는 종류마다 어떤 일정인지 문구로 보여준다', () => {
+    renderIntro()
+
+    expect(screen.getByText('1차 면접')).toBeInTheDocument()
+    expect(screen.getByText('코딩 테스트')).toBeInTheDocument()
+    expect(screen.getByText('지원서 제출')).toBeInTheDocument()
+  })
+
   it('소개 페이지가 열려 있는 동안만 스크롤바 색 클래스가 붙는다', () => {
     const { unmount } = renderIntro()
     expect(document.documentElement).toHaveClass('intro-scrollbar')

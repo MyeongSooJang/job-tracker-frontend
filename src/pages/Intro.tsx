@@ -15,30 +15,34 @@ const sectionClass = 'flex min-h-[70vh] flex-col justify-center px-6 py-16 sm:px
 const headingClass = 'break-keep text-3xl font-bold tracking-tight text-ink-900 [text-wrap:balance] sm:text-4xl lg:text-5xl'
 const bodyClass = 'mt-4 max-w-md break-keep text-base leading-relaxed text-ink-600 [text-wrap:pretty]'
 
-// 실제 데이터가 아니라 모양을 보여주는 그림에는 모두 이 표시를 붙인다.
-function ExampleTag() {
-  return <span className="inline-block rounded bg-white px-2 py-0.5 text-xs font-medium text-ink-600">예시</span>
+// 실제 데이터가 아니라 모양을 보여주는 그림에는 모두 이 표시를 붙인다. 흰 카드 안에서는 크림색 바탕으로 구분한다.
+function ExampleTag({ onCard = false }: { onCard?: boolean }) {
+  return (
+    <span className={`inline-block rounded px-2 py-0.5 text-xs font-medium text-ink-600 ${onCard ? 'bg-surface' : 'bg-white'}`}>
+      예시
+    </span>
+  )
 }
 
-// 지원 단계. 서비스가 다루는 상태 이름만 보여준다.
+// 지원 단계. 서비스가 다루는 상태 이름만 보여준다. 줄이 오른쪽 끝까지 이어져 지원이 흘러가는 모양을 만든다.
 function StatusPath() {
   const steps = ['서류 제출', '면접', '합격']
   return (
-    <div className="mt-8">
+    <div className="mt-8 max-w-xl">
       <ExampleTag />
-      <div aria-hidden className="mt-2 flex items-center gap-2">
+      <div aria-hidden className="mt-3 flex items-center gap-3">
         {steps.map((label, index) => (
-          <div key={label} className="flex items-center gap-2">
-            {index > 0 && <span className="h-px w-5 bg-line" />}
+          <div key={label} className="flex flex-1 items-center gap-3 last:flex-none">
             <span
               className={
                 index === 1
-                  ? 'rounded-full bg-brand-500 px-3 py-1 text-xs font-medium text-white'
-                  : 'rounded-full bg-brand-50 px-3 py-1 text-xs font-medium text-brand-700'
+                  ? 'rounded-full bg-brand-500 px-4 py-1.5 text-sm font-medium text-white'
+                  : 'rounded-full bg-brand-50 px-4 py-1.5 text-sm font-medium text-brand-700'
               }
             >
               {label}
             </span>
+            {index < steps.length - 1 && <span className="h-px flex-1 bg-line" />}
           </div>
         ))}
       </div>
@@ -49,28 +53,36 @@ function StatusPath() {
 // 면접 질문과 답변이 어떤 모양으로 남는지 보여주는 예시. 일반적인 개념 질문이며 실제 면접 기록이 아니다.
 function InterviewExample() {
   return (
-    <div className="mt-8 max-w-md rounded-xl border border-line bg-white p-5">
-      <ExampleTag />
-      <p className="mt-3 break-keep text-sm font-semibold text-ink-900">Q. 프로세스와 스레드의 차이를 설명해 주세요.</p>
-      <p className="mt-2 break-keep text-sm leading-relaxed text-ink-600">
-        A. 프로세스는 독립된 메모리 공간을 가지고, 스레드는 한 프로세스 안에서 코드와 힙을 공유합니다.
-      </p>
+    <div className="mt-8 max-w-lg overflow-hidden rounded-xl border border-line bg-white">
+      <div className="px-5 pt-4">
+        <ExampleTag onCard />
+        <p className="mt-3 break-keep text-base font-semibold text-ink-900">프로세스와 스레드의 차이를 설명해 주세요.</p>
+      </div>
+      <div className="mt-4 border-t border-line bg-brand-50 px-5 py-4">
+        <p className="break-keep text-sm leading-relaxed text-ink-900">
+          프로세스는 독립된 메모리 공간을 가지고, 스레드는 한 프로세스 안에서 코드와 힙을 공유합니다.
+        </p>
+      </div>
     </div>
   )
 }
 
-// 일정 종류. 날짜와 회사는 비워 두고 종류만 보여준다.
-const SCHEDULE_TYPES = ['면접', '과제 제출', '서류 마감']
+// 일정 종류와 설명. 날짜와 회사는 넣지 않고 종류별로 어떤 일정인지만 보여준다.
+const SCHEDULE_EXAMPLES = [
+  { type: '면접', title: '1차 면접' },
+  { type: '과제 제출', title: '코딩 테스트' },
+  { type: '서류 마감', title: '지원서 제출' },
+]
 
 function ScheduleExample() {
   return (
     <div className="mt-8 max-w-md">
       <ExampleTag />
       <ul className="mt-2 divide-y divide-line rounded-xl border border-line bg-white">
-        {SCHEDULE_TYPES.map(type => (
-          <li key={type} className="flex items-center gap-4 px-4 py-3">
+        {SCHEDULE_EXAMPLES.map(({ type, title }) => (
+          <li key={type} className="flex items-baseline gap-4 px-4 py-3">
             <span className="w-16 shrink-0 text-sm font-medium text-brand-700">{type}</span>
-            <span aria-hidden className="h-1.5 flex-1 rounded bg-line" />
+            <span className="text-sm text-ink-900">{title}</span>
           </li>
         ))}
       </ul>
@@ -78,17 +90,36 @@ function ScheduleExample() {
   )
 }
 
-// 잔디 범례. 칠해지는 단계 색만 보여주며 실제 기록이 아니다.
+// 잔디 예시. 26주 x 7일 칸을 규칙적인 값으로 칠한 그림이며 실제 기록이 아니다. 좁은 화면에서는 16주만 보여준다.
+const HEAT_WEEKS = 26
+const HEAT_WEEKS_NARROW = 16
 const HEAT_CLASS = ['bg-line', 'bg-heat-1', 'bg-heat-2', 'bg-heat-3', 'bg-heat-4']
 
-function HeatStrip() {
+function heatLevel(index: number) {
+  const value = (index * 37 + 11) % 100
+  if (value < 30) return 0
+  if (value < 55) return 1
+  if (value < 75) return 2
+  if (value < 90) return 3
+  return 4
+}
+
+function HeatGrid() {
   return (
     <div className="mt-8">
       <ExampleTag />
-      <div aria-hidden className="mt-2 flex items-center gap-1.5 text-xs text-ink-600">
+      <div aria-hidden className="mt-3 grid grid-flow-col grid-rows-7 justify-start gap-1">
+        {Array.from({ length: HEAT_WEEKS * 7 }, (_, index) => (
+          <span
+            key={index}
+            className={`h-3.5 w-3.5 rounded-[3px] ${HEAT_CLASS[heatLevel(index)]} ${index >= HEAT_WEEKS_NARROW * 7 ? 'hidden sm:block' : ''}`}
+          />
+        ))}
+      </div>
+      <div aria-hidden className="mt-3 flex items-center gap-1.5 text-xs text-ink-600">
         <span className="mr-1">적게</span>
         {HEAT_CLASS.map(color => (
-          <span key={color} className={`h-4 w-4 rounded-[3px] ${color}`} />
+          <span key={color} className={`h-3.5 w-3.5 rounded-[3px] ${color}`} />
         ))}
         <span className="ml-1">많이</span>
       </div>
@@ -224,15 +255,15 @@ export default function Intro() {
         </section>
 
         <section data-stage={4} className={sectionClass}>
-          <h2 className={headingClass}>오늘 공부한 걸 글로 남겨요</h2>
+          <h2 className={`${headingClass} lg:text-6xl`}>오늘 공부한 걸 글로 남겨요</h2>
           <p className={bodyClass}>
             노션처럼 쓰는 에디터에 개념 정리, 비교 표, 면접 예상 질문을 적어요. 글을 쓴 날은 잔디에 칠해지고, 연속으로 쓴 날수만큼 왼쪽의 새싹이 자라요.
           </p>
-          <HeatStrip />
+          <HeatGrid />
         </section>
 
         <section data-stage={5} className={sectionClass}>
-          <h2 className={headingClass}>오늘 한 줄부터.</h2>
+          <h2 className={`${headingClass} lg:text-6xl`}>오늘 한 줄부터.</h2>
           <p className={bodyClass}>첫 기록이 씨앗이에요. 오늘 공부한 것 하나만 적어도 시작할 수 있어요.</p>
           {actions}
         </section>
