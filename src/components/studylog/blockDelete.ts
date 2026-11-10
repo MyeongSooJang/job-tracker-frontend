@@ -26,6 +26,12 @@ function locate(view: EditorView, element: Element): Located | null {
     return null
   }
   const $pos = view.state.doc.resolve(pos)
+  // 이미지처럼 내용이 없는 최상위 블록은 posAtDOM이 노드 바로 앞 위치를 돌려주므로(깊이 0), 그 뒤의 노드를 본다.
+  const next = $pos.nodeAfter
+  const nextDom = view.nodeDOM(pos)
+  if (next && DELETABLE[next.type.name] && nextDom instanceof Element && (nextDom === element || nextDom.contains(element) || element.contains(nextDom))) {
+    return { from: pos, nodeSize: next.nodeSize, label: DELETABLE[next.type.name] }
+  }
   for (let depth = $pos.depth; depth >= 1; depth--) {
     const node = $pos.node(depth)
     const label = DELETABLE[node.type.name]
