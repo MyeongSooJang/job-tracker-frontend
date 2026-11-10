@@ -1,4 +1,4 @@
-import { act, render, screen } from '@testing-library/react'
+import { act, render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
@@ -57,7 +57,7 @@ describe('Intro', () => {
 
     expect(screen.getByRole('heading', { level: 1, name: '쓴 만큼 자라요.' })).toBeInTheDocument()
     expect(screen.getByRole('heading', { level: 2, name: '어디까지 왔는지 한눈에' })).toBeInTheDocument()
-    expect(screen.getByRole('heading', { level: 2, name: '면접에서 받은 질문과 내 답변' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { level: 2, name: '면접을 회차별로 관리해요' })).toBeInTheDocument()
     expect(screen.getByRole('heading', { level: 2, name: '다가오는 일정을 놓치지 않게' })).toBeInTheDocument()
     expect(screen.getByRole('heading', { level: 2, name: '오늘 공부한 걸 글로 남겨요' })).toBeInTheDocument()
     expect(screen.getByRole('heading', { level: 2, name: '오늘 한 줄부터.' })).toBeInTheDocument()
@@ -108,12 +108,23 @@ describe('Intro', () => {
     expect(screen.getAllByText('예시')).toHaveLength(4)
   })
 
+  it('면접 예시는 회차와 질문 답변, 후기(별점, 난이도, 분위기)를 함께 보여준다', () => {
+    renderIntro()
+
+    expect(screen.getByRole('heading', { level: 3, name: '1차 면접' })).toBeInTheDocument()
+    expect(screen.getByText('프로세스와 스레드의 차이를 설명해 주세요.')).toBeInTheDocument()
+    expect(screen.getByRole('img', { name: '별점 4.0점' })).toBeInTheDocument()
+    expect(screen.getByRole('img', { name: /난이도 3\/5/ })).toBeInTheDocument()
+    expect(screen.getByText('분위기 편안함')).toBeInTheDocument()
+  })
+
   it('일정 예시는 종류마다 어떤 일정인지 문구로 보여준다', () => {
     renderIntro()
 
-    expect(screen.getByText('1차 면접')).toBeInTheDocument()
-    expect(screen.getByText('코딩 테스트')).toBeInTheDocument()
-    expect(screen.getByText('지원서 제출')).toBeInTheDocument()
+    const list = screen.getByText('서류 마감').closest('ul') as HTMLElement
+    expect(within(list).getByText('1차 면접')).toBeInTheDocument()
+    expect(within(list).getByText('코딩 테스트')).toBeInTheDocument()
+    expect(within(list).getByText('지원서 제출')).toBeInTheDocument()
   })
 
   it('소개 페이지가 열려 있는 동안만 스크롤바 색 클래스가 붙는다', () => {

@@ -2,7 +2,10 @@ import { useEffect, useRef, useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { useAuth } from '@/components/auth/AuthProvider'
 import SproutIllustration from '@/components/studylog/SproutIllustration'
+import DifficultyMeter from '@/components/reviews/DifficultyMeter'
+import RatingStars from '@/components/reviews/RatingStars'
 import { Button } from '@/components/ui/button'
+import { ATMOSPHERE_LABELS } from '@/lib/review'
 import { growthStage, type GrowthStage } from '@/lib/studyLog'
 
 type Stage = GrowthStage['stage']
@@ -50,18 +53,42 @@ function StatusPath() {
   )
 }
 
-// 면접 질문과 답변이 어떤 모양으로 남는지 보여주는 예시. 일반적인 개념 질문이며 실제 면접 기록이 아니다.
+// 면접을 회차별로 적고 후기까지 정리하는 모양을 보여주는 예시. 일반적인 개념 질문이며 실제 면접 기록이 아니다.
+// 별점, 난이도, 분위기는 앱의 면접 후기 화면에서 쓰는 컴포넌트와 표기를 그대로 쓴다.
 function InterviewExample() {
   return (
     <div className="mt-8 max-w-lg overflow-hidden rounded-xl border border-line bg-white">
       <div className="px-5 pt-4">
-        <ExampleTag onCard />
-        <p className="mt-3 break-keep text-base font-semibold text-ink-900">프로세스와 스레드의 차이를 설명해 주세요.</p>
+        <div className="flex items-center justify-between gap-3">
+          <ExampleTag onCard />
+          <div aria-hidden className="flex gap-1.5">
+            <span className="rounded-full bg-brand-500 px-3 py-0.5 text-xs font-medium text-white">1차</span>
+            <span className="rounded-full bg-brand-50 px-3 py-0.5 text-xs font-medium text-brand-700">2차</span>
+          </div>
+        </div>
+        <h3 className="mt-3 text-base font-semibold text-ink-900">1차 면접</h3>
+        <dl className="mt-1 flex flex-wrap gap-x-5 text-sm text-ink-600">
+          <div className="flex gap-1.5">
+            <dt>장소</dt>
+            <dd className="text-ink-900">온라인</dd>
+          </div>
+          <div className="flex gap-1.5">
+            <dt>점수</dt>
+            <dd className="text-ink-900">—</dd>
+          </div>
+        </dl>
+        <p className="mt-4 break-keep text-sm font-semibold text-ink-900">프로세스와 스레드의 차이를 설명해 주세요.</p>
       </div>
-      <div className="mt-4 border-t border-line bg-brand-50 px-5 py-4">
+      <div className="mt-3 border-t border-line bg-brand-50 px-5 py-4">
         <p className="break-keep text-sm leading-relaxed text-ink-900">
           프로세스는 독립된 메모리 공간을 가지고, 스레드는 한 프로세스 안에서 코드와 힙을 공유합니다.
         </p>
+      </div>
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-line px-5 py-3">
+        <span className="text-xs font-medium text-ink-600">후기</span>
+        <RatingStars value={4} size={14} />
+        <DifficultyMeter value={3} />
+        <span className="text-xs text-ink-600">분위기 {ATMOSPHERE_LABELS.COMFORTABLE}</span>
       </div>
     </div>
   )
@@ -239,9 +266,9 @@ export default function Intro() {
         </section>
 
         <section data-stage={2} className={sectionClass}>
-          <h2 className={headingClass}>면접에서 받은 질문과 내 답변</h2>
+          <h2 className={headingClass}>면접을 회차별로 관리해요</h2>
           <p className={bodyClass}>
-            면접마다 받은 질문과 그때 한 답변을 남겨요. 다음 면접 전에 다시 꺼내 보면 같은 질문에 더 잘 답할 수 있어요.
+            1차, 2차 면접마다 장소와 점수를 적고 받은 질문과 내 답변을 남겨요. 면접이 끝나면 별점과 난이도, 분위기로 후기도 정리하고, 회사별 후기는 익명으로 모아 볼 수 있어요.
           </p>
           <InterviewExample />
         </section>
