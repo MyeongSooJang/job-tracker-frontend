@@ -11,7 +11,7 @@ const h = vi.hoisted(() => ({
 
 vi.mock('@milkdown/crepe', () => {
   class Crepe {
-    static Feature = { ImageBlock: 'image-block', Latex: 'latex', Placeholder: 'placeholder', Toolbar: 'toolbar' }
+    static Feature = { ImageBlock: 'image-block', Latex: 'latex', Placeholder: 'placeholder', Toolbar: 'toolbar', BlockEdit: 'block-edit' }
     editor = { config() { return this }, use() { return this } }
     constructor(config: Record<string, unknown>) {
       h.configs.push(config)

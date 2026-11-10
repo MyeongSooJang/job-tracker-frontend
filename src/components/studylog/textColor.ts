@@ -137,5 +137,24 @@ export const setTextColorCommand = $command('SetTextColor', ctx => (payload?: Pa
   return true
 })
 
-export const textColorPlugins = [remarkTextColor, textColorSchema, setTextColorCommand].flat()
+
+// 커서에서 이어서 쓸 글의 색을 정한다(노션의 "빨간 글자" 블록 메뉴처럼). 이미 쓴 글은 바꾸지 않는다.
+// 넘기지 않은 쪽(글자색/배경색)은 지금 커서에 걸린 값을 유지하고, null 을 넘기면 지운다.
+export const continueWithColorCommand = $command('ContinueWithColor', ctx => (payload?: Partial<TextColorAttrs>) => (state, dispatch) => {
+  const markType = textColorSchema.type(ctx)
+  const marks = state.storedMarks ?? state.selection.$from.marks()
+  const current = marks.find(mark => mark.type === markType)
+  const next: TextColorAttrs = {
+    color: payload && 'color' in payload ? payload.color ?? null : current?.attrs.color ?? null,
+    background: payload && 'background' in payload ? payload.background ?? null : current?.attrs.background ?? null,
+  }
+  if (dispatch) {
+    const others = marks.filter(mark => mark.type !== markType)
+    const colored = next.color !== null || next.background !== null ? [markType.create(next)] : []
+    dispatch(state.tr.setStoredMarks([...others, ...colored]))
+  }
+  return true
+})
+
+export const textColorPlugins = [remarkTextColor, textColorSchema, setTextColorCommand, continueWithColorCommand].flat()
 export { stringifyTextColor }

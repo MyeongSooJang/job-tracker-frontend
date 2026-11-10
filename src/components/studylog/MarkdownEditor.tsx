@@ -5,6 +5,7 @@ import '@milkdown/crepe/theme/frame.css'
 import './markdown-editor.css'
 import { stringifyTextColor, textColorPlugins } from './textColor'
 import { buildColorToolbar } from './colorToolbar'
+import { buildColorMenu } from './colorMenu'
 
 interface MarkdownEditorProps {
   initialValue: string
@@ -36,6 +37,7 @@ export default function MarkdownEditor({ initialValue, onChange, placeholder, ar
       featureConfigs: {
         ...(placeholder !== undefined && { [Crepe.Feature.Placeholder]: { text: placeholder } }),
         [Crepe.Feature.Toolbar]: { buildToolbar: buildColorToolbar },
+        [Crepe.Feature.BlockEdit]: { buildMenu: buildColorMenu },
       },
     })
     // 글자색·배경색: 마크다운에는 <span style="color:…">로 저장하는 커스텀 마크.
