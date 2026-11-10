@@ -96,12 +96,33 @@ describe('Intro', () => {
     expect(screen.getByText('연속 0일 · 씨앗')).toBeInTheDocument()
   })
 
-  it('로그인하지 않았으면 처음과 끝 두 곳에 로그인과 회원가입 링크를 보여준다', () => {
+  it('연속 10일마다 한 단계 자라는 규칙을 새싹 옆에 항상 보여준다', () => {
+    renderIntro()
+
+    expect(screen.getByText('연속 기록 10일마다 한 단계씩 자라요')).toBeInTheDocument()
+  })
+
+  it('모양만 보여주는 그림에는 모두 예시 표시가 붙는다', () => {
+    renderIntro()
+
+    expect(screen.getAllByText('예시')).toHaveLength(4)
+  })
+
+  it('소개 페이지가 열려 있는 동안만 스크롤바 색 클래스가 붙는다', () => {
+    const { unmount } = renderIntro()
+    expect(document.documentElement).toHaveClass('intro-scrollbar')
+
+    unmount()
+
+    expect(document.documentElement).not.toHaveClass('intro-scrollbar')
+  })
+
+  it('로그인하지 않았으면 위쪽 고정 영역과 처음, 끝에 로그인 링크를, 처음과 끝에 회원가입 링크를 보여준다', () => {
     renderIntro()
 
     const logins = screen.getAllByRole('link', { name: '로그인' })
     const signups = screen.getAllByRole('link', { name: '회원가입' })
-    expect(logins).toHaveLength(2)
+    expect(logins).toHaveLength(3)
     expect(signups).toHaveLength(2)
     logins.forEach(link => expect(link).toHaveAttribute('href', '/login'))
     signups.forEach(link => expect(link).toHaveAttribute('href', '/signup'))
@@ -124,6 +145,15 @@ describe('Intro', () => {
     await user.click(screen.getAllByRole('link', { name: '로그인' })[1])
 
     expect(screen.getByText('로그인 화면 from=없음')).toBeInTheDocument()
+  })
+
+  it('끝에 있는 로그인 버튼도 원래 가려던 주소를 넘긴다', async () => {
+    const user = userEvent.setup()
+    renderIntro({ from: '/mypage' })
+
+    await user.click(screen.getAllByRole('link', { name: '로그인' })[2])
+
+    expect(screen.getByText('로그인 화면 from=/mypage')).toBeInTheDocument()
   })
 
   it('로그인한 상태에서는 내 화면으로 가기 링크만 보여준다', async () => {

@@ -10,45 +10,88 @@ type Stage = GrowthStage['stage']
 // 앱의 새싹은 연속 작성일 10일마다 한 단계 자란다. 소개 페이지는 같은 기준의 일수를 그대로 보여준다.
 const STAGE_DAYS = [0, 10, 20, 30, 40, 50] as const
 
-const sectionClass = 'flex min-h-[85vh] flex-col justify-center px-6 py-16 sm:px-10 lg:min-h-screen lg:px-16'
+const sectionClass = 'flex min-h-[70vh] flex-col justify-center px-6 py-16 sm:px-10 lg:min-h-[90vh] lg:px-16'
 // 한국어는 단어 단위로 줄을 바꾸고(break-keep), 제목은 줄 길이를 고르게, 본문은 마지막 줄이 한 단어만 남지 않게 맞춘다.
-const headingClass = 'break-keep text-3xl font-bold tracking-tight text-ink-900 [text-wrap:balance] sm:text-4xl'
+const headingClass = 'break-keep text-3xl font-bold tracking-tight text-ink-900 [text-wrap:balance] sm:text-4xl lg:text-5xl'
 const bodyClass = 'mt-4 max-w-md break-keep text-base leading-relaxed text-ink-600 [text-wrap:pretty]'
 
-// 지원 단계. 실제 데이터가 아니라 서비스가 다루는 상태 이름만 보여주는 장식이다.
+// 실제 데이터가 아니라 모양을 보여주는 그림에는 모두 이 표시를 붙인다.
+function ExampleTag() {
+  return <span className="inline-block rounded bg-white px-2 py-0.5 text-xs font-medium text-ink-600">예시</span>
+}
+
+// 지원 단계. 서비스가 다루는 상태 이름만 보여준다.
 function StatusPath() {
   const steps = ['서류 제출', '면접', '합격']
   return (
-    <div aria-hidden className="mt-8 flex items-center gap-2">
-      {steps.map((label, index) => (
-        <div key={label} className="flex items-center gap-2">
-          {index > 0 && <span className="h-px w-5 bg-line" />}
-          <span
-            className={
-              index === 1
-                ? 'rounded-full bg-brand-500 px-3 py-1 text-xs font-medium text-white'
-                : 'rounded-full bg-brand-50 px-3 py-1 text-xs font-medium text-brand-700'
-            }
-          >
-            {label}
-          </span>
-        </div>
-      ))}
+    <div className="mt-8">
+      <ExampleTag />
+      <div aria-hidden className="mt-2 flex items-center gap-2">
+        {steps.map((label, index) => (
+          <div key={label} className="flex items-center gap-2">
+            {index > 0 && <span className="h-px w-5 bg-line" />}
+            <span
+              className={
+                index === 1
+                  ? 'rounded-full bg-brand-500 px-3 py-1 text-xs font-medium text-white'
+                  : 'rounded-full bg-brand-50 px-3 py-1 text-xs font-medium text-brand-700'
+              }
+            >
+              {label}
+            </span>
+          </div>
+        ))}
+      </div>
     </div>
   )
 }
 
-// 잔디 한 줄. 단계 색을 늘어놓은 장식이며 실제 기록이 아니다.
+// 면접 질문과 답변이 어떤 모양으로 남는지 보여주는 예시. 일반적인 개념 질문이며 실제 면접 기록이 아니다.
+function InterviewExample() {
+  return (
+    <div className="mt-8 max-w-md rounded-xl border border-line bg-white p-5">
+      <ExampleTag />
+      <p className="mt-3 break-keep text-sm font-semibold text-ink-900">Q. 프로세스와 스레드의 차이를 설명해 주세요.</p>
+      <p className="mt-2 break-keep text-sm leading-relaxed text-ink-600">
+        A. 프로세스는 독립된 메모리 공간을 가지고, 스레드는 한 프로세스 안에서 코드와 힙을 공유합니다.
+      </p>
+    </div>
+  )
+}
+
+// 일정 종류. 날짜와 회사는 비워 두고 종류만 보여준다.
+const SCHEDULE_TYPES = ['면접', '과제 제출', '서류 마감']
+
+function ScheduleExample() {
+  return (
+    <div className="mt-8 max-w-md">
+      <ExampleTag />
+      <ul className="mt-2 divide-y divide-line rounded-xl border border-line bg-white">
+        {SCHEDULE_TYPES.map(type => (
+          <li key={type} className="flex items-center gap-4 px-4 py-3">
+            <span className="w-16 shrink-0 text-sm font-medium text-brand-700">{type}</span>
+            <span aria-hidden className="h-1.5 flex-1 rounded bg-line" />
+          </li>
+        ))}
+      </ul>
+    </div>
+  )
+}
+
+// 잔디 범례. 칠해지는 단계 색만 보여주며 실제 기록이 아니다.
 const HEAT_CLASS = ['bg-line', 'bg-heat-1', 'bg-heat-2', 'bg-heat-3', 'bg-heat-4']
 
 function HeatStrip() {
   return (
-    <div aria-hidden className="mt-8 flex items-center gap-1.5 text-xs text-ink-600">
-      <span className="mr-1">적게</span>
-      {HEAT_CLASS.map(color => (
-        <span key={color} className={`h-4 w-4 rounded-[3px] ${color}`} />
-      ))}
-      <span className="ml-1">많이</span>
+    <div className="mt-8">
+      <ExampleTag />
+      <div aria-hidden className="mt-2 flex items-center gap-1.5 text-xs text-ink-600">
+        <span className="mr-1">적게</span>
+        {HEAT_CLASS.map(color => (
+          <span key={color} className={`h-4 w-4 rounded-[3px] ${color}`} />
+        ))}
+        <span className="ml-1">많이</span>
+      </div>
     </div>
   )
 }
@@ -87,6 +130,12 @@ export default function Intro() {
   const [stage, setStage] = useState<Stage>(0)
   const flowRef = useRef<HTMLDivElement>(null)
 
+  // 이 페이지가 열려 있는 동안만 스크롤바 색을 브랜드에 맞춘다.
+  useEffect(() => {
+    document.documentElement.classList.add('intro-scrollbar')
+    return () => document.documentElement.classList.remove('intro-scrollbar')
+  }, [])
+
   // 화면 가운데를 지나는 글 영역의 단계로 식물을 바꾼다.
   useEffect(() => {
     const flow = flowRef.current
@@ -110,20 +159,35 @@ export default function Intro() {
   return (
     <div className="min-h-screen bg-surface font-sans selection:bg-brand-100 lg:flex">
       <div className="sticky top-0 z-10 flex items-center gap-4 border-b border-line bg-surface px-4 py-3 lg:h-screen lg:w-5/12 lg:shrink-0 lg:flex-col lg:justify-center lg:gap-6 lg:border-b-0 lg:px-0 lg:py-0">
-        <div className="flex items-center gap-2.5 lg:absolute lg:left-10 lg:top-8">
-          <img src="/brand/mark-light.svg" alt="" className="h-7 w-7" />
-          <span className="text-lg font-bold tracking-tight text-ink-900">쌍떡잎</span>
-        </div>
-        <div key={stage} className="animate-grow origin-bottom motion-reduce:animate-none">
+        <div key={stage} className="shrink-0 animate-grow origin-bottom motion-reduce:animate-none">
           <SproutIllustration
             stage={stage}
             label={`새싹 ${stage + 1}단계 ${growth.name}`}
-            className="h-24 w-24 lg:h-auto lg:w-[min(26rem,32vw)]"
+            className="h-28 w-28 lg:h-auto lg:w-[min(28rem,34vw)]"
           />
         </div>
-        <p className="text-sm font-medium tabular-nums text-ink-600 lg:text-base">
-          연속 {days}일 · {growth.name}
-        </p>
+        <div className="min-w-0 flex-1 lg:flex-none lg:text-center">
+          {/* 데스크톱에서는 wrapper를 없애고 로고는 왼쪽 위, 로그인은 오른쪽 위에 둔다 */}
+          <div className="flex items-center justify-between gap-3 lg:contents">
+            <div className="flex items-center gap-2 lg:absolute lg:left-10 lg:top-8 lg:gap-2.5">
+              <img src="/brand/mark-light.svg" alt="" className="h-6 w-6 lg:h-7 lg:w-7" />
+              <span className="text-base font-bold tracking-tight text-ink-900 lg:text-lg">쌍떡잎</span>
+            </div>
+            {!isAuthenticated && (
+              <Link
+                to="/login"
+                state={from ? { from } : undefined}
+                className="text-sm font-semibold text-brand-600 underline-offset-4 hover:underline lg:fixed lg:right-10 lg:top-8"
+              >
+                로그인
+              </Link>
+            )}
+          </div>
+          <p className="mt-2 text-sm font-medium tabular-nums text-ink-900 lg:mt-0 lg:text-base">
+            연속 {days}일 · {growth.name}
+          </p>
+          <p className="mt-0.5 break-keep text-xs text-ink-600 lg:text-sm">연속 기록 10일마다 한 단계씩 자라요</p>
+        </div>
       </div>
 
       <main ref={flowRef} className="min-w-0 flex-1">
@@ -148,6 +212,7 @@ export default function Intro() {
           <p className={bodyClass}>
             면접마다 받은 질문과 그때 한 답변을 남겨요. 다음 면접 전에 다시 꺼내 보면 같은 질문에 더 잘 답할 수 있어요.
           </p>
+          <InterviewExample />
         </section>
 
         <section data-stage={3} className={sectionClass}>
@@ -155,6 +220,7 @@ export default function Intro() {
           <p className={bodyClass}>
             면접, 과제 제출, 서류 마감 날짜를 일정으로 모아두고 지원 건과 함께 확인해요.
           </p>
+          <ScheduleExample />
         </section>
 
         <section data-stage={4} className={sectionClass}>

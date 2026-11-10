@@ -57,3 +57,8 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* 소개 페이지가 열려 있는 동안만 스크롤바를 브랜드 색으로 맞춘다 */
+.intro-scrollbar {
+  scrollbar-color: theme('colors.brand.500') theme('colors.surface');
+}
