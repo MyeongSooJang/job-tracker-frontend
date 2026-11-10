@@ -6,6 +6,7 @@ import './markdown-editor.css'
 import { stringifyTextColor, textColorPlugins } from './textColor'
 import { buildColorToolbar } from './colorToolbar'
 import { buildColorMenu } from './colorMenu'
+import { blockDeletePlugin } from './blockDelete'
 import { BLOCK_EDIT_KO, LINK_TOOLTIP_KO, TOOLBAR_KO } from './crepeKo'
 
 interface MarkdownEditorProps {
@@ -43,7 +44,7 @@ export default function MarkdownEditor({ initialValue, onChange, placeholder, ar
       },
     })
     // 글자색·배경색: 마크다운에는 <span style="color:…">로 저장하는 커스텀 마크.
-    crepe.editor.config(stringifyTextColor).use(textColorPlugins)
+    crepe.editor.config(stringifyTextColor).use(textColorPlugins).use(blockDeletePlugin)
     crepe.on(listener => {
       listener.markdownUpdated((_ctx, markdown, previous) => {
         if (markdown !== previous) onChangeRef.current(markdown)
