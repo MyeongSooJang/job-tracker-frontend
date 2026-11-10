@@ -230,6 +230,7 @@ export default function Intro() {
             <div className="flex items-center gap-2 lg:absolute lg:left-10 lg:top-8 lg:gap-2.5">
               <img src="/brand/mark-light.svg" alt="" className="h-6 w-6 lg:h-7 lg:w-7" />
               <span className="text-base font-bold tracking-tight text-ink-900 lg:text-lg">쌍떡잎</span>
+              <span className="hidden text-sm text-ink-600 lg:inline">취업 준비 · 학습 로그 관리</span>
             </div>
             {!isAuthenticated && (
               <Link
@@ -252,7 +253,8 @@ export default function Intro() {
         <section data-stage={0} className={sectionClass}>
           <h1 className="break-keep text-5xl font-bold leading-[1.1] tracking-tight text-ink-900 sm:text-6xl lg:text-7xl">쓴 만큼 자라요.</h1>
           <p className="mt-6 max-w-md break-keep text-lg leading-relaxed text-ink-600 [text-wrap:pretty]">
-            연속으로 기록할수록 싹이 자라는 취업 준비 기록장. 지원 현황, 면접 질문과 답변, 매일 공부한 글을 한곳에 모아요.
+            <strong className="font-semibold text-ink-900">쌍떡잎은 취업 준비와 매일의 학습 로그를 한곳에서 관리하는 사이트예요.</strong>{' '}
+            지원 현황, 면접 기록, 일정, 공부한 글을 모으고, 연속으로 기록할수록 새싹이 자라요.
           </p>
           {actions}
         </section>

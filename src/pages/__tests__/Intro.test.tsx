@@ -63,6 +63,13 @@ describe('Intro', () => {
     expect(screen.getByRole('heading', { level: 2, name: '오늘 한 줄부터.' })).toBeInTheDocument()
   })
 
+  it('무엇을 하는 사이트인지 첫 화면 문구에서 직접 밝힌다', () => {
+    renderIntro()
+
+    expect(screen.getByText('쌍떡잎은 취업 준비와 매일의 학습 로그를 한곳에서 관리하는 사이트예요.')).toBeInTheDocument()
+    expect(screen.getByText('취업 준비 · 학습 로그 관리')).toBeInTheDocument()
+  })
+
   it('처음에는 씨앗 단계의 새싹과 연속 0일을 보여준다', () => {
     renderIntro()
 
