@@ -11,7 +11,7 @@ const h = vi.hoisted(() => ({
 
 vi.mock('@milkdown/crepe', () => {
   class Crepe {
-    static Feature = { ImageBlock: 'image-block', Latex: 'latex', Placeholder: 'placeholder', Toolbar: 'toolbar', BlockEdit: 'block-edit' }
+    static Feature = { ImageBlock: 'image-block', Latex: 'latex', Placeholder: 'placeholder', Toolbar: 'toolbar', BlockEdit: 'block-edit', LinkTooltip: 'link-tooltip' }
     editor = { config() { return this }, use() { return this } }
     constructor(config: Record<string, unknown>) {
       h.configs.push(config)
@@ -114,5 +114,19 @@ describe('MarkdownEditor 색 도구', () => {
 
     const toolbar = (h.configs[0].featureConfigs as Record<string, { buildToolbar?: unknown }>).toolbar
     expect(typeof toolbar.buildToolbar).toBe('function')
+  })
+})
+
+describe('MarkdownEditor 한글 문구', () => {
+  it('블록 메뉴와 툴바의 영어 문구를 한글로 바꿔 넘긴다', async () => {
+    h.configs.length = 0
+    render(<MarkdownEditor initialValue="" onChange={vi.fn()} />)
+    await waitFor(() => expect(h.configs.length).toBeGreaterThan(0))
+
+    const configs = h.configs[0].featureConfigs as Record<string, Record<string, unknown>>
+    expect(configs['block-edit'].textGroup).toMatchObject({ label: '텍스트', h1: { label: '제목 1' }, quote: { label: '인용' } })
+    expect(configs['block-edit'].listGroup).toMatchObject({ bulletList: { label: '글머리 기호 목록' } })
+    expect(configs['block-edit'].advancedGroup).toMatchObject({ table: { label: '표' } })
+    expect(configs.toolbar).toMatchObject({ boldLabel: '굵게', linkLabel: '링크' })
   })
 })

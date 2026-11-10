@@ -86,3 +86,17 @@
   background: linear-gradient(135deg, transparent 45%, #9ca3af 45%, #9ca3af 55%, transparent 55%);
   color: #374151;
 }
+
+/* 표: 기본 테두리는 outline 색을 80% 투명하게 섞어 거의 흰색이라 선이 안 보인다. 글자색(검정 계열)으로 또렷하게 한다. */
+.study-editor .milkdown .milkdown-table-block th,
+.study-editor .milkdown .milkdown-table-block td {
+  border: 1px solid theme('colors.ink.900');
+}
+
+.study-editor .milkdown .milkdown-table-block svg {
+  fill: theme('colors.ink.600');
+}
+
+.study-editor .milkdown .milkdown-table-block .cell-handle {
+  color: theme('colors.ink.600');
+}
