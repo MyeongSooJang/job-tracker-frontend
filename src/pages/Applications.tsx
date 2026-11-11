@@ -11,7 +11,14 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { ACTION_LABELS, NEXT_STATUSES, STATUS_LABELS } from '@/lib/status'
-import { JOB_SITES, JOB_SITE_LABELS, jobSiteLabel } from '@/lib/jobSite'
+import {
+  JOB_SITES,
+  JOB_SITE_FILTER_OPTIONS,
+  JOB_SITE_LABELS,
+  jobSiteLabel,
+  matchesJobSite,
+  type JobSiteFilter,
+} from '@/lib/jobSite'
 import type { ApplicationStatus, JobSite } from '@/api/types'
 
 const STATUS_COLORS: Record<ApplicationStatus, string> = {
@@ -70,11 +77,13 @@ export default function Applications() {
 
   const [open, setOpen] = useState(false)
   const [filter, setFilter] = useState<ApplicationStatus | 'ALL'>('ALL')
+  const [siteFilter, setSiteFilter] = useState<JobSiteFilter>('ALL')
   const [passed, setPassed] = useState<{ id: number; companyName: string } | null>(null)
   const [form, setForm] = useState(EMPTY_FORM)
 
-  const filtered =
-    filter === 'ALL' ? applications : applications.filter((a) => a.status === filter)
+  const filtered = applications.filter(
+    (a) => (filter === 'ALL' || a.status === filter) && matchesJobSite(a.jobSite, siteFilter),
+  )
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -183,22 +192,43 @@ export default function Applications() {
         </Dialog>
       </div>
 
-      <div className="flex gap-2 flex-wrap">
-        {FILTER_OPTIONS.map((s) => (
-          <Button
-            key={s}
-            variant={filter === s ? 'default' : 'outline'}
-            size="sm"
-            onClick={() => setFilter(s)}
-          >
-            {s === 'ALL' ? '전체' : STATUS_LABELS[s]}
-          </Button>
-        ))}
+      <div className="flex items-center justify-between gap-4 flex-wrap">
+        <div className="flex gap-2 flex-wrap">
+          {FILTER_OPTIONS.map((s) => (
+            <Button
+              key={s}
+              variant={filter === s ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setFilter(s)}
+            >
+              {s === 'ALL' ? '전체' : STATUS_LABELS[s]}
+            </Button>
+          ))}
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="text-sm text-slate-500">지원 사이트</span>
+          <Select value={siteFilter} onValueChange={(v) => setSiteFilter(v as JobSiteFilter)}>
+            <SelectTrigger aria-label="지원 사이트 필터" className="w-40">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {JOB_SITE_FILTER_OPTIONS.map((o) => (
+                <SelectItem key={o.value} value={o.value}>
+                  {o.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">{filtered.length}건</CardTitle>
+          <CardTitle className="text-base">
+            {filtered.length}건
+            {siteFilter !== 'ALL' &&
+              ` · ${JOB_SITE_FILTER_OPTIONS.find((o) => o.value === siteFilter)?.label}`}
+          </CardTitle>
         </CardHeader>
         <CardContent>
           <Table>

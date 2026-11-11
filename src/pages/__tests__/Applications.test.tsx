@@ -82,6 +82,35 @@ describe('Applications', () => {
     expect(screen.getByRole('button', { name: '등록' })).toBeDisabled()
   })
 
+  it('사이트를 고르면 그 사이트로 지원한 건만 보여준다', async () => {
+    render(<Applications />, { wrapper })
+
+    await pickOption(screen.getByRole('combobox', { name: '지원 사이트 필터' }), '사람인')
+
+    expect(screen.getByRole('row', { name: /카카오/ })).toBeInTheDocument()
+    expect(screen.queryByRole('row', { name: /네이버/ })).not.toBeInTheDocument()
+    expect(screen.getByText('1건 · 사람인')).toBeInTheDocument()
+  })
+
+  it('미지정을 고르면 사이트를 채우지 않은 이전 지원 건만 보여준다', async () => {
+    render(<Applications />, { wrapper })
+
+    await pickOption(screen.getByRole('combobox', { name: '지원 사이트 필터' }), '미지정')
+
+    expect(screen.getByRole('row', { name: /네이버/ })).toBeInTheDocument()
+    expect(screen.queryByRole('row', { name: /카카오/ })).not.toBeInTheDocument()
+  })
+
+  it('상태 버튼과 사이트 필터는 함께 적용된다', async () => {
+    render(<Applications />, { wrapper })
+    await pickOption(screen.getByRole('combobox', { name: '지원 사이트 필터' }), '사람인')
+
+    await userEvent.click(screen.getByRole('button', { name: '최종합격' }))
+
+    expect(screen.queryByRole('row', { name: /카카오/ })).not.toBeInTheDocument()
+    expect(screen.getByText('0건 · 사람인')).toBeInTheDocument()
+  })
+
   it('지원 목록을 렌더링한다', () => {
     render(<Applications />, { wrapper })
     expect(screen.getByText('카카오')).toBeInTheDocument()
