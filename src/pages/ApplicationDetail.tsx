@@ -1,17 +1,25 @@
 import { useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
-import { useApplication, useUpdateApplicationStatus } from '@/hooks/useApplications'
+import {
+  useApplication,
+  useUpdateApplicationJobSite,
+  useUpdateApplicationStatus,
+} from '@/hooks/useApplications'
 import InterviewMemo from '@/components/reviews/InterviewMemo'
 import PassScheduleDialog from '@/components/schedules/PassScheduleDialog'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { ACTION_LABELS, NEXT_STATUSES, STATUS_LABELS } from '@/lib/status'
+import { JOB_SITES, JOB_SITE_LABELS } from '@/lib/jobSite'
+import type { JobSite } from '@/api/types'
 
 export default function ApplicationDetail() {
   const { id } = useParams<{ id: string }>()
   const appId = Number(id)
   const { data: application, isLoading, isError } = useApplication(appId)
   const { mutate: updateStatus, isPending: updating } = useUpdateApplicationStatus(appId)
+  const { mutate: updateJobSite, isPending: updatingJobSite } = useUpdateApplicationJobSite(appId)
   const [scheduleOpen, setScheduleOpen] = useState(false)
 
   if (isLoading || !application) return <div className="text-slate-500">불러오는 중...</div>
@@ -43,6 +51,25 @@ export default function ApplicationDetail() {
             <div>
               <span className="text-slate-500">현재 상태</span>
               <p className="font-medium">{STATUS_LABELS[application.status]}</p>
+            </div>
+            <div>
+              <span className="text-slate-500">지원 사이트</span>
+              <Select
+                value={application.jobSite ?? ''}
+                onValueChange={(v) => updateJobSite(v as JobSite)}
+                disabled={updatingJobSite}
+              >
+                <SelectTrigger aria-label="지원 사이트" className="mt-1 w-48">
+                  <SelectValue placeholder="미지정" />
+                </SelectTrigger>
+                <SelectContent>
+                  {JOB_SITES.map((site) => (
+                    <SelectItem key={site} value={site}>
+                      {JOB_SITE_LABELS[site]}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           </div>
 

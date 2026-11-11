@@ -1,15 +1,22 @@
 import { render, screen } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { describe, it, expect, vi } from 'vitest'
+import { beforeAll, beforeEach, describe, it, expect, vi } from 'vitest'
 import ApplicationDetail from '../ApplicationDetail'
 
+const jobSiteMutate = vi.hoisted(() => vi.fn())
+const application = vi.hoisted(() => ({
+  current: {
+    id: 1, company: { name: '카카오' }, position: '백엔드', status: 'RESUME_SUBMITTED',
+    appliedDate: '2026-10-01', jobSite: null as string | null, createdAt: '',
+  },
+}))
+
 vi.mock('@/hooks/useApplications', () => ({
-  useApplication: () => ({
-    data: { id: 1, company: { name: '카카오' }, position: '백엔드', status: 'RESUME_SUBMITTED', appliedDate: '2026-10-01', createdAt: '' },
-    isLoading: false,
-  }),
+  useApplication: () => ({ data: application.current, isLoading: false }),
   useUpdateApplicationStatus: () => ({ mutate: vi.fn(), isPending: false }),
+  useUpdateApplicationJobSite: () => ({ mutate: jobSiteMutate, isPending: false }),
 }))
 
 vi.mock('@/hooks/useReviews', () => ({
@@ -26,10 +33,45 @@ const wrapper = ({ children }: { children: React.ReactNode }) => (
   </QueryClientProvider>
 )
 
+// Radix Select가 jsdom에서 열리도록 브라우저 API를 보정한다.
+beforeAll(() => {
+  Element.prototype.hasPointerCapture = () => false
+  Element.prototype.releasePointerCapture = () => {}
+  Element.prototype.scrollIntoView = () => {}
+})
+
+beforeEach(() => {
+  jobSiteMutate.mockClear()
+  application.current.jobSite = null
+})
+
 describe('ApplicationDetail', () => {
   it('회사명과 직무를 렌더링한다', () => {
     render(<ApplicationDetail />, { wrapper })
     expect(screen.getByText('카카오')).toBeInTheDocument()
     expect(screen.getByText('백엔드')).toBeInTheDocument()
+  })
+
+  it('지정한 지원 사이트를 보여준다', () => {
+    application.current.jobSite = 'WANTED'
+
+    render(<ApplicationDetail />, { wrapper })
+
+    expect(screen.getByRole('combobox', { name: '지원 사이트' })).toHaveTextContent('Wanted')
+  })
+
+  it('이전에 등록한 지원 건은 미지정으로 보여준다', () => {
+    render(<ApplicationDetail />, { wrapper })
+
+    expect(screen.getByRole('combobox', { name: '지원 사이트' })).toHaveTextContent('미지정')
+  })
+
+  it('지원 사이트를 고르면 선택한 사이트로 변경을 요청한다', async () => {
+    render(<ApplicationDetail />, { wrapper })
+
+    await userEvent.click(screen.getByRole('combobox', { name: '지원 사이트' }))
+    await userEvent.click(await screen.findByRole('option', { name: '사람인' }))
+
+    expect(jobSiteMutate).toHaveBeenCalledWith('SARAMIN')
   })
 })

@@ -1,9 +1,9 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import {
   getApplications, getApplication,
-  createApplication, updateApplicationStatus,
+  createApplication, updateApplicationStatus, updateApplicationJobSite,
 } from '@/api/applications'
-import type { ApplicationStatus, CreateApplicationRequest } from '@/api/types'
+import type { ApplicationStatus, CreateApplicationRequest, JobSite } from '@/api/types'
 
 export const useApplications = () =>
   useQuery({ queryKey: ['applications'], queryFn: getApplications })
@@ -16,6 +16,17 @@ export const useCreateApplication = () => {
   return useMutation({
     mutationFn: (data: CreateApplicationRequest) => createApplication(data),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['applications'] }),
+  })
+}
+
+export const useUpdateApplicationJobSite = (id: number) => {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (jobSite: JobSite) => updateApplicationJobSite(id, jobSite),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['applications'] })
+      queryClient.invalidateQueries({ queryKey: ['applications', id] })
+    },
   })
 }
 
