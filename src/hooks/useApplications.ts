@@ -1,12 +1,16 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import {
-  getApplications, getApplication,
+  getApplications, getApplication, getJobSiteStats,
   createApplication, updateApplicationStatus, updateApplicationJobSite,
 } from '@/api/applications'
 import type { ApplicationStatus, CreateApplicationRequest, JobSite } from '@/api/types'
 
 export const useApplications = () =>
   useQuery({ queryKey: ['applications'], queryFn: getApplications })
+
+// 키가 ['applications', ...]로 시작해서 지원 등록, 상태 변경, 면접 일정 등록 때 함께 갱신된다.
+export const useJobSiteStats = () =>
+  useQuery({ queryKey: ['applications', 'job-site-stats'], queryFn: getJobSiteStats })
 
 export const useApplication = (id: number) =>
   useQuery({ queryKey: ['applications', id], queryFn: () => getApplication(id), enabled: !!id })
