@@ -42,12 +42,23 @@ export interface CompanyReview extends InterviewDetail {
   createdAt: string
 }
 
+// 지원서를 제출한 구직 사이트. 백엔드 JobSite enum과 일치해야 한다.
+export type JobSite =
+  | 'JOBKOREA'
+  | 'SARAMIN'
+  | 'GROUPBY'
+  | 'WANTED'
+  | 'COMPANY_WEBSITE'
+  | 'OTHER'
+
 export interface Application {
   id: number
   company: Company
   position: string
   status: ApplicationStatus
   appliedDate: string
+  // 사이트 입력 기능 이전에 등록한 지원 건은 null로 내려온다.
+  jobSite?: JobSite | null
   createdAt: string
 }
 
