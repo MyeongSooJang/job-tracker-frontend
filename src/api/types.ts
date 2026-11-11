@@ -62,6 +62,16 @@ export interface Application {
   createdAt: string
 }
 
+// 사이트별 서류 합격 통계 한 줄. 서류 합격은 면접 일정이 잡힌 지원 건을 뜻한다.
+// 지원이 없는 사이트는 내려오지 않는다. 사이트가 비어 있는 지원 건은 jobSite가 null인 한 줄로 묶여 온다.
+export interface JobSiteStat {
+  jobSite: JobSite | null
+  applicationCount: number
+  documentPassedCount: number
+  // 0.0 ~ 1.0
+  documentPassRate: number
+}
+
 export interface InterviewQuestion {
   id: number
   question: string

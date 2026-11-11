@@ -1,6 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { jobSiteLabel } from '@/lib/jobSite'
-import { formatPassRate, sortByPassRate, type JobSiteStat } from '@/lib/jobSiteStats'
+import { formatPassRate, sortByPassRate } from '@/lib/jobSiteStats'
+import type { JobSiteStat } from '@/api/types'
 
 interface Props {
   stats: JobSiteStat[]
@@ -22,9 +23,9 @@ export default function JobSitePassRate({ stats }: Props) {
           <ul className="space-y-3">
             {rows.map(s => {
               const percent = Math.round(s.documentPassRate * 100)
-              const label = jobSiteLabel(s.jobSite)
+              const label = s.jobSite ? jobSiteLabel(s.jobSite) : '미지정'
               return (
-                <li key={s.jobSite} className="grid grid-cols-[5.5rem_1fr_auto] items-center gap-3 text-sm">
+                <li key={s.jobSite ?? 'UNSET'}className="grid grid-cols-[5.5rem_1fr_auto] items-center gap-3 text-sm">
                   <span className="truncate text-slate-700">{label}</span>
                   <div
                     role="meter"

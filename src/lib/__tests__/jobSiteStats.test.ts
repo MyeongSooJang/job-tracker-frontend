@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest'
-import { formatPassRate, sortByPassRate, type JobSiteStat } from '../jobSiteStats'
+import { formatPassRate, sortByPassRate } from '../jobSiteStats'
+import type { JobSiteStat } from '@/api/types'
 
 const stat = (jobSite: JobSiteStat['jobSite'], applicationCount: number, documentPassedCount: number): JobSiteStat => ({
   jobSite,

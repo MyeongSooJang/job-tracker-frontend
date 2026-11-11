@@ -1,7 +1,7 @@
 import { render, screen, within } from '@testing-library/react'
 import { describe, it, expect } from 'vitest'
 import JobSitePassRate from '../JobSitePassRate'
-import type { JobSiteStat } from '@/lib/jobSiteStats'
+import type { JobSiteStat } from '@/api/types'
 
 const stats: JobSiteStat[] = [
   { jobSite: 'SARAMIN', applicationCount: 10, documentPassedCount: 3, documentPassRate: 0.3 },
@@ -46,6 +46,17 @@ describe('JobSitePassRate', () => {
 
     expect(within(jobkorea).getByText('0%')).toBeInTheDocument()
     expect(within(jobkorea).getByText('0/6건')).toBeInTheDocument()
+  })
+
+  it('사이트가 비어 있는 지원 건은 미지정으로 보여준다', () => {
+    render(
+      <JobSitePassRate
+        stats={[{ jobSite: null, applicationCount: 2, documentPassedCount: 1, documentPassRate: 0.5 }]}
+      />,
+    )
+
+    expect(screen.getByRole('listitem')).toHaveTextContent('미지정')
+    expect(screen.getByRole('meter', { name: '미지정 서류 합격률' })).toBeInTheDocument()
   })
 
   it('통계가 없으면 안내 문구를 보여준다', () => {
