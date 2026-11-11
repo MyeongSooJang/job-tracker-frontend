@@ -1,5 +1,5 @@
 import { apiClient } from '@/lib/axios'
-import type { Application, ApplicationStatus, CreateApplicationRequest, JobSite } from './types'
+import type { Application, ApplicationStatus, CreateApplicationRequest, JobSite, JobSiteStat } from './types'
 
 export const getApplications = () =>
   apiClient.get<Application[]>('/api/applications').then(r => r.data)
@@ -7,7 +7,10 @@ export const getApplications = () =>
 export const getApplication = (id: number) =>
   apiClient.get<Application>(`/api/applications/${id}`).then(r => r.data)
 
-export const createApplication = (data: CreateApplicationRequest) =>
+export const getJobSiteStats = () =>
+  apiClient.get<JobSiteStat[]>('/api/applications/stats/job-site').then(r => r.data)
+
+export const createApplication =(data: CreateApplicationRequest) =>
   apiClient.post<Application>('/api/applications', data).then(r => r.data)
 
 export const updateApplicationJobSite = (id: number, jobSite: JobSite) =>
