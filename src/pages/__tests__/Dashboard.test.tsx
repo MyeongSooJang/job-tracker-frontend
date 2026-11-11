@@ -59,4 +59,9 @@ describe('Dashboard', () => {
       expect(screen.getByText('최근 7일 동안 지원한 내역이 없습니다.')).toBeInTheDocument()
     })
   })
+
+  it('면접 일정 달력은 대시보드에 보여주지 않는다', () => {
+    render(<Dashboard />, { wrapper })
+    expect(screen.queryByText('면접 일정 달력')).not.toBeInTheDocument()
+  })
 })

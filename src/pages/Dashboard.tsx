@@ -1,7 +1,6 @@
 import { useApplications } from '@/hooks/useApplications'
 import { useSchedules } from '@/hooks/useSchedules'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import InterviewCalendar from '@/components/schedules/InterviewCalendar'
 import RecentApplications from '@/components/dashboard/RecentApplications'
 import { recentApplications, RECENT_DAYS } from '@/lib/recentApplications'
 import { upcomingInterviews } from '@/lib/schedule'
@@ -99,9 +98,6 @@ export default function Dashboard() {
 
       {/* 최근 지원 현황 */}
       <RecentApplications applications={recent} days={RECENT_DAYS} />
-
-      {/* 면접 일정 달력 */}
-      <InterviewCalendar schedules={schedules} />
     </div>
   )
 }
