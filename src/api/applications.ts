@@ -10,7 +10,7 @@ export const getApplication = (id: number) =>
 export const getJobSiteStats = () =>
   apiClient.get<JobSiteStat[]>('/api/applications/stats/job-site').then(r => r.data)
 
-export const createApplication =(data: CreateApplicationRequest) =>
+export const createApplication = (data: CreateApplicationRequest) =>
   apiClient.post<Application>('/api/applications', data).then(r => r.data)
 
 export const updateApplicationJobSite = (id: number, jobSite: JobSite) =>

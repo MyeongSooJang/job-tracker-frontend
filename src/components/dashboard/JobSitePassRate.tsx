@@ -25,7 +25,7 @@ export default function JobSitePassRate({ stats }: Props) {
               const percent = Math.round(s.documentPassRate * 100)
               const label = s.jobSite ? jobSiteLabel(s.jobSite) : '미지정'
               return (
-                <li key={s.jobSite ?? 'UNSET'}className="grid grid-cols-[5.5rem_1fr_auto] items-center gap-3 text-sm">
+                <li key={s.jobSite ?? 'UNSET'} className="grid grid-cols-[5.5rem_1fr_auto] items-center gap-3 text-sm">
                   <span className="truncate text-slate-700">{label}</span>
                   <div
                     role="meter"
