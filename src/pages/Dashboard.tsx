@@ -1,20 +1,11 @@
 import { useApplications } from '@/hooks/useApplications'
 import { useSchedules } from '@/hooks/useSchedules'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import InterviewCalendar from '@/components/schedules/InterviewCalendar'
-import { Badge } from '@/components/ui/badge'
-import { STATUS_LABELS } from '@/lib/status'
+import RecentApplications from '@/components/dashboard/RecentApplications'
+import { recentApplications, RECENT_DAYS } from '@/lib/recentApplications'
 import { upcomingInterviews } from '@/lib/schedule'
-import type { ApplicationStatus } from '@/api/types'
 
 const UPCOMING_DAYS = 10
-
-const STATUS_BADGE_CLASS: Record<ApplicationStatus, string> = {
-  RESUME_SUBMITTED: 'border-slate-300 text-slate-600',
-  INTERVIEW: 'border-brand-500 text-brand-700',
-  ACCEPTED: 'border-success text-success-strong',
-  REJECTED: 'border-rose-400 text-rose-600',
-}
 
 export default function Dashboard() {
   const { data: applications = [], isLoading: appsLoading, isError: appsError } = useApplications()
@@ -24,7 +15,9 @@ export default function Dashboard() {
   const rejected = applications.filter(a => a.status === 'REJECTED').length
   const inProgress = applications.length - accepted - rejected
 
-  const upcoming = upcomingInterviews(schedules, new Date(), UPCOMING_DAYS)
+  const now = new Date()
+  const upcoming = upcomingInterviews(schedules, now, UPCOMING_DAYS)
+  const recent = recentApplications(applications, now, RECENT_DAYS)
 
   if (appsLoading || schedulesLoading) {
     return <div className="text-slate-500 p-8">불러오는 중...</div>
@@ -104,36 +97,7 @@ export default function Dashboard() {
       </Card>
 
       {/* 최근 지원 현황 */}
-      <Card className="border-slate-200 shadow-sm">
-        <CardHeader>
-          <CardTitle className="text-base font-semibold text-slate-700">최근 지원 현황</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {applications.length === 0 ? (
-            <p className="text-slate-400 text-sm py-2">지원 내역이 없습니다.</p>
-          ) : (
-            <ul className="divide-y divide-slate-100">
-              {applications.slice(0, 8).map(a => (
-                <li key={a.id} className="flex items-center justify-between py-2 text-sm">
-                  <span className="text-slate-700">
-                    <span className="font-medium">{a.company.name}</span>
-                    <span className="text-slate-400 ml-2">— {a.position}</span>
-                  </span>
-                  <Badge
-                    variant="outline"
-                    className={`text-xs ${STATUS_BADGE_CLASS[a.status]}`}
-                  >
-                    {STATUS_LABELS[a.status]}
-                  </Badge>
-                </li>
-              ))}
-            </ul>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* 면접 일정 달력 */}
-      <InterviewCalendar schedules={schedules} />
+      <RecentApplications applications={recent} days={RECENT_DAYS} />
     </div>
   )
 }
