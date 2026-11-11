@@ -1,8 +1,12 @@
 import { render, screen, within } from '@testing-library/react'
 import { BrowserRouter } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { afterEach, describe, it, expect, vi } from 'vitest'
+import { afterEach, beforeEach, describe, it, expect, vi } from 'vitest'
 import Dashboard from '../Dashboard'
+
+const jobSiteStatsResult = vi.hoisted(() => ({
+  value: {} as { data?: unknown; isError?: boolean },
+}))
 
 vi.mock('@/hooks/useApplications', () => ({
   useApplications: () => ({
@@ -12,6 +16,7 @@ vi.mock('@/hooks/useApplications', () => ({
     ],
     isLoading: false,
   }),
+  useJobSiteStats: () => jobSiteStatsResult.value,
 }))
 
 vi.mock('@/hooks/useSchedules', () => ({
@@ -24,6 +29,12 @@ const wrapper = ({ children }: { children: React.ReactNode }) => (
 )
 
 describe('Dashboard', () => {
+  beforeEach(() => {
+    jobSiteStatsResult.value = {
+      data: [{ jobSite: 'WANTED', applicationCount: 4, documentPassedCount: 3, documentPassRate: 0.75 }],
+    }
+  })
+
   it('전체 지원 건수를 표시한다', () => {
     render(<Dashboard />, { wrapper })
     expect(screen.getByText('전체 지원').parentElement!.parentElement).toHaveTextContent('2')
@@ -63,5 +74,32 @@ describe('Dashboard', () => {
   it('면접 일정 달력은 대시보드에 보여주지 않는다', () => {
     render(<Dashboard />, { wrapper })
     expect(screen.queryByText('면접 일정 달력')).not.toBeInTheDocument()
+  })
+
+  describe('사이트별 서류 합격률', () => {
+    it('합격률을 보여준다', () => {
+      render(<Dashboard />, { wrapper })
+
+      expect(screen.getByText('사이트별 서류 합격률')).toBeInTheDocument()
+      expect(screen.getByRole('meter', { name: 'Wanted 서류 합격률' })).toHaveAttribute('aria-valuenow', '75')
+    })
+
+    it('불러오는 중이면 카드도 오류 문구도 보여주지 않는다', () => {
+      jobSiteStatsResult.value = { data: undefined }
+
+      render(<Dashboard />, { wrapper })
+
+      expect(screen.queryByText('사이트별 서류 합격률')).not.toBeInTheDocument()
+      expect(screen.queryByText('사이트별 서류 합격률을 불러오지 못했습니다.')).not.toBeInTheDocument()
+    })
+
+    it('합격률만 불러오지 못하면 그 자리에 안내하고 나머지 대시보드는 그대로 보여준다', () => {
+      jobSiteStatsResult.value = { data: undefined, isError: true }
+
+      render(<Dashboard />, { wrapper })
+
+      expect(screen.getByText('사이트별 서류 합격률을 불러오지 못했습니다.')).toBeInTheDocument()
+      expect(screen.getByText('전체 지원').parentElement!.parentElement).toHaveTextContent('2')
+    })
   })
 })

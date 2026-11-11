@@ -1,7 +1,8 @@
-import { useApplications } from '@/hooks/useApplications'
+import { useApplications, useJobSiteStats } from '@/hooks/useApplications'
 import { useSchedules } from '@/hooks/useSchedules'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import RecentApplications from '@/components/dashboard/RecentApplications'
+import JobSitePassRate from '@/components/dashboard/JobSitePassRate'
 import { recentApplications, RECENT_DAYS } from '@/lib/recentApplications'
 import { upcomingInterviews } from '@/lib/schedule'
 
@@ -10,6 +11,7 @@ const UPCOMING_DAYS = 10
 export default function Dashboard() {
   const { data: applications = [], isLoading: appsLoading, isError: appsError } = useApplications()
   const { data: schedules = [], isLoading: schedulesLoading, isError: schedulesError } = useSchedules()
+  const { data: jobSiteStats, isError: statsError } = useJobSiteStats()
 
   const accepted = applications.filter(a => a.status === 'ACCEPTED').length
   const rejected = applications.filter(a => a.status === 'REJECTED').length
@@ -69,6 +71,17 @@ export default function Dashboard() {
           </CardContent>
         </Card>
       </div>
+
+      {/* 사이트별 서류 합격률. 이 통계만 실패해도 대시보드 나머지는 보여준다. */}
+      {statsError ? (
+        <Card className="border-slate-200 shadow-sm">
+          <CardContent className="py-6 text-sm text-slate-400">
+            사이트별 서류 합격률을 불러오지 못했습니다.
+          </CardContent>
+        </Card>
+      ) : (
+        jobSiteStats && <JobSitePassRate stats={jobSiteStats} />
+      )}
 
       {/* 다가오는 일정 */}
       <Card className="border-slate-200 shadow-sm">
