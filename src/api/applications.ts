@@ -13,5 +13,5 @@ export const createApplication = (data: CreateApplicationRequest) =>
 export const updateApplicationJobSite = (id: number, jobSite: JobSite) =>
   apiClient.patch<Application>(`/api/applications/${id}/job-site`, { jobSite }).then(r => r.data)
 
-export const updateApplicationStatus =(id: number, status: ApplicationStatus) =>
+export const updateApplicationStatus = (id: number, status: ApplicationStatus) =>
   apiClient.patch<Application>(`/api/applications/${id}/status`, { status }).then(r => r.data)
