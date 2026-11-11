@@ -11,7 +11,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { ACTION_LABELS, NEXT_STATUSES, STATUS_LABELS } from '@/lib/status'
-import type { ApplicationStatus } from '@/api/types'
+import { JOB_SITES, JOB_SITE_LABELS, jobSiteLabel } from '@/lib/jobSite'
+import type { ApplicationStatus, JobSite } from '@/api/types'
 
 const STATUS_COLORS: Record<ApplicationStatus, string> = {
   RESUME_SUBMITTED: 'bg-slate-100 text-slate-700',
@@ -60,6 +61,8 @@ const FILTER_OPTIONS: Array<ApplicationStatus | 'ALL'> = [
   'REJECTED',
 ]
 
+const EMPTY_FORM = { companyId: '', position: '', appliedDate: '', jobSite: '' as JobSite | '' }
+
 export default function Applications() {
   const { data: applications = [], isLoading, isError } = useApplications()
   const { data: companies = [] } = useCompanies()
@@ -68,20 +71,25 @@ export default function Applications() {
   const [open, setOpen] = useState(false)
   const [filter, setFilter] = useState<ApplicationStatus | 'ALL'>('ALL')
   const [passed, setPassed] = useState<{ id: number; companyName: string } | null>(null)
-  const [form, setForm] = useState({ companyId: '', position: '', appliedDate: '' })
+  const [form, setForm] = useState(EMPTY_FORM)
 
   const filtered =
     filter === 'ALL' ? applications : applications.filter((a) => a.status === filter)
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    if (!form.companyId) return
+    if (!form.companyId || !form.jobSite) return
     createApplication(
-      { companyId: Number(form.companyId), position: form.position, appliedDate: form.appliedDate },
+      {
+        companyId: Number(form.companyId),
+        position: form.position,
+        appliedDate: form.appliedDate,
+        jobSite: form.jobSite,
+      },
       {
         onSuccess: () => {
           setOpen(false)
-          setForm({ companyId: '', position: '', appliedDate: '' })
+          setForm(EMPTY_FORM)
         },
       },
     )
@@ -89,7 +97,7 @@ export default function Applications() {
 
   const handleDialogChange = (isOpen: boolean) => {
     setOpen(isOpen)
-    if (!isOpen) setForm({ companyId: '', position: '', appliedDate: '' })
+    if (!isOpen) setForm(EMPTY_FORM)
   }
 
   if (isLoading) return <div className="text-slate-500">불러오는 중...</div>
@@ -145,7 +153,29 @@ export default function Applications() {
                   required
                 />
               </div>
-              <Button type="submit" disabled={isPending || !form.companyId} className="w-full">
+              <div>
+                <Label>지원 사이트 *</Label>
+                <Select
+                  value={form.jobSite}
+                  onValueChange={(v) => setForm((f) => ({ ...f, jobSite: v as JobSite }))}
+                >
+                  <SelectTrigger aria-label="지원 사이트">
+                    <SelectValue placeholder="지원한 사이트 선택" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {JOB_SITES.map((site) => (
+                      <SelectItem key={site} value={site}>
+                        {JOB_SITE_LABELS[site]}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <Button
+                type="submit"
+                disabled={isPending || !form.companyId || !form.jobSite}
+                className="w-full"
+              >
                 {isPending ? '등록 중...' : '등록'}
               </Button>
             </form>
@@ -176,6 +206,7 @@ export default function Applications() {
               <TableRow>
                 <TableHead>회사</TableHead>
                 <TableHead>직무</TableHead>
+                <TableHead>지원 사이트</TableHead>
                 <TableHead>상태</TableHead>
                 <TableHead>지원일</TableHead>
               </TableRow>
@@ -192,6 +223,7 @@ export default function Applications() {
                     </Link>
                   </TableCell>
                   <TableCell>{a.position}</TableCell>
+                  <TableCell>{jobSiteLabel(a.jobSite)}</TableCell>
                   <TableCell>
                     <StatusCell
                       id={a.id}

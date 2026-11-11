@@ -109,6 +109,7 @@ export interface CreateApplicationRequest {
   companyId: number
   position: string
   appliedDate: string
+  jobSite: JobSite
 }
 
 export interface UpdateStatusRequest {

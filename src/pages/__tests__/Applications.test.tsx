@@ -2,19 +2,24 @@ import { render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { BrowserRouter } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { describe, it, expect, vi } from 'vitest'
+import { beforeAll, describe, it, expect, vi } from 'vitest'
 import Applications from '../Applications'
 
 const updateMutate = vi.hoisted(() =>
   vi.fn((_status: string, opts?: { onSuccess?: () => void }) => opts?.onSuccess?.()),
 )
 
+const createMutate = vi.hoisted(() => vi.fn())
+
 vi.mock('@/hooks/useApplications', () => ({
   useApplications: () => ({
-    data: [{ id: 1, company: { id: 1, name: '카카오', industry: 'IT', website: '', createdAt: '' }, position: '백엔드', status: 'RESUME_SUBMITTED', appliedDate: '2026-10-01', createdAt: '' }],
+    data: [
+      { id: 1, company: { id: 1, name: '카카오', industry: 'IT', website: '', createdAt: '' }, position: '백엔드', status: 'RESUME_SUBMITTED', appliedDate: '2026-10-01', jobSite: 'SARAMIN', createdAt: '' },
+      { id: 2, company: { id: 2, name: '네이버', industry: 'IT', website: '', createdAt: '' }, position: '프론트엔드', status: 'RESUME_SUBMITTED', appliedDate: '2026-09-01', jobSite: null, createdAt: '' },
+    ],
     isLoading: false,
   }),
-  useCreateApplication: () => ({ mutate: vi.fn(), isPending: false }),
+  useCreateApplication: () => ({ mutate: createMutate, isPending: false }),
   useUpdateApplicationStatus: () => ({ mutate: updateMutate, isPending: false }),
 }))
 
@@ -27,7 +32,56 @@ const wrapper = ({ children }: { children: React.ReactNode }) => (
   <QueryClientProvider client={qc}><BrowserRouter>{children}</BrowserRouter></QueryClientProvider>
 )
 
+// Radix Select가 jsdom에서 열리도록 브라우저 API를 보정한다.
+beforeAll(() => {
+  Element.prototype.hasPointerCapture = () => false
+  Element.prototype.releasePointerCapture = () => {}
+  Element.prototype.scrollIntoView = () => {}
+})
+
+async function pickOption(trigger: HTMLElement, optionName: string) {
+  await userEvent.click(trigger)
+  await userEvent.click(await screen.findByRole('option', { name: optionName }))
+}
+
+// 회사 선택 상자는 접근 가능한 이름이 없어 첫 번째 combobox로 찾는다.
+const companySelect = () => screen.getAllByRole('combobox')[0]
+const jobSiteSelect = () => screen.getByRole('combobox', { name: '지원 사이트' })
+
 describe('Applications', () => {
+  it('지원 목록에 지원한 사이트를 보여주고 이전 지원 건은 대시로 보여준다', () => {
+    render(<Applications />, { wrapper })
+    expect(within(screen.getByRole('row', { name: /카카오/ })).getByText('사람인')).toBeInTheDocument()
+    expect(within(screen.getByRole('row', { name: /네이버/ })).getByText('-')).toBeInTheDocument()
+  })
+
+  it('회사, 직무, 지원일, 사이트를 모두 입력하면 선택한 사이트와 함께 등록한다', async () => {
+    createMutate.mockClear()
+    render(<Applications />, { wrapper })
+    await userEvent.click(screen.getByRole('button', { name: '지원 등록' }))
+    await pickOption(companySelect(), '카카오')
+    await userEvent.type(screen.getByLabelText('직무 *'), '백엔드')
+    await userEvent.type(screen.getByLabelText('지원일 *'), '2026-11-01')
+    await pickOption(jobSiteSelect(), '자사 홈페이지')
+
+    await userEvent.click(screen.getByRole('button', { name: '등록' }))
+
+    expect(createMutate).toHaveBeenCalledWith(
+      { companyId: 1, position: '백엔드', appliedDate: '2026-11-01', jobSite: 'COMPANY_WEBSITE' },
+      expect.anything(),
+    )
+  })
+
+  it('지원 사이트를 고르지 않으면 등록할 수 없다', async () => {
+    render(<Applications />, { wrapper })
+    await userEvent.click(screen.getByRole('button', { name: '지원 등록' }))
+    await pickOption(companySelect(), '카카오')
+    await userEvent.type(screen.getByLabelText('직무 *'), '백엔드')
+    await userEvent.type(screen.getByLabelText('지원일 *'), '2026-11-01')
+
+    expect(screen.getByRole('button', { name: '등록' })).toBeDisabled()
+  })
+
   it('지원 목록을 렌더링한다', () => {
     render(<Applications />, { wrapper })
     expect(screen.getByText('카카오')).toBeInTheDocument()
