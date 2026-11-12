@@ -1,6 +1,6 @@
-import { render, screen } from '@testing-library/react'
+import { act, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { MemoryRouter, Route, Routes } from 'react-router-dom'
+import { MemoryRouter, Route, Routes, useNavigate } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { beforeAll, beforeEach, describe, it, expect, vi } from 'vitest'
 import ApplicationDetail from '../ApplicationDetail'
@@ -12,10 +12,17 @@ const application = vi.hoisted(() => ({
     appliedDate: '2026-10-01', jobSite: null as string | null, createdAt: '',
     deadline: null as string | null, resumeView: 'NOT_VIEWED', autoRejectedAt: null as string | null,
   },
+  second: {
+    id: 2, company: { name: '네이버' }, position: '프론트엔드', status: 'RESUME_SUBMITTED',
+    appliedDate: '2026-10-02', jobSite: null as string | null, createdAt: '',
+    deadline: '2026-12-25', resumeView: 'NOT_VIEWED', autoRejectedAt: null as string | null,
+  },
 }))
 
 vi.mock('@/hooks/useApplications', () => ({
-  useApplication: () => ({ data: application.current, isLoading: false }),
+  useApplication: (id: number) => ({
+    data: id === 2 ? application.second : application.current, isLoading: false,
+  }),
   useUpdateApplicationStatus: () => ({ mutate: vi.fn(), isPending: false }),
   useUpdateApplicationJobSite: () => ({ mutate: jobSiteMutate, isPending: false }),
   useUpdateApplicationDeadline: () => ({ mutate: vi.fn(), isPending: false }),
@@ -86,5 +93,29 @@ describe('ApplicationDetail', () => {
 
     expect(screen.getByLabelText('공고 마감일')).toHaveValue('2026-10-10')
     expect(screen.getByText('미열람')).toBeInTheDocument()
+  })
+
+  it('다른 지원 건으로 이동하면 마감일 입력도 그 지원 건의 값으로 바뀐다', async () => {
+    application.current.deadline = '2026-10-10'
+    let goTo: (path: string) => void = () => {}
+    const Navigator = () => {
+      const navigate = useNavigate()
+      goTo = navigate
+      return null
+    }
+
+    render(
+      <QueryClientProvider client={qc}>
+        <MemoryRouter initialEntries={['/applications/1']}>
+          <Navigator />
+          <Routes><Route path="/applications/:id" element={<ApplicationDetail />} /></Routes>
+        </MemoryRouter>
+      </QueryClientProvider>,
+    )
+    expect(screen.getByLabelText('공고 마감일')).toHaveValue('2026-10-10')
+
+    act(() => goTo('/applications/2'))
+
+    expect(screen.getByLabelText('공고 마감일')).toHaveValue('2026-12-25')
   })
 })

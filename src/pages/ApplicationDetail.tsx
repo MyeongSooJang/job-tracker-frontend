@@ -74,7 +74,7 @@ export default function ApplicationDetail() {
             </div>
           </div>
 
-          <ApplicationPostingSection application={application} />
+          <ApplicationPostingSection key={application.id} application={application} />
 
           {nextStatuses.length > 0 && (
             <div>
