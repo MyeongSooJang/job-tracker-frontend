@@ -14,8 +14,9 @@ const createMutate = vi.hoisted(() => vi.fn())
 vi.mock('@/hooks/useApplications', () => ({
   useApplications: () => ({
     data: [
-      { id: 1, company: { id: 1, name: '카카오', industry: 'IT', website: '', createdAt: '' }, position: '백엔드', status: 'RESUME_SUBMITTED', appliedDate: '2026-10-01', jobSite: 'SARAMIN', createdAt: '' },
-      { id: 2, company: { id: 2, name: '네이버', industry: 'IT', website: '', createdAt: '' }, position: '프론트엔드', status: 'RESUME_SUBMITTED', appliedDate: '2026-09-01', jobSite: null, createdAt: '' },
+      { id: 1, company: { id: 1, name: '카카오', industry: 'IT', website: '', createdAt: '' }, position: '백엔드', status: 'RESUME_SUBMITTED', appliedDate: '2026-10-01', jobSite: 'SARAMIN', deadline: '2026-10-31', resumeView: 'VIEWED', autoRejectedAt: null, createdAt: '' },
+      { id: 2, company: { id: 2, name: '네이버', industry: 'IT', website: '', createdAt: '' }, position: '프론트엔드', status: 'RESUME_SUBMITTED', appliedDate: '2026-09-01', jobSite: null, deadline: '2026-09-15', resumeView: 'NOT_VIEWED', autoRejectedAt: null, createdAt: '' },
+      { id: 3, company: { id: 3, name: '토스', industry: 'IT', website: '', createdAt: '' }, position: '서버', status: 'REJECTED', appliedDate: '2026-08-01', jobSite: 'WANTED', deadline: null, resumeView: 'NOT_VIEWED', autoRejectedAt: '2026-11-11T07:00:00', createdAt: '' },
     ],
     isLoading: false,
   }),
@@ -137,5 +138,42 @@ describe('Applications', () => {
     const row = within(screen.getByRole('row', { name: /카카오/ }))
     await userEvent.click(row.getByRole('button', { name: '→ 불합격' }))
     expect(screen.queryByText('서류합격 — 면접 일정 등록')).not.toBeInTheDocument()
+  })
+
+  it('지원 목록에 공고 마감일과 열람 여부를 보여준다', () => {
+    render(<Applications />, { wrapper })
+    const row = within(screen.getByRole('row', { name: /카카오/ }))
+    expect(row.getByText('2026-10-31')).toBeInTheDocument()
+    expect(row.getByText('열람')).toBeInTheDocument()
+    expect(within(screen.getByRole('row', { name: /네이버/ })).getByText('미열람')).toBeInTheDocument()
+  })
+
+  it('마감일을 모르는 지원 건은 대시로 보여준다', () => {
+    render(<Applications />, { wrapper })
+    expect(within(screen.getByRole('row', { name: /토스/ })).getByText('-')).toBeInTheDocument()
+  })
+
+  it('자동으로 불합격된 지원 건에만 자동 표시를 붙인다', () => {
+    render(<Applications />, { wrapper })
+    expect(within(screen.getByRole('row', { name: /토스/ })).getByText('자동')).toBeInTheDocument()
+    expect(within(screen.getByRole('row', { name: /카카오/ })).queryByText('자동')).not.toBeInTheDocument()
+  })
+
+  it('공고 마감일을 입력하면 마감일과 함께 등록한다', async () => {
+    createMutate.mockClear()
+    render(<Applications />, { wrapper })
+    await userEvent.click(screen.getByRole('button', { name: '지원 등록' }))
+    await pickOption(companySelect(), '카카오')
+    await userEvent.type(screen.getByLabelText('직무 *'), '백엔드')
+    await userEvent.type(screen.getByLabelText('지원일 *'), '2026-11-01')
+    await pickOption(jobSiteSelect(), '사람인')
+    await userEvent.type(screen.getByLabelText('공고 마감일'), '2026-11-30')
+
+    await userEvent.click(screen.getByRole('button', { name: '등록' }))
+
+    expect(createMutate).toHaveBeenCalledWith(
+      { companyId: 1, position: '백엔드', appliedDate: '2026-11-01', jobSite: 'SARAMIN', deadline: '2026-11-30' },
+      expect.anything(),
+    )
   })
 })

@@ -51,6 +51,9 @@ export type JobSite =
   | 'COMPANY_WEBSITE'
   | 'OTHER'
 
+// 기업이 지원서를 열람했는지. 백엔드 ResumeView enum과 일치해야 한다.
+export type ResumeView = 'VIEWED' | 'NOT_VIEWED'
+
 export interface Application {
   id: number
   company: Company
@@ -59,6 +62,11 @@ export interface Application {
   appliedDate: string
   // 사이트 입력 기능 이전에 등록한 지원 건은 null로 내려온다.
   jobSite?: JobSite | null
+  // 공고 마감일(yyyy-MM-dd). 모르면 null이고, null이면 자동 불합격 대상이 아니다.
+  deadline?: string | null
+  resumeView?: ResumeView
+  // 마감일 + 1달이 지나 자동으로 불합격된 시각. 직접 불합격 처리했거나 불합격이 아니면 null이다.
+  autoRejectedAt?: string | null
   createdAt: string
 }
 
@@ -120,6 +128,7 @@ export interface CreateApplicationRequest {
   position: string
   appliedDate: string
   jobSite: JobSite
+  deadline?: string
 }
 
 export interface UpdateStatusRequest {
