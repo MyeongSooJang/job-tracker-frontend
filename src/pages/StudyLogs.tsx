@@ -3,6 +3,7 @@ import { Pencil } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { useHeatmap, useStudyLogFeed, useStudyStats } from '@/hooks/useStudyLogs'
 import { feedWindow, heatmapRange, monthRange, toDateKey, toMonthKey } from '@/lib/studyLog'
+import { studyChartRange } from '@/lib/studyTime'
 import { cardClass } from '@/components/studylog/cardClass'
 import StudyHeatmap from '@/components/studylog/StudyHeatmap'
 import StudyLogCalendar from '@/components/studylog/StudyLogCalendar'
@@ -23,7 +24,10 @@ export default function StudyLogs() {
 
   const stats = useStudyStats()
   const yearRange = heatmapRange(today)
-  const yearHeatmap = useHeatmap(yearRange.from, yearRange.to)
+  // 잔디와 차트가 한 번의 조회를 나눠 쓴다. 차트 범위가 잔디보다 앞서 시작할 수 있어 잔디 쪽 집계는 잔디 범위로 자른다.
+  const chartRange = studyChartRange(today)
+  const yearHeatmap = useHeatmap(chartRange.from, chartRange.to)
+  const heatmapDays = useMemo(() => (yearHeatmap.data ?? []).filter(day => day.date >= yearRange.from), [yearHeatmap.data, yearRange.from])
   const monthBounds = monthRange(month)
   const monthHeatmap = useHeatmap(monthBounds.from, monthBounds.to)
   const feed = useStudyLogFeed(today)
@@ -81,7 +85,7 @@ export default function StudyLogs() {
       <section aria-label="학습 잔디" className={cardClass}>
         <div className="mb-3 flex items-baseline justify-between">
           <h2 className="text-sm font-semibold text-ink-900">최근 1년 학습 잔디</h2>
-          {yearHeatmap.data && <span className="text-xs tabular-nums text-ink-600">{yearHeatmap.data.length}일 작성</span>}
+          {yearHeatmap.data && <span className="text-xs tabular-nums text-ink-600">{heatmapDays.length}일 작성</span>}
         </div>
         {yearHeatmap.isError ? (
           <div role="alert" className="flex items-center gap-3 text-sm text-danger">
@@ -91,7 +95,7 @@ export default function StudyLogs() {
         ) : yearHeatmap.isLoading ? (
           <div aria-hidden className="h-36 animate-pulse rounded-md bg-surface" />
         ) : (
-          <StudyHeatmap today={today} selectedDate={selectedDate} days={yearHeatmap.data ?? []} onSelect={selectDate} />
+          <StudyHeatmap today={today} selectedDate={selectedDate} days={heatmapDays} onSelect={selectDate} />
         )}
       </section>
 
