@@ -2,8 +2,9 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import {
   getApplications, getApplication, getJobSiteStats,
   createApplication, updateApplicationStatus, updateApplicationJobSite,
+  updateApplicationDeadline, updateApplicationResumeView,
 } from '@/api/applications'
-import type { ApplicationStatus, CreateApplicationRequest, JobSite } from '@/api/types'
+import type { ApplicationStatus, CreateApplicationRequest, JobSite, ResumeView } from '@/api/types'
 
 export const useApplications = () =>
   useQuery({ queryKey: ['applications'], queryFn: getApplications })
@@ -27,6 +28,28 @@ export const useUpdateApplicationJobSite = (id: number) => {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: (jobSite: JobSite) => updateApplicationJobSite(id, jobSite),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['applications'] })
+      queryClient.invalidateQueries({ queryKey: ['applications', id] })
+    },
+  })
+}
+
+export const useUpdateApplicationDeadline = (id: number) => {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (deadline: string) => updateApplicationDeadline(id, deadline),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['applications'] })
+      queryClient.invalidateQueries({ queryKey: ['applications', id] })
+    },
+  })
+}
+
+export const useUpdateApplicationResumeView = (id: number) => {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (resumeView: ResumeView) => updateApplicationResumeView(id, resumeView),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['applications'] })
       queryClient.invalidateQueries({ queryKey: ['applications', id] })
