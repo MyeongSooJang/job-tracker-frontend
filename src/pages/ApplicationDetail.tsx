@@ -6,6 +6,7 @@ import {
   useUpdateApplicationStatus,
 } from '@/hooks/useApplications'
 import InterviewMemo from '@/components/reviews/InterviewMemo'
+import ApplicationPostingSection from '@/components/applications/ApplicationPostingSection'
 import PassScheduleDialog from '@/components/schedules/PassScheduleDialog'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -72,6 +73,8 @@ export default function ApplicationDetail() {
               </Select>
             </div>
           </div>
+
+          <ApplicationPostingSection application={application} />
 
           {nextStatuses.length > 0 && (
             <div>
