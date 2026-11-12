@@ -1,4 +1,4 @@
-import { addDays, shiftMonth, toMonthKey, weekdayIndex } from '@/lib/studyLog'
+import { addDays, heatmapRange, shiftMonth, toMonthKey, weekdayIndex } from '@/lib/studyLog'
 
 export interface DayMinutes {
   date: string
@@ -65,6 +65,13 @@ export function monthlyBuckets(days: readonly DayMinutes[], today: string, count
       inProgress: key === currentMonth,
     }
   })
+}
+
+// 차트가 쓰는 조회 범위. 잔디 범위(53주)가 12개월 중 가장 오래된 달의 1일을 놓치는 해가 있어 그 1일까지 넓힌다.
+export function studyChartRange(today: string, months = 12): { from: string; to: string } {
+  const heatmap = heatmapRange(today)
+  const oldestMonthStart = `${shiftMonth(toMonthKey(today), -(months - 1))}-01`
+  return { from: oldestMonthStart < heatmap.from ? oldestMonthStart : heatmap.from, to: heatmap.to }
 }
 
 export interface AxisScale {
