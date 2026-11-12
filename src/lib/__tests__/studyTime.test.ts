@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { monthlyBuckets, niceAxis, weeklyBuckets } from '@/lib/studyTime'
+import { monthlyBuckets, niceAxis, studyChartRange, weeklyBuckets } from '@/lib/studyTime'
 
 // 2026-11-10은 화요일이라 이번 주는 일요일 2026-11-08에 시작한다.
 const TODAY = '2026-11-10'
@@ -140,5 +140,16 @@ describe('niceAxis', () => {
 
   it('음수는 0으로 다룬다', () => {
     expect(niceAxis(-5)).toEqual({ top: 15, step: 15, ticks: [0, 15] })
+  })
+})
+
+describe('studyChartRange', () => {
+  it('보통은 잔디 조회 범위와 같다', () => {
+    expect(studyChartRange(TODAY)).toEqual({ from: '2025-11-09', to: TODAY })
+  })
+
+  it('잔디 범위가 가장 오래된 달의 1일을 놓치면 그 1일부터 조회한다', () => {
+    // 2028-12-31은 일요일이고 12개월 안에 윤일이 있어, 잔디는 2028-01-02부터 시작한다.
+    expect(studyChartRange('2028-12-31')).toEqual({ from: '2028-01-01', to: '2028-12-31' })
   })
 })
