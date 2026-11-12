@@ -19,6 +19,7 @@ import {
   matchesJobSite,
   type JobSiteFilter,
 } from '@/lib/jobSite'
+import { resumeViewLabel } from '@/lib/application'
 import type { ApplicationStatus, JobSite } from '@/api/types'
 
 const STATUS_COLORS: Record<ApplicationStatus, string> = {
@@ -31,10 +32,12 @@ const STATUS_COLORS: Record<ApplicationStatus, string> = {
 function StatusCell({
   id,
   status,
+  isAutoRejected,
   onPassed,
 }: {
   id: number
   status: ApplicationStatus
+  isAutoRejected: boolean
   onPassed: () => void
 }) {
   const { mutate: updateStatus, isPending } = useUpdateApplicationStatus(id)
@@ -45,6 +48,14 @@ function StatusCell({
       <span className={`px-2 py-1 rounded-full text-xs font-medium ${STATUS_COLORS[status]}`}>
         {STATUS_LABELS[status]}
       </span>
+      {isAutoRejected && (
+        <span
+          title="공고 마감일 + 1달이 지나 자동으로 불합격 처리되었습니다"
+          className="px-2 py-1 rounded-full text-xs font-medium bg-slate-100 text-slate-500"
+        >
+          자동
+        </span>
+      )}
       {nextStatuses.map((s) => (
         <Button
           key={s}
@@ -68,7 +79,7 @@ const FILTER_OPTIONS: Array<ApplicationStatus | 'ALL'> = [
   'REJECTED',
 ]
 
-const EMPTY_FORM = { companyId: '', position: '', appliedDate: '', jobSite: '' as JobSite | '' }
+const EMPTY_FORM = { companyId: '', position: '', appliedDate: '', jobSite: '' as JobSite | '', deadline: '' }
 
 export default function Applications() {
   const { data: applications = [], isLoading, isError } = useApplications()
@@ -94,6 +105,7 @@ export default function Applications() {
         position: form.position,
         appliedDate: form.appliedDate,
         jobSite: form.jobSite,
+        ...(form.deadline ? { deadline: form.deadline } : {}),
       },
       {
         onSuccess: () => {
@@ -180,6 +192,15 @@ export default function Applications() {
                   </SelectContent>
                 </Select>
               </div>
+              <div>
+                <Label htmlFor="deadline">공고 마감일</Label>
+                <Input
+                  id="deadline"
+                  type="date"
+                  value={form.deadline}
+                  onChange={(e) => setForm((f) => ({ ...f, deadline: e.target.value }))}
+                />
+              </div>
               <Button
                 type="submit"
                 disabled={isPending || !form.companyId || !form.jobSite}
@@ -239,6 +260,8 @@ export default function Applications() {
                 <TableHead>지원 사이트</TableHead>
                 <TableHead>상태</TableHead>
                 <TableHead>지원일</TableHead>
+                <TableHead>마감일</TableHead>
+                <TableHead>열람</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -258,10 +281,13 @@ export default function Applications() {
                     <StatusCell
                       id={a.id}
                       status={a.status}
+                      isAutoRejected={!!a.autoRejectedAt}
                       onPassed={() => setPassed({ id: a.id, companyName: a.company.name })}
                     />
                   </TableCell>
                   <TableCell>{a.appliedDate}</TableCell>
+                  <TableCell>{a.deadline ?? '-'}</TableCell>
+                  <TableCell>{resumeViewLabel(a.resumeView)}</TableCell>
                 </TableRow>
               ))}
             </TableBody>
