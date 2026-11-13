@@ -127,24 +127,22 @@ export default function FileListCard({ files }: { files: UserFile[] }) {
       ) : (
         <ul className="mt-5 space-y-3">
           {files.map(file => (
-            <li key={file.id} className="flex flex-col gap-3 rounded-lg border border-line bg-surface p-4 sm:flex-row sm:items-center">
+            <li key={file.id} className="flex flex-col gap-3 rounded-lg border border-line bg-surface p-4 xl:flex-row xl:items-center">
               <div className="flex min-w-0 flex-1 items-center gap-3">
                 <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-brand-50 text-brand-600">
                   <FileText size={22} aria-hidden />
                 </div>
                 <div className="min-w-0">
-                  <p className="flex items-center gap-2">
-                    <span data-testid="file-name" className="truncate text-sm font-semibold text-ink-900">{file.fileName}</span>
-                    <span className="shrink-0 rounded-full bg-brand-50 px-2 py-0.5 text-xs font-medium text-brand-700">
+                  <p data-testid="file-name" className="break-all text-sm font-semibold text-ink-900">{file.fileName}</p>
+                  <p className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-ink-400">
+                    <span className="rounded-full bg-brand-50 px-2 py-0.5 font-medium text-brand-700">
                       {FILE_TYPE_LABELS[file.type]}
                     </span>
-                  </p>
-                  <p className="text-xs text-ink-400">
-                    {formatFileSize(file.sizeBytes)} · {formatDateTime(file.createdAt)} 업로드
+                    <span>{formatFileSize(file.sizeBytes)} · {formatDateTime(file.createdAt)} 업로드</span>
                   </p>
                 </div>
               </div>
-              <div className="flex gap-1">
+              <div className="flex shrink-0 gap-1">
                 <Button type="button" variant="outline" size="sm" onClick={() => setPreviewing(file)} disabled={busy} aria-label={`${file.fileName} 미리보기`}>
                   <Eye /> 미리보기
                 </Button>
