@@ -4,16 +4,16 @@ import { useProfile } from '@/hooks/useProfile'
 import { cn } from '@/lib/utils'
 import ProfileSummaryCard from '@/components/mypage/ProfileSummaryCard'
 import ProfileSection from '@/components/mypage/ProfileSection'
-import ResumeCard from '@/components/mypage/ResumeCard'
+import FileListCard from '@/components/mypage/FileListCard'
 import { PROFILE_SECTIONS } from '@/components/mypage/sections'
 
-const RESUME_TAB = 'resume'
+const FILES_TAB = 'files'
 // 준비 시작일 필드가 있는 탭
 const START_DATE_TAB = 'basic'
 
 const TABS = [
   ...PROFILE_SECTIONS.map(section => ({ id: section.id as string, title: section.title, icon: section.icon })),
-  { id: RESUME_TAB, title: '이력서', icon: FileText },
+  { id: FILES_TAB, title: '파일', icon: FileText },
 ]
 
 export default function MyPage() {
@@ -57,7 +57,7 @@ export default function MyPage() {
           {activeSection ? (
             <ProfileSection key={activeSection.id} section={activeSection} profile={profile} />
           ) : (
-            <ResumeCard resume={profile.resume} />
+            <FileListCard files={profile.files} />
           )}
         </div>
       </div>

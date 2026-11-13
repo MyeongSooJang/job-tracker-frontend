@@ -1,11 +1,11 @@
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { downloadResume } from '@/api/profile'
+import { downloadFile } from '@/api/profile'
 import { loadPdf } from '@/lib/pdf'
-import ResumePreviewDialog from '../ResumePreviewDialog'
+import FilePreviewDialog from '../FilePreviewDialog'
 
-vi.mock('@/api/profile', () => ({ downloadResume: vi.fn() }))
+vi.mock('@/api/profile', () => ({ downloadFile: vi.fn() }))
 vi.mock('@/lib/pdf', () => ({ loadPdf: vi.fn() }))
 vi.mock('../PdfPageCanvas', () => ({
   default: ({ pageNumber }: { pageNumber: number }) => <div data-testid="page">{pageNumber}페이지</div>,
@@ -18,12 +18,20 @@ const fakePdf = (pageCount: number) => ({
 })
 
 const renderOpen = () =>
-  render(<ResumePreviewDialog open onOpenChange={() => {}} fileName="이력서.pdf" />)
+  render(<FilePreviewDialog open onOpenChange={() => {}} fileId={7} fileName="이력서.pdf" />)
 
-describe('ResumePreviewDialog', () => {
+describe('FilePreviewDialog', () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    vi.mocked(downloadResume).mockResolvedValue(new Blob(['%PDF-1.7']))
+    vi.mocked(downloadFile).mockResolvedValue(new Blob(['%PDF-1.7']))
+  })
+
+  it('선택한 파일의 id로 내려받는다', async () => {
+    vi.mocked(loadPdf).mockResolvedValue(fakePdf(1))
+    renderOpen()
+
+    await screen.findByTestId('page')
+    expect(downloadFile).toHaveBeenCalledWith(7)
   })
 
   it('첫 페이지와 전체 페이지 수를 보여준다', async () => {
@@ -70,9 +78,9 @@ describe('ResumePreviewDialog', () => {
   })
 
   it('불러오기에 실패하면 오류를 안내한다', async () => {
-    vi.mocked(downloadResume).mockRejectedValue(new Error('network'))
+    vi.mocked(downloadFile).mockRejectedValue(new Error('network'))
     renderOpen()
 
-    expect(await screen.findByRole('alert')).toHaveTextContent('이력서를 불러오지 못했습니다.')
+    expect(await screen.findByRole('alert')).toHaveTextContent('파일을 불러오지 못했습니다.')
   })
 })

@@ -1,10 +1,8 @@
 import type { Profile, ProfileRequest } from '@/api/types'
 
-export const MAX_RESUME_BYTES = 5 * 1024 * 1024
-
 const isFilled = (value: string | null | undefined) => !!value && value.trim().length > 0
 
-// 완성도에 반영하는 항목 수: 연락처, 생년월일, 주소, 링크(하나라도), 학력, 경력, 희망 직무, 자기소개, 이력서
+// 완성도에 반영하는 항목 수: 연락처, 생년월일, 주소, 링크(하나라도), 학력, 경력, 희망 직무, 자기소개, 파일(종류 무관 1개 이상)
 const COMPLETENESS_ITEMS = 9
 
 export function calcCompleteness(profile: Profile): number {
@@ -17,7 +15,7 @@ export function calcCompleteness(profile: Profile): number {
     isFilled(profile.career),
     isFilled(profile.desiredJob),
     isFilled(profile.introduction),
-    profile.resume !== null,
+    profile.files.length > 0,
   ].filter(Boolean).length
   return Math.round((filled / COMPLETENESS_ITEMS) * 100)
 }
@@ -93,15 +91,6 @@ export function toProfileRequest(profile: Profile, changes: Partial<ProfileReque
     desiredJob: blankToNull(merged.desiredJob),
     introduction: blankToNull(merged.introduction),
   }
-}
-
-// 업로드 전에 형식/용량을 미리 검사한다. 통과하면 null, 아니면 사용자에게 보일 메시지.
-export function validateResumeFile(file: File): string | null {
-  const looksLikePdf = file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')
-  if (!looksLikePdf) return 'PDF 파일만 업로드할 수 있습니다.'
-  if (file.size === 0) return '비어 있는 파일은 업로드할 수 없습니다.'
-  if (file.size > MAX_RESUME_BYTES) return '파일 크기는 5MB 이하여야 합니다.'
-  return null
 }
 
 export function formatFileSize(bytes: number): string {

@@ -1,7 +1,7 @@
 import { GraduationCap, Link2, Target, User, type LucideIcon } from 'lucide-react'
 import type { Profile } from '@/api/types'
 
-export type ProfileFieldKey = keyof Omit<Profile, 'resume'>
+export type ProfileFieldKey = keyof Omit<Profile, 'files'>
 
 export interface FieldDef {
   key: ProfileFieldKey
