@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import type { Profile } from '@/api/types'
 import {
-  calcCompleteness, calcPreparationMonths, formatFileSize, getPreparationGrade, initialOf, MAX_RESUME_BYTES, toProfileRequest, validateResumeFile,
+  calcCompleteness, calcPreparationMonths, formatFileSize, getPreparationGrade, initialOf, toProfileRequest,
 } from '@/lib/profile'
 
 const emptyProfile: Profile = {
@@ -18,11 +18,8 @@ const emptyProfile: Profile = {
   career: null,
   desiredJob: null,
   introduction: null,
-  resume: null,
+  files: [],
 }
-
-const pdf = (name: string, size = 100) =>
-  new File([new Uint8Array(size)], name, { type: 'application/pdf' })
 
 describe('calcCompleteness', () => {
   it('아무것도 채우지 않으면 0%다', () => {
@@ -34,9 +31,13 @@ describe('calcCompleteness', () => {
       ...emptyProfile,
       phone: '010-1234-5678',
       desiredJob: '백엔드 개발자',
-      resume: { fileName: 'a.pdf', sizeBytes: 10, updatedAt: '2026-11-01T10:00:00' },
+      files: [{ id: 1, type: 'ETC' as const, fileName: 'a.pdf', sizeBytes: 10, createdAt: '2026-11-01T10:00:00' }],
     }
     expect(calcCompleteness(profile)).toBe(33)
+  })
+
+  it('종류와 상관없이 파일이 하나라도 있으면 파일 항목을 채운 것으로 본다', () => {
+    expect(calcCompleteness({ ...emptyProfile, files: [{ id: 1, type: 'ETC' as const, fileName: 'a.pdf', sizeBytes: 10, createdAt: '2026-11-01T10:00:00' }] })).toBe(11)
   })
 
   it('링크는 하나만 채워도 한 항목으로 센다', () => {
@@ -56,7 +57,7 @@ describe('calcCompleteness', () => {
       ...emptyProfile,
       phone: '010', birthDate: '1998-04-27', address: '서울', githubUrl: 'https://a',
       education: '대학', career: '인턴', desiredJob: '백엔드', introduction: '안녕',
-      resume: { fileName: 'a.pdf', sizeBytes: 10, updatedAt: '2026-11-01T10:00:00' },
+      files: [{ id: 1, type: 'ETC' as const, fileName: 'a.pdf', sizeBytes: 10, createdAt: '2026-11-01T10:00:00' }],
     }
     expect(calcCompleteness(full)).toBe(100)
   })
@@ -87,35 +88,11 @@ describe('toProfileRequest', () => {
     expect(request.address).toBe('서울')
   })
 
-  it('이메일과 이력서는 요청에 포함하지 않는다', () => {
+  it('이메일과 파일 목록은 요청에 포함하지 않는다', () => {
     const request = toProfileRequest(emptyProfile, {})
 
     expect(request).not.toHaveProperty('email')
-    expect(request).not.toHaveProperty('resume')
-  })
-})
-
-describe('validateResumeFile', () => {
-  it('정상적인 PDF는 통과한다', () => {
-    expect(validateResumeFile(pdf('이력서.pdf'))).toBeNull()
-  })
-
-  it('MIME 타입이 비어 있어도 .pdf 확장자면 통과한다', () => {
-    expect(validateResumeFile(new File([new Uint8Array(10)], 'resume.PDF'))).toBeNull()
-  })
-
-  it('PDF가 아니면 거부한다', () => {
-    const file = new File(['x'], 'resume.docx', { type: 'application/msword' })
-    expect(validateResumeFile(file)).toBe('PDF 파일만 업로드할 수 있습니다.')
-  })
-
-  it('빈 파일은 거부한다', () => {
-    expect(validateResumeFile(pdf('a.pdf', 0))).toBe('비어 있는 파일은 업로드할 수 없습니다.')
-  })
-
-  it('5MB를 초과하면 거부하고 정확히 5MB는 허용한다', () => {
-    expect(validateResumeFile(pdf('a.pdf', MAX_RESUME_BYTES + 1))).toBe('파일 크기는 5MB 이하여야 합니다.')
-    expect(validateResumeFile(pdf('a.pdf', MAX_RESUME_BYTES))).toBeNull()
+    expect(request).not.toHaveProperty('files')
   })
 })
 

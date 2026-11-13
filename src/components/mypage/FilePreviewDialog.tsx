@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { clampPage } from '@/lib/pagination'
-import { useResumePreview } from '@/hooks/useResumePreview'
+import { useFilePreview } from '@/hooks/useFilePreview'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import PdfPageCanvas from './PdfPageCanvas'
@@ -9,11 +9,12 @@ import PdfPageCanvas from './PdfPageCanvas'
 interface Props {
   open: boolean
   onOpenChange: (open: boolean) => void
+  fileId: number
   fileName: string
 }
 
-export default function ResumePreviewDialog({ open, onOpenChange, fileName }: Props) {
-  const { pdf, error, loading } = useResumePreview(open)
+export default function FilePreviewDialog({ open, onOpenChange, fileId, fileName }: Props) {
+  const { pdf, error, loading } = useFilePreview(open, fileId)
   const [page, setPage] = useState(1)
 
   useEffect(() => {
@@ -33,7 +34,7 @@ export default function ResumePreviewDialog({ open, onOpenChange, fileName }: Pr
       <DialogContent className="max-h-[90vh] max-w-3xl overflow-y-auto" onKeyDown={handleKeyDown}>
         <DialogHeader>
           <DialogTitle className="truncate pr-6">{fileName}</DialogTitle>
-          <DialogDescription className="sr-only">이력서 미리보기</DialogDescription>
+          <DialogDescription className="sr-only">파일 미리보기</DialogDescription>
         </DialogHeader>
 
         {loading && <p className="py-12 text-center text-sm text-ink-600">불러오는 중...</p>}

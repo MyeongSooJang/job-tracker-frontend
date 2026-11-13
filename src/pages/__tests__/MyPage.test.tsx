@@ -23,14 +23,17 @@ const profile: Profile = {
   career: null,
   desiredJob: '백엔드 개발자',
   introduction: null,
-  resume: { fileName: '이력서.pdf', sizeBytes: 2048, updatedAt: '2026-11-01T10:00:00' },
+  files: [
+    { id: 2, type: 'PORTFOLIO', fileName: '포트폴리오.pdf', sizeBytes: 4096, createdAt: '2026-11-02T10:00:00' },
+    { id: 1, type: 'RESUME', fileName: '이력서.pdf', sizeBytes: 2048, createdAt: '2026-11-01T10:00:00' },
+  ],
 }
 
 vi.mock('@/hooks/useProfile', () => ({
   useProfile: () => profileState,
   useUpdateProfile: () => ({ mutate: updateMutate, isPending: false, error: null, reset: vi.fn() }),
-  useUploadResume: () => ({ mutate: vi.fn(), isPending: false, error: null, reset: vi.fn() }),
-  useDeleteResume: () => ({ mutate: vi.fn(), isPending: false, error: null, reset: vi.fn() }),
+  useUploadFile: () => ({ mutate: vi.fn(), isPending: false, error: null, reset: vi.fn() }),
+  useDeleteFile: () => ({ mutate: vi.fn(), isPending: false, error: null, reset: vi.fn() }),
 }))
 
 const wrapper = ({ children }: { children: React.ReactNode }) => (
@@ -78,14 +81,28 @@ describe('MyPage', () => {
     expect(screen.getByRole('link', { name: 'https://github.com/hong' })).toHaveAttribute('href', 'https://github.com/hong')
   })
 
-  it('이력서 탭에서 등록된 파일 정보를 보여준다', async () => {
+  it('파일 탭에서 프로필 응답의 파일을 서버가 준 순서 그대로 종류와 함께 보여준다', async () => {
     const user = userEvent.setup()
     render(<MyPage />, { wrapper })
 
-    await user.click(screen.getByRole('button', { name: '이력서' }))
+    await user.click(screen.getByRole('button', { name: '파일' }))
 
-    expect(screen.getByText('이력서.pdf')).toBeInTheDocument()
-    expect(screen.getByText(/2\.0KB/)).toBeInTheDocument()
+    const items = screen.getAllByRole('listitem')
+    expect(items).toHaveLength(2)
+    expect(items[0]).toHaveTextContent('포트폴리오.pdf')
+    expect(items[0]).toHaveTextContent('포트폴리오')
+    expect(items[1]).toHaveTextContent('이력서.pdf')
+    expect(items[1]).toHaveTextContent(/2\.0KB/)
+  })
+
+  it('파일이 없으면 완성도에서 파일 항목이 빠지고 빈 목록 안내를 보여준다', async () => {
+    const user = userEvent.setup()
+    profileState = { data: { ...profile, files: [] }, isLoading: false, isError: false }
+    render(<MyPage />, { wrapper })
+
+    expect(screen.getByRole('progressbar', { name: '프로필 완성도' })).toHaveAttribute('aria-valuenow', '33')
+    await user.click(screen.getByRole('button', { name: '파일' }))
+    expect(screen.getByText('등록된 파일이 없습니다.')).toBeInTheDocument()
   })
 
   it('수정 후 저장하면 바뀐 값과 기존 값을 합쳐 전체 프로필을 저장한다', async () => {

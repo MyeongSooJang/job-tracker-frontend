@@ -187,18 +187,6 @@ export interface TokenResponse {
   accessToken: string
 }
 
-export interface ResumeDownloadUrl {
-  url: string
-  fileName: string
-  expiresAt: string
-}
-
-export interface ResumeInfo {
-  fileName: string
-  sizeBytes: number
-  updatedAt: string
-}
-
 // 백엔드 파일 종류(FileType)와 일치해야 한다. 대문자 그대로 보내야 한다.
 export type FileType = 'RESUME' | 'PORTFOLIO' | 'CERTIFICATE' | 'ETC'
 
@@ -232,10 +220,11 @@ export interface Profile {
   career: string | null
   desiredJob: string | null
   introduction: string | null
-  resume: ResumeInfo | null
+  // 업로드 최신순. 서버가 준 순서 그대로 쓴다. 없으면 []
+  files: UserFile[]
 }
 
-export type ProfileRequest = Omit<Profile, 'email' | 'resume'>
+export type ProfileRequest = Omit<Profile, 'email' | 'files'>
 
 // 학습 기록 (하루 여러 글, studyDate는 yyyy-MM-dd)
 export interface StudyLog {
