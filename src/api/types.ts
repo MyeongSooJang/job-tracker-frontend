@@ -199,6 +199,24 @@ export interface ResumeInfo {
   updatedAt: string
 }
 
+// 백엔드 파일 종류(FileType)와 일치해야 한다. 대문자 그대로 보내야 한다.
+export type FileType = 'RESUME' | 'PORTFOLIO' | 'CERTIFICATE' | 'ETC'
+
+export interface UserFile {
+  id: number
+  type: FileType
+  fileName: string
+  sizeBytes: number
+  // 타임존 없는 LocalDateTime 문자열 (예: 2026-11-13T10:00:00)
+  createdAt: string
+}
+
+export interface FileDownloadUrl {
+  url: string
+  fileName: string
+  expiresAt: string
+}
+
 export interface Profile {
   email: string
   name: string

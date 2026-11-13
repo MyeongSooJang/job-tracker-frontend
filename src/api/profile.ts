@@ -1,5 +1,5 @@
 import { apiClient } from '@/lib/axios'
-import type { Profile, ProfileRequest, ResumeDownloadUrl, ResumeInfo } from './types'
+import type { FileDownloadUrl, FileType, Profile, ProfileRequest, ResumeDownloadUrl, ResumeInfo, UserFile } from './types'
 
 export const getMyProfile = () =>
   apiClient.get<Profile>('/api/me/profile').then(r => r.data)
@@ -26,3 +26,23 @@ export const downloadResume = async (): Promise<Blob> => {
 
 export const deleteResume = () =>
   apiClient.delete('/api/me/resume').then(() => undefined)
+
+// 서버는 파일을 직접 주지 않고 짧게 유효한 주소를 준다. 만료되므로 클릭할 때마다 요청한다.
+export const uploadFile = (file: File, type: FileType) => {
+  const formData = new FormData()
+  formData.append('file', file)
+  formData.append('type', type)
+  return apiClient
+    .post<UserFile>('/api/me/files', formData, { headers: { 'Content-Type': 'multipart/form-data' } })
+    .then(r => r.data)
+}
+
+export const downloadFile = async (id: number): Promise<Blob> => {
+  const { url } = await apiClient.get<FileDownloadUrl>(`/api/me/files/${id}`).then(r => r.data)
+  const response = await fetch(url)
+  if (!response.ok) throw new Error(`파일을 받지 못했습니다. (${response.status})`)
+  return response.blob()
+}
+
+export const deleteFile = (id: number) =>
+  apiClient.delete(`/api/me/files/${id}`).then(() => undefined)
