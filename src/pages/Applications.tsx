@@ -105,12 +105,16 @@ export default function Applications() {
   const [page, setPage] = useState(1)
 
   const keyword = query.trim().toLowerCase()
-  const filtered = applications.filter(
-    (a) =>
-      (filter === 'ALL' || a.status === filter) &&
-      matchesJobSite(a.jobSite, siteFilter) &&
-      (!keyword || a.company.name.toLowerCase().includes(keyword)),
-  )
+  // 지원일이 최근인 건이 위로 오도록 정렬한다. 지원일이 같으면 나중에 등록한 건이 먼저 온다.
+  // 지원일은 yyyy-MM-dd 형식이라 문자열 비교로 날짜 순서가 맞다.
+  const filtered = applications
+    .filter(
+      (a) =>
+        (filter === 'ALL' || a.status === filter) &&
+        matchesJobSite(a.jobSite, siteFilter) &&
+        (!keyword || a.company.name.toLowerCase().includes(keyword)),
+    )
+    .sort((a, b) => b.appliedDate.localeCompare(a.appliedDate) || b.id - a.id)
   const pageCount = totalPages(filtered.length, PAGE_SIZE)
   const currentPage = clampPage(page, pageCount)
   const visible = paginate(filtered, currentPage, PAGE_SIZE)

@@ -17,6 +17,9 @@ vi.mock('@/hooks/useApplications', () => ({
       { id: 1, company: { id: 1, name: '카카오', industry: 'IT', website: '', createdAt: '' }, position: '백엔드', status: 'RESUME_SUBMITTED', appliedDate: '2026-10-01', jobSite: 'SARAMIN', deadline: '2026-10-31', resumeView: 'VIEWED', autoRejectedAt: null, createdAt: '' },
       { id: 2, company: { id: 2, name: '네이버', industry: 'IT', website: '', createdAt: '' }, position: '프론트엔드', status: 'RESUME_SUBMITTED', appliedDate: '2026-09-01', jobSite: null, deadline: '2026-09-15', resumeView: 'NOT_VIEWED', autoRejectedAt: null, createdAt: '' },
       { id: 3, company: { id: 3, name: '토스', industry: 'IT', website: '', createdAt: '' }, position: '서버', status: 'REJECTED', appliedDate: '2026-08-01', jobSite: 'WANTED', deadline: null, resumeView: 'NOT_VIEWED', autoRejectedAt: '2026-11-11T07:00:00', createdAt: '' },
+      // 일부러 지원일 순서를 어긋나게 둔 건: 정렬하면 당근(10-20)은 맨 위, 라인(09-20)은 카카오와 네이버 사이로 온다.
+      { id: 4, company: { id: 4, name: '라인', industry: 'IT', website: '', createdAt: '' }, position: '플랫폼', status: 'RESUME_SUBMITTED', appliedDate: '2026-09-20', jobSite: 'OTHER', deadline: null, resumeView: 'NOT_VIEWED', autoRejectedAt: null, createdAt: '' },
+      { id: 5, company: { id: 5, name: '당근', industry: 'IT', website: '', createdAt: '' }, position: '모바일', status: 'RESUME_SUBMITTED', appliedDate: '2026-10-20', jobSite: 'OTHER', deadline: null, resumeView: 'NOT_VIEWED', autoRejectedAt: null, createdAt: '' },
     ],
     isLoading: false,
   }),
@@ -110,6 +113,15 @@ describe('Applications', () => {
 
     expect(screen.queryByRole('row', { name: /카카오/ })).not.toBeInTheDocument()
     expect(screen.getByText('0건 · 사람인')).toBeInTheDocument()
+  })
+
+  it('지원일이 최근인 건이 위로 오도록 정렬한다', () => {
+    render(<Applications />, { wrapper })
+    const names = screen
+      .getAllByRole('row')
+      .slice(1)
+      .map((row) => within(row).getAllByRole('cell')[0].textContent)
+    expect(names).toEqual(['당근', '카카오', '라인', '네이버', '토스'])
   })
 
   it('지원 목록을 렌더링한다', () => {
