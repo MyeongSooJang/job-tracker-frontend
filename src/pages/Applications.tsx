@@ -20,6 +20,9 @@ import {
   type JobSiteFilter,
 } from '@/lib/jobSite'
 import { resumeViewLabel } from '@/lib/application'
+import { SearchInput } from '@/components/ui/search-input'
+import { Pagination } from '@/components/ui/pagination'
+import { clampPage, paginate, totalPages } from '@/lib/pagination'
 import type { ApplicationStatus, JobSite } from '@/api/types'
 
 const STATUS_COLORS: Record<ApplicationStatus, string> = {
@@ -44,8 +47,8 @@ function StatusCell({
   const nextStatuses = NEXT_STATUSES[status]
 
   return (
-    <div className="flex items-center gap-2 flex-wrap">
-      <span className={`px-2 py-1 rounded-full text-xs font-medium ${STATUS_COLORS[status]}`}>
+    <div className="flex flex-col items-center gap-2 whitespace-nowrap">
+      <span className={`px-2 py-1 rounded-full text-xs font-medium whitespace-nowrap ${STATUS_COLORS[status]}`}>
         {STATUS_LABELS[status]}
       </span>
       {isAutoRejected && (
@@ -56,17 +59,21 @@ function StatusCell({
           자동
         </span>
       )}
-      {nextStatuses.map((s) => (
-        <Button
-          key={s}
-          variant={s === 'REJECTED' ? 'destructive' : 'outline'}
-          size="sm"
-          disabled={isPending}
-          onClick={() => (s === 'INTERVIEW' ? onPassed() : updateStatus(s))}
-        >
-          → {ACTION_LABELS[s]}
-        </Button>
-      ))}
+      {nextStatuses.length > 0 && (
+        <div className="flex items-center gap-2">
+          {nextStatuses.map((s) => (
+            <Button
+              key={s}
+              variant={s === 'REJECTED' ? 'destructive' : 'outline'}
+              size="sm"
+              disabled={isPending}
+              onClick={() => (s === 'INTERVIEW' ? onPassed() : updateStatus(s))}
+            >
+              {ACTION_LABELS[s]}
+            </Button>
+          ))}
+        </div>
+      )}
     </div>
   )
 }
@@ -78,6 +85,8 @@ const FILTER_OPTIONS: Array<ApplicationStatus | 'ALL'> = [
   'ACCEPTED',
   'REJECTED',
 ]
+
+const PAGE_SIZE = 10
 
 const EMPTY_FORM = { companyId: '', position: '', appliedDate: '', jobSite: '' as JobSite | '', deadline: '' }
 
@@ -92,9 +101,22 @@ export default function Applications() {
   const [passed, setPassed] = useState<{ id: number; companyName: string } | null>(null)
   const [form, setForm] = useState(EMPTY_FORM)
 
+  const [query, setQuery] = useState('')
+  const [page, setPage] = useState(1)
+
+  const keyword = query.trim().toLowerCase()
   const filtered = applications.filter(
-    (a) => (filter === 'ALL' || a.status === filter) && matchesJobSite(a.jobSite, siteFilter),
+    (a) =>
+      (filter === 'ALL' || a.status === filter) &&
+      matchesJobSite(a.jobSite, siteFilter) &&
+      (!keyword || a.company.name.toLowerCase().includes(keyword)),
   )
+  const pageCount = totalPages(filtered.length, PAGE_SIZE)
+  const currentPage = clampPage(page, pageCount)
+  const visible = paginate(filtered, currentPage, PAGE_SIZE)
+
+  // 필터·검색어가 바뀌면 결과의 처음부터 보여준다.
+  const resetPage = () => setPage(1)
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -213,6 +235,16 @@ export default function Applications() {
         </Dialog>
       </div>
 
+      <SearchInput
+        label="회사 검색"
+        placeholder="회사명으로 검색"
+        value={query}
+        onChange={(v) => {
+          setQuery(v)
+          resetPage()
+        }}
+      />
+
       <div className="flex items-center justify-between gap-4 flex-wrap">
         <div className="flex gap-2 flex-wrap">
           {FILTER_OPTIONS.map((s) => (
@@ -220,7 +252,10 @@ export default function Applications() {
               key={s}
               variant={filter === s ? 'default' : 'outline'}
               size="sm"
-              onClick={() => setFilter(s)}
+              onClick={() => {
+                setFilter(s)
+                resetPage()
+              }}
             >
               {s === 'ALL' ? '전체' : STATUS_LABELS[s]}
             </Button>
@@ -228,7 +263,10 @@ export default function Applications() {
         </div>
         <div className="flex items-center gap-2">
           <span className="text-sm text-slate-500">지원 사이트</span>
-          <Select value={siteFilter} onValueChange={(v) => setSiteFilter(v as JobSiteFilter)}>
+          <Select value={siteFilter} onValueChange={(v) => {
+              setSiteFilter(v as JobSiteFilter)
+              resetPage()
+            }}>
             <SelectTrigger aria-label="지원 사이트 필터" className="w-40">
               <SelectValue />
             </SelectTrigger>
@@ -252,7 +290,7 @@ export default function Applications() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <Table>
+          <Table className="min-w-[860px] [&_th]:text-center [&_td]:text-center">
             <TableHeader>
               <TableRow>
                 <TableHead>회사</TableHead>
@@ -265,9 +303,9 @@ export default function Applications() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filtered.map((a) => (
+              {visible.map((a) => (
                 <TableRow key={a.id} className="cursor-pointer hover:bg-slate-50">
-                  <TableCell>
+                  <TableCell className="whitespace-nowrap">
                     <Link
                       to={`/applications/${a.id}`}
                       className="font-medium hover:underline"
@@ -276,8 +314,8 @@ export default function Applications() {
                     </Link>
                   </TableCell>
                   <TableCell>{a.position}</TableCell>
-                  <TableCell>{jobSiteLabel(a.jobSite)}</TableCell>
-                  <TableCell>
+                  <TableCell className="whitespace-nowrap">{jobSiteLabel(a.jobSite)}</TableCell>
+                  <TableCell className="whitespace-nowrap">
                     <StatusCell
                       id={a.id}
                       status={a.status}
@@ -285,13 +323,16 @@ export default function Applications() {
                       onPassed={() => setPassed({ id: a.id, companyName: a.company.name })}
                     />
                   </TableCell>
-                  <TableCell>{a.appliedDate}</TableCell>
-                  <TableCell>{a.deadline ?? '-'}</TableCell>
-                  <TableCell>{resumeViewLabel(a.resumeView)}</TableCell>
+                  <TableCell className="whitespace-nowrap">{a.appliedDate}</TableCell>
+                  <TableCell className="whitespace-nowrap">{a.deadline ?? '-'}</TableCell>
+                  <TableCell className="whitespace-nowrap">{resumeViewLabel(a.resumeView)}</TableCell>
                 </TableRow>
               ))}
             </TableBody>
           </Table>
+          <div className="mt-4">
+            <Pagination page={currentPage} totalPages={pageCount} onChange={setPage} />
+          </div>
         </CardContent>
       </Card>
 
