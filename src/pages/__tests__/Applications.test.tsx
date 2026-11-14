@@ -121,14 +121,14 @@ describe('Applications', () => {
   it('다음 단계가 있는 지원 건에 상태 변경 버튼을 보여준다', () => {
     render(<Applications />, { wrapper })
     const row = within(screen.getByRole('row', { name: /카카오/ }))
-    expect(row.getByRole('button', { name: '→ 서류합격' })).toBeInTheDocument()
-    expect(row.getByRole('button', { name: '→ 불합격' })).toBeInTheDocument()
+    expect(row.getByRole('button', { name: '서류합격' })).toBeInTheDocument()
+    expect(row.getByRole('button', { name: '불합격' })).toBeInTheDocument()
   })
 
   it('서류합격으로 변경하면 면접 일정 등록 창을 띄운다', async () => {
     render(<Applications />, { wrapper })
     const row = within(screen.getByRole('row', { name: /카카오/ }))
-    await userEvent.click(row.getByRole('button', { name: '→ 서류합격' }))
+    await userEvent.click(row.getByRole('button', { name: '서류합격' }))
     expect(await screen.findByText('서류합격 — 면접 일정 등록')).toBeInTheDocument()
     expect(screen.getByLabelText('제목 *')).toHaveValue('카카오 면접')
   })
@@ -136,7 +136,7 @@ describe('Applications', () => {
   it('불합격으로 변경하면 일정 등록 창을 띄우지 않는다', async () => {
     render(<Applications />, { wrapper })
     const row = within(screen.getByRole('row', { name: /카카오/ }))
-    await userEvent.click(row.getByRole('button', { name: '→ 불합격' }))
+    await userEvent.click(row.getByRole('button', { name: '불합격' }))
     expect(screen.queryByText('서류합격 — 면접 일정 등록')).not.toBeInTheDocument()
   })
 
